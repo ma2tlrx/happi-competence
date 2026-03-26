@@ -1,0 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --happi-orange: #FF8650;
+  --happi-teal: #102C32;
+}
+
+@layer base {
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background-color: #f8fafc;
+    color: #102C32;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: 'Poppins', sans-serif;
+    color: #102C32;
+  }
+
+  #root {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    text-align: left;
+  }
+}
+
+@layer components {
+  /* Cards */
+  .card {
+    @apply bg-white rounded-2xl border border-slate-100 p-5 md:p-6;
+    box-shadow: 0 1px 4px rgba(16, 44, 50, 0.06), 0 4px 16px rgba(16, 44, 50, 0.06);
+  }
+
+  /* Primary button - orange */
+  .btn-primary {
+    font-family: 'DM Sans', sans-serif;
+    background-color: #FF8650;
+    color: white;
+    @apply px-5 py-2.5 rounded-full font-semibold transition-all duration-200 flex items-center gap-2 text-sm;
+    box-shadow: 0 4px 14px rgba(255, 134, 80, 0.35);
+  }
+  .btn-primary:hover {
+    background-color: #E86A35;
+    box-shadow: 0 6px 20px rgba(255, 134, 80, 0.45);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    font-family: 'DM Sans', sans-serif;
+    color: #102C32;
+    @apply bg-slate-100 hover:bg-slate-200 px-5 py-2.5 rounded-full font-medium transition-all duration-200 flex items-center gap-2 text-sm;
+  }
+
+  /* Danger button */
+  .btn-danger {
+    font-family: 'DM Sans', sans-serif;
+    @apply bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 px-5 py-2.5 rounded-full font-medium transition-all duration-200 flex items-center gap-2 text-sm;
+  }
+
+  /* Input */
+  .input {
+    font-family: 'DM Sans', sans-serif;
+    color: #102C32;
+    border-color: #e2e8f0;
+    @apply w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all bg-white placeholder:text-slate-400;
+    --tw-ring-color: rgba(255, 134, 80, 0.25);
+    --tw-border-opacity: 1;
+  }
+  .input:focus {
+    border-color: #FF8650;
+  }
+
+  /* Badge */
+  .badge {
+    font-family: 'DM Sans', sans-serif;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  /* Page title */
+  .page-title {
+    font-family: 'Poppins', sans-serif;
+    color: #102C32;
+    @apply font-semibold;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1dfe0; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #8AABB0; }
+
+/* Hide scrollbar for tabs / horizontal scrollers */
+.scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
+/* Safe area insets (iPhone notch / home bar) */
+.pb-safe  { padding-bottom: max(1.25rem, env(safe-area-inset-bottom)); }
+.pb-safe-nav { padding-bottom: max(5rem, calc(4.5rem + env(safe-area-inset-bottom))); }
+
+/* Mobile input — bigger touch target */
+@media (max-width: 767px) {
+  .input { @apply py-3 text-base; }
+  .btn-primary, .btn-secondary, .btn-danger { @apply py-3; }
+}
+
+* { box-sizing: border-box; }
