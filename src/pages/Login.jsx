@@ -138,19 +138,6 @@ export default function Login({ onLogin, users, onBack }) {
               </button>
             </form>
 
-            {/* Demo credentials */}
-            {adminUser && (
-              <div className="mt-6 p-4 rounded-2xl" style={{ background: '#FFF1EB' }}>
-                <p className="text-xs font-semibold text-happi-teal mb-2">Accès démo :</p>
-                <p className="text-xs text-slate-500 font-mono">Email : <span style={{ color: '#FF8650' }}>{adminUser.email}</span></p>
-                <p className="text-xs text-slate-500 font-mono">Mot de passe : <span style={{ color: '#FF8650' }}>{adminUser.password}</span></p>
-                <button type="button"
-                  onClick={() => { setEmail(adminUser.email); setPassword(adminUser.password); }}
-                  className="mt-2 text-xs font-semibold" style={{ color: '#FF8650', fontFamily: 'DM Sans,sans-serif' }}>
-                  Remplir automatiquement →
-                </button>
-              </div>
-            )}
 
             {/* Back to talent */}
             {onBack && (

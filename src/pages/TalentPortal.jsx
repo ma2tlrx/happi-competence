@@ -255,11 +255,6 @@ function TalentLogin({ data, update, onLogin, onRegister, onFormateurAccess }) {
                 </button>
               </div>
 
-              <div className="mt-5 p-4 rounded-2xl" style={{ background: '#FFF1EB' }}>
-                <p className="text-xs font-semibold text-happi-teal mb-1">Mot de passe par défaut :</p>
-                <p className="text-xs font-mono" style={{ color: '#FF8650' }}>talent123</p>
-                <p className="text-xs text-slate-400 mt-1">Ou créez votre propre mot de passe via "Créer mon espace".</p>
-              </div>
 
               <button onClick={onFormateurAccess} className="mt-4 w-full text-xs text-center text-slate-400 hover:text-happi-teal transition-colors lg:hidden">
                 Accès Espace Formateur →
