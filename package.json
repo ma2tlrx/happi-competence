@@ -12,6 +12,7 @@
   "dependencies": {
     "@headlessui/react": "^2.2.9",
     "@sentry/react": "^10.46.0",
+    "@supabase/supabase-js": "^2.100.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "html2canvas": "^1.4.1",

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { initialParticipants, initialSessions, initialPresences, initialEvaluations } from '../data/initialData';
+import { supabase } from '../lib/supabase';
 
 const STORAGE_KEY = 'happi_formateur_data';
 
@@ -196,79 +197,108 @@ const defaultData = {
   isLoggedIn: false,
 };
 
+/* ─── Migrate / validate a parsed data object ─────────────────────────── */
+function migrateData(parsed) {
+  const firstP = parsed.participants?.[0];
+  const hasOldCompetences = firstP && (
+    'Bon relationnel' in (firstP.competences || {}) ||
+    'Adaptabilité'    in (firstP.competences || {}) ||
+    ('Sensibilité sociale' in (firstP.competences || {}))
+  );
+  const missingHbs        = firstP && !firstP.hbs;
+  const missingCTFormat   = firstP && firstP.competences && !('Rigueur' in (firstP.competences || {}));
+  const missingHbsJeu     = firstP && !('hbsJeu'      in firstP);
+  const missingCtAutoEval = firstP && !('ctAutoEval'  in firstP);
+
+  if (hasOldCompetences || missingHbs || missingCTFormat || missingHbsJeu || missingCtAutoEval) {
+    return {
+      ...defaultData,
+      isLoggedIn:      parsed.isLoggedIn,
+      user:            parsed.user,
+      users:           parsed.users           || defaultData.users,
+      talentPasswords: parsed.talentPasswords || {},
+    };
+  }
+
+  if (!parsed.participants || parsed.participants.length === 0) parsed.participants = initialParticipants;
+  if (!parsed.sessions    || parsed.sessions.length    === 0) parsed.sessions    = initialSessions;
+  if (!parsed.presences)   parsed.presences   = initialPresences;
+  if (!parsed.evaluations) parsed.evaluations = initialEvaluations;
+
+  if (!parsed.users || parsed.users.length === 0) parsed.users = defaultData.users;
+  if (!parsed.talentPasswords) parsed.talentPasswords = {};
+  if (!parsed.baremes || !parsed.baremes.some(b => b.id === 'b_sess_1')) {
+    parsed.baremes = DEFAULT_BAREMES;
+  }
+
+  const sess1 = parsed.sessions?.find(s => s.id === 'sess_1');
+  const hasNewStepContent = sess1?.steps?.[0]?.content?.includes('Objectifs de la session');
+  if (!parsed.sessions || !parsed.sessions.some(s => s.id === 'sess_1') || !hasNewStepContent) {
+    parsed.sessions    = defaultData.sessions;
+    parsed.presences   = defaultData.presences;
+    parsed.evaluations = defaultData.evaluations;
+  }
+
+  return parsed;
+}
+
+/* ─── Load initial data from localStorage ────────────────────────────── */
+function loadLocalData() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return migrateData(JSON.parse(stored));
+  } catch (e) {
+    console.error('Failed to load from localStorage', e);
+  }
+  return defaultData;
+}
+
+/* ─── Push data to Supabase (fire-and-forget) ────────────────────────── */
+async function pushToSupabase(data) {
+  if (!supabase) return;
+  try {
+    await supabase.from('app_data').upsert(
+      { org_id: 'default', data, updated_at: new Date().toISOString() },
+      { onConflict: 'org_id' }
+    );
+  } catch (e) {
+    console.warn('Supabase sync failed (push):', e);
+  }
+}
+
 export function useStore() {
-  const [data, setData] = useState(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
+  const [data, setData] = useState(loadLocalData);
+  const syncedRef = useRef(false); // has Supabase data been fetched once?
 
-        // ── Migration: detect stale participant format and reset ──────────────
-        const firstP = parsed.participants?.[0];
-        const hasOldCompetences = firstP && (
-          'Bon relationnel' in (firstP.competences || {}) ||
-          'Adaptabilité'    in (firstP.competences || {}) ||
-          ('Sensibilité sociale' in (firstP.competences || {}))
-        );
-        const missingHbs        = firstP && !firstP.hbs;
-        const missingCTFormat   = firstP && firstP.competences && !('Rigueur' in (firstP.competences || {}));
-        const missingHbsJeu     = firstP && !('hbsJeu'      in firstP);
-        const missingCtAutoEval = firstP && !('ctAutoEval'  in firstP);
-
-        if (hasOldCompetences || missingHbs || missingCTFormat || missingHbsJeu || missingCtAutoEval) {
-          return {
-            ...defaultData,
-            isLoggedIn:      parsed.isLoggedIn,
-            user:            parsed.user,
-            users:           parsed.users           || defaultData.users,
-            talentPasswords: parsed.talentPasswords || {},
-          };
-        }
-
-        // ── Fill in any missing top-level fields ─────────────────────────────
-        if (!parsed.participants || parsed.participants.length === 0) parsed.participants = initialParticipants;
-        if (!parsed.sessions    || parsed.sessions.length    === 0) parsed.sessions    = initialSessions;
-        if (!parsed.presences)   parsed.presences   = initialPresences;
-        if (!parsed.evaluations) parsed.evaluations = initialEvaluations;
-
-        // ── Fill in new account fields (first load after update) ─────────────
-        if (!parsed.users || parsed.users.length === 0) parsed.users = defaultData.users;
-        if (!parsed.talentPasswords) parsed.talentPasswords = {};
-        // Migration: reset barèmes if old format detected (no b_sess_1)
-        if (!parsed.baremes || !parsed.baremes.some(b => b.id === 'b_sess_1')) {
-          parsed.baremes = DEFAULT_BAREMES;
-        }
-
-        // Migration: reset sessions if old format detected (no sess_1 or outdated step content)
-        const sess1 = parsed.sessions?.find(s => s.id === 'sess_1');
-        const hasNewStepContent = sess1?.steps?.[0]?.content?.includes('Objectifs de la session');
-        if (!parsed.sessions || !parsed.sessions.some(s => s.id === 'sess_1') || !hasNewStepContent) {
-          parsed.sessions   = defaultData.sessions;
-          parsed.presences  = defaultData.presences;
-          parsed.evaluations = defaultData.evaluations;
-        }
-
-        return parsed;
-      }
-    } catch (e) {
-      console.error('Failed to load from localStorage', e);
-    }
-    return defaultData;
-  });
-
+  /* ── On mount: pull latest data from Supabase ─────────────────────── */
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (e) {
+    if (!supabase || syncedRef.current) return;
+    syncedRef.current = true;
+
+    supabase.from('app_data').select('data').eq('org_id', 'default').single()
+      .then(({ data: row, error }) => {
+        if (error || !row?.data) {
+          // No remote data yet — push local data to bootstrap Supabase
+          setData(prev => { pushToSupabase(prev); return prev; });
+          return;
+        }
+        const migrated = migrateData(row.data);
+        setData(migrated);
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated)); } catch (_) {}
+      })
+      .catch(e => console.warn('Supabase sync failed (pull):', e));
+  }, []);
+
+  /* ── Persist every state change to localStorage + Supabase ─────────── */
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {
       console.error('Failed to save to localStorage', e);
     }
+    pushToSupabase(data);
   }, [data]);
 
   const update = (updater) => {
-    setData(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
-      return next;
-    });
+    setData(prev => typeof updater === 'function' ? updater(prev) : { ...prev, ...updater });
   };
 
   return { data, update };
