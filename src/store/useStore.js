@@ -282,9 +282,19 @@ export function useStore() {
           setData(prev => { pushToSupabase(prev); return prev; });
           return;
         }
-        const migrated = migrateData(row.data);
-        setData(migrated);
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated)); } catch (_) {}
+        const remoteData = migrateData(row.data);
+        setData(prev => {
+          const localTs  = prev._updatedAt  || 0;
+          const remoteTs = remoteData._updatedAt || 0;
+          if (remoteTs > localTs) {
+            // Remote is newer — use it and sync localStorage
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteData)); } catch (_) {}
+            return remoteData;
+          }
+          // Local is newer or equal — push local to Supabase to sync remote
+          pushToSupabase(prev);
+          return prev;
+        });
       })
       .catch(e => console.warn('Supabase sync failed (pull):', e));
   }, []);
@@ -298,7 +308,10 @@ export function useStore() {
   }, [data]);
 
   const update = (updater) => {
-    setData(prev => typeof updater === 'function' ? updater(prev) : { ...prev, ...updater });
+    setData(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
+      return { ...next, _updatedAt: Date.now() };
+    });
   };
 
   return { data, update };
