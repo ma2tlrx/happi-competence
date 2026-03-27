@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import OnboardingTalent from '../components/OnboardingTalent';
 import {
-  Sparkles, Home, BarChart2, ClipboardList, User, Calendar,
+  Home, BarChart2, ClipboardList, User, Calendar,
   LogOut, CheckCircle, Star, Eye, EyeOff, Lock, Mail,
   AlertCircle, TrendingUp, Award, Zap, ChevronRight,
   BookOpen, Briefcase, Phone, MapPin, GraduationCap,
@@ -12,6 +12,7 @@ import {
   Radar, ResponsiveContainer, Tooltip, Legend
 } from 'recharts';
 import { CT_KEYS, CT_CATEGORIES, HBS_CATEGORIES } from '../data/initialData';
+import logo from '../assets/logo.png';
 
 /* ─── Échelles ─────────────────────────────────────────────────── */
 const CT_SCALE  = ['', 'Non acquis', 'En difficulté', "En cours d'acquisition", 'Acquis', 'Dépassé'];
@@ -56,9 +57,7 @@ function TalentLeftPanel({ mode, onFormateurAccess }) {
       <div className="absolute -bottom-20 -right-20 w-96 h-96 rounded-full opacity-10" style={{ background: '#FF8650' }} />
       {/* Logo */}
       <div className="flex items-center gap-3 relative z-10">
-        <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: '#FF8650', boxShadow: '0 4px 20px rgba(255,134,80,0.4)' }}>
-          <Sparkles size={22} className="text-white" />
-        </div>
+        <img src={logo} alt="Happi" className="w-12 h-12 rounded-2xl object-contain bg-white" />
         <div>
           <p className="font-bold text-white text-lg leading-tight" style={{ fontFamily: 'Poppins,sans-serif' }}>Happi Compétence</p>
           <p className="text-xs" style={{ color: '#8AABB0' }}>Espace Talent</p>
@@ -191,9 +190,7 @@ function TalentLogin({ data, update, onLogin, onRegister, onFormateurAccess }) {
         <div className="w-full max-w-md py-6 my-auto">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#FF8650' }}>
-              <Sparkles size={20} className="text-white" />
-            </div>
+            <img src={logo} alt="Happi" className="w-11 h-11 rounded-xl object-contain bg-white" />
             <div>
               <p className="font-bold text-white text-lg" style={{ fontFamily: 'Poppins,sans-serif' }}>Happi Compétence</p>
               <p className="text-xs" style={{ color: '#8AABB0' }}>Espace Talent</p>
@@ -1275,9 +1272,7 @@ function TalentApp({ data, update, talentUser, onLogout }) {
 
         {/* Logo */}
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: '#FF8650' }}>
-            <Sparkles size={16} className="text-white" />
-          </div>
+          <img src={logo} alt="Happi" className="w-9 h-9 rounded-xl object-contain bg-white" />
           <div>
             <p className="text-xs font-bold text-happi-teal leading-tight" style={{ fontFamily: 'Poppins,sans-serif' }}>Happi Compétence</p>
             <p className="text-[10px] text-slate-400">Espace Talent</p>

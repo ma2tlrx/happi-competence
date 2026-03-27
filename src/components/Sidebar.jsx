@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Calendar, BarChart2, Settings, LogOut, Sparkles, X, SlidersHorizontal } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, BarChart2, Settings, LogOut, X, SlidersHorizontal } from 'lucide-react';
+import logo from '../assets/logo.png';
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: 'Tableau de bord' },
@@ -17,9 +18,7 @@ export default function Sidebar({ user, onLogout, onClose, isMobile }) {
       <div className="p-5 border-b border-happi-teal-light">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-happi-orange flex items-center justify-center shadow-orange">
-              <Sparkles size={18} className="text-white" />
-            </div>
+            <img src={logo} alt="Happi" className="w-10 h-10 rounded-xl object-contain bg-white" />
             <div>
               <p className="font-heading font-bold text-white text-sm leading-tight" style={{fontFamily:'Poppins,sans-serif'}}>Happi</p>
               <p className="text-xs text-happi-teal-muted">Compétence</p>

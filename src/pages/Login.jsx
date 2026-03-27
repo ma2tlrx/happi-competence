@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Sparkles, Eye, EyeOff, Lock, Mail, AlertCircle, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, AlertCircle, ArrowRight } from 'lucide-react';
+import logo from '../assets/logo.png';
 
 /* ── Spinner ────────────────────────────────────────────────────── */
 function Spinner() {
@@ -20,9 +21,7 @@ function LeftPanel() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full opacity-5" style={{ background: '#FF8650' }} />
 
       <div className="flex items-center gap-3 relative z-10">
-        <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: '#FF8650', boxShadow: '0 4px 20px rgba(255,134,80,0.4)' }}>
-          <Sparkles size={22} className="text-white" />
-        </div>
+        <img src={logo} alt="Happi" className="w-12 h-12 rounded-2xl object-contain bg-white" />
         <div>
           <p className="font-bold text-white text-lg leading-tight" style={{ fontFamily: 'Poppins,sans-serif' }}>Happi Compétence</p>
           <p className="text-xs" style={{ color: '#8AABB0' }}>Plateforme formateur</p>
@@ -87,9 +86,7 @@ export default function Login({ onLogin, users, onBack }) {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#FF8650' }}>
-              <Sparkles size={20} className="text-white" />
-            </div>
+            <img src={logo} alt="Happi" className="w-11 h-11 rounded-xl object-contain bg-white" />
             <p className="font-bold text-white text-lg" style={{ fontFamily: 'Poppins,sans-serif' }}>Happi Compétence</p>
           </div>
 
