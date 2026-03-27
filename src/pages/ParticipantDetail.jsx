@@ -165,13 +165,18 @@ export default function ParticipantDetail({ data, update }) {
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
-      const imgH = (canvas.height * pageW) / canvas.width;
+      // 100px margin each side (at scale:2, 1px = 0.5 real px; convert to mm at 96dpi)
+      const marginPx = 100; // px in the source DOM
+      const pxToMm = 25.4 / 96;
+      const marginMm = marginPx * pxToMm;
+      const contentW = pageW - marginMm * 2;
+      const imgH = (canvas.height * contentW) / canvas.width;
 
       // Multi-page: split canvas image across A4 pages
       let remaining = imgH;
       let offset = 0;
       while (remaining > 0) {
-        pdf.addImage(imgData, 'PNG', 0, offset, pageW, imgH);
+        pdf.addImage(imgData, 'PNG', marginMm, offset, contentW, imgH);
         remaining -= pageH;
         if (remaining > 0) {
           pdf.addPage();
@@ -202,7 +207,7 @@ export default function ParticipantDetail({ data, update }) {
               <img src={logo} alt="Happi" className="w-12 h-12 rounded-xl object-contain bg-white p-1" />
               <div>
                 <p className="text-xs uppercase tracking-widest text-white/60" style={{ fontFamily: 'DM Sans,sans-serif' }}>Happi Compétence</p>
-                <p className="text-xl font-bold text-white" style={{ fontFamily: 'Poppins,sans-serif' }}>Bilan de compétences</p>
+                <p className="text-xl font-bold text-white" style={{ fontFamily: 'Poppins,sans-serif' }}>Passeport de compétence</p>
               </div>
             </div>
             <div className="text-right">
