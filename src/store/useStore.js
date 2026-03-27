@@ -269,6 +269,7 @@ async function pushToSupabase(data) {
 export function useStore() {
   const [data, setData] = useState(loadLocalData);
   const syncedRef = useRef(false); // has Supabase data been fetched once?
+  const isInitialMount = useRef(true); // skip first Supabase push to avoid overwriting remote
 
   /* ── On mount: pull latest data from Supabase ─────────────────────── */
   useEffect(() => {
@@ -303,6 +304,12 @@ export function useStore() {
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {
       console.error('Failed to save to localStorage', e);
+    }
+    // Skip the very first render to avoid overwriting newer Supabase data
+    // with potentially stale local data before the pull completes
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
     }
     pushToSupabase(data);
   }, [data]);

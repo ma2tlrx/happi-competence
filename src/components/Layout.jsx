@@ -32,8 +32,9 @@ export default function Layout({ children, user, onLogout }) {
       <div
         className={[
           isMobile ? 'fixed inset-y-0 left-0 z-30' : 'relative flex-shrink-0',
-          'transition-transform duration-300',
+          'transition-all duration-300 overflow-hidden',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+          !isMobile && !sidebarOpen ? 'w-0' : '',
         ].join(' ')}
       >
         <Sidebar

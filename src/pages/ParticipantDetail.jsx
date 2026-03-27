@@ -489,9 +489,9 @@ export default function ParticipantDetail({ data, update }) {
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold uppercase tracking-wide" style={{ color: cat.color }}>{cat.label}</span>
                   {jeuAvg !== null ? (
-                    <span className={`text-sm font-bold ${hbsScoreColor(cap4(jeuAvg))}`}>
+                    <span className={`text-sm font-bold flex items-center gap-1 flex-shrink-0 ${hbsScoreColor(cap4(jeuAvg))}`}>
                       {jeuAvg.toFixed(1)}/4
-                      <span className="ml-1 text-[10px] font-normal text-slate-400 hidden sm:inline">{HBS_SCALE[cap4(jeuAvg)]}</span>
+                      <span className="text-[10px] font-normal text-slate-400 hidden md:inline">{HBS_SCALE[cap4(jeuAvg)]}</span>
                     </span>
                   ) : (
                     <span className="text-xs italic text-slate-400">—</span>
@@ -504,10 +504,10 @@ export default function ParticipantDetail({ data, update }) {
                     const jeuV = jeuRaw != null ? cap4(jeuRaw) : null;
                     const hbsKey = HBS_KEYS[it.hbsIndex];
                     return (
-                      <div key={it.key} className="flex items-center justify-between text-xs border-t border-slate-50 pt-1">
-                        <div>
-                          <span className="text-slate-600 font-medium">{it.key}</span>
-                          <span className="text-[10px] text-slate-400 ml-1">({hbsKey})</span>
+                      <div key={it.key} className="flex items-center justify-between text-xs border-t border-slate-50 pt-1 gap-2">
+                        <div className="min-w-0">
+                          <span className="text-slate-600 font-medium truncate block">{it.key}</span>
+                          <span className="text-[10px] text-slate-400 truncate block">({hbsKey})</span>
                         </div>
                         {jeuV !== null ? (
                           <div className="flex items-center gap-1 flex-shrink-0">
@@ -517,7 +517,7 @@ export default function ParticipantDetail({ data, update }) {
                               ))}
                             </div>
                             <span className={`font-bold w-7 text-right ${hbsScoreColor(jeuV)}`}>{jeuRaw?.toFixed ? jeuRaw.toFixed(1) : jeuV}</span>
-                            <span className="text-[10px] text-slate-400 hidden sm:inline text-right">{HBS_SCALE[jeuV]}</span>
+                            <span className="text-[10px] text-slate-400 hidden lg:inline w-14 text-right truncate">{HBS_SCALE[jeuV]}</span>
                           </div>
                         ) : (
                           <span className="text-[10px] italic text-slate-400 flex-shrink-0">—</span>
