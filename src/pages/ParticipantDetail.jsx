@@ -158,16 +158,16 @@ export default function ParticipantDetail({ data, update }) {
   return (
     <div className="space-y-6" ref={printRef}>
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/participants')} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all">
+      <div className="flex items-center gap-2 flex-wrap">
+        <button onClick={() => navigate('/participants')} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all flex-shrink-0">
           <ArrowLeft size={20} />
         </button>
-        <div className="flex-1" />
+        <div className="flex-1 min-w-0" />
         <button onClick={startEdit} className="btn-secondary text-sm">
-          <Edit2 size={15} /> Modifier
+          <Edit2 size={15} /> <span className="hidden sm:inline">Modifier</span>
         </button>
         <button onClick={exportPDF} className="btn-primary text-sm">
-          <Download size={15} /> Exporter PDF
+          <Download size={15} /> <span className="hidden sm:inline">Exporter </span>PDF
         </button>
       </div>
 
@@ -345,10 +345,10 @@ export default function ParticipantDetail({ data, update }) {
                               ))}
                             </div>
                             <span className={`font-bold w-3 text-right ${ctScoreColor(v)}`}>{v}</span>
-                            <span className="text-[10px] text-slate-400 w-28 text-right">{CT_SCALE[v] || ''}</span>
+                            <span className="text-[10px] text-slate-400 hidden sm:inline text-right">{CT_SCALE[v] || ''}</span>
                           </div>
                         ) : (
-                          <span className="text-[10px] italic text-slate-400 flex-shrink-0">Absent lors de la session</span>
+                          <span className="text-[10px] italic text-slate-400 flex-shrink-0">—</span>
                         )}
                       </div>
                     );
@@ -405,10 +405,10 @@ export default function ParticipantDetail({ data, update }) {
                   {jeuAvg !== null ? (
                     <span className={`text-sm font-bold ${hbsScoreColor(cap4(jeuAvg))}`}>
                       {jeuAvg.toFixed(1)}/4
-                      <span className="ml-1 text-[10px] font-normal text-slate-400">{HBS_SCALE[cap4(jeuAvg)]}</span>
+                      <span className="ml-1 text-[10px] font-normal text-slate-400 hidden sm:inline">{HBS_SCALE[cap4(jeuAvg)]}</span>
                     </span>
                   ) : (
-                    <span className="text-xs italic text-slate-400">Absent lors de la session</span>
+                    <span className="text-xs italic text-slate-400">—</span>
                   )}
                 </div>
 
@@ -431,10 +431,10 @@ export default function ParticipantDetail({ data, update }) {
                               ))}
                             </div>
                             <span className={`font-bold w-7 text-right ${hbsScoreColor(jeuV)}`}>{jeuRaw?.toFixed ? jeuRaw.toFixed(1) : jeuV}</span>
-                            <span className="text-[10px] text-slate-400 w-20 text-right">{HBS_SCALE[jeuV]}</span>
+                            <span className="text-[10px] text-slate-400 hidden sm:inline text-right">{HBS_SCALE[jeuV]}</span>
                           </div>
                         ) : (
-                          <span className="text-[10px] italic text-slate-400 flex-shrink-0">Absent lors de la session</span>
+                          <span className="text-[10px] italic text-slate-400 flex-shrink-0">—</span>
                         )}
                       </div>
                     );
@@ -520,7 +520,7 @@ export default function ParticipantDetail({ data, update }) {
               <h2 className="text-lg font-semibold text-slate-800">Modifier le profil</h2>
               <button onClick={() => setEditing(false)} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400"><X size={18} /></button>
             </div>
-            <div className="p-6 grid grid-cols-2 gap-4">
+            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 { label: 'Prénom', key: 'prenom' },
                 { label: 'Nom', key: 'nom' },
@@ -541,7 +541,7 @@ export default function ParticipantDetail({ data, update }) {
                   />
                 </div>
               ))}
-              <div className="col-span-2">
+              <div className="col-span-1 sm:col-span-2">
                 <label className="block text-sm font-medium text-slate-700 mb-1">Ambitions</label>
                 <input
                   value={editForm.ambitions || ''}
@@ -550,9 +550,9 @@ export default function ParticipantDetail({ data, update }) {
                 />
               </div>
               {/* Competences editing */}
-              <div className="col-span-2">
+              <div className="col-span-1 sm:col-span-2">
                 <h3 className="text-sm font-semibold text-slate-700 mb-3">Compétences (session de jeu)</h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {Object.entries(editForm.competences || {}).filter(([, v]) => v !== null).map(([k, v]) => (
                     <div key={k} className="flex items-center gap-2">
                       <label className="text-xs text-slate-600 flex-1 min-w-0 truncate">{k}</label>
