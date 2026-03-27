@@ -147,19 +147,37 @@ export default function ParticipantDetail({ data, update }) {
       if (pdfHeaderRef.current) pdfHeaderRef.current.style.display = 'block';
       if (actionBarRef.current) actionBarRef.current.style.display = 'none';
 
+      // Force all sm:inline / md:inline labels to be visible during capture
+      const forceStyle = document.createElement('style');
+      forceStyle.id = 'pdf-force-visible';
+      forceStyle.textContent = `
+        [data-pdf-root] .hidden { display: inline !important; }
+        [data-pdf-root] .sm\\:inline { display: inline !important; }
+        [data-pdf-root] .md\\:inline { display: inline !important; }
+        [data-pdf-root] .sm\\:table-cell { display: table-cell !important; }
+        [data-pdf-root] .md\\:table-cell { display: table-cell !important; }
+        [data-pdf-root] .xl\\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0,1fr)) !important; }
+        [data-pdf-root] .md\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+      `;
+      printRef.current.setAttribute('data-pdf-root', '');
+      document.head.appendChild(forceStyle);
+
       // Small delay for DOM to repaint
-      await new Promise(r => setTimeout(r, 80));
+      await new Promise(r => setTimeout(r, 120));
 
       const canvas = await html2canvas(printRef.current, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#f8fafc',
         logging: false,
+        windowWidth: 1400,
       });
 
       // Restore DOM
       if (pdfHeaderRef.current) pdfHeaderRef.current.style.display = 'none';
       if (actionBarRef.current) actionBarRef.current.style.display = '';
+      printRef.current.removeAttribute('data-pdf-root');
+      document.getElementById('pdf-force-visible')?.remove();
 
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -187,6 +205,8 @@ export default function ParticipantDetail({ data, update }) {
     } catch (e) {
       if (pdfHeaderRef.current) pdfHeaderRef.current.style.display = 'none';
       if (actionBarRef.current) actionBarRef.current.style.display = '';
+      printRef.current?.removeAttribute('data-pdf-root');
+      document.getElementById('pdf-force-visible')?.remove();
       alert('Erreur lors de l\'export PDF');
     }
   };
