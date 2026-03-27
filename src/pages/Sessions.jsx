@@ -351,44 +351,47 @@ export default function Sessions({ data, update }) {
     const month = format(date, 'MMM', { locale: fr }).toUpperCase().replace('.', '');
     return (
       <div
-        className="bg-white rounded-2xl border border-slate-100 px-4 py-3.5 flex items-center gap-4 hover:shadow-md cursor-pointer transition-all duration-200 group"
+        className="bg-white rounded-2xl border border-slate-100 p-4 md:p-5 hover:shadow-md cursor-pointer transition-all duration-200 group"
         style={{ boxShadow: '0 1px 4px rgba(16,44,50,0.06)' }}
         onClick={() => navigate(`/sessions/${session.id}`)}
       >
-        {/* Bloc date */}
-        <div className="flex-shrink-0 w-[52px] h-[52px] rounded-xl bg-slate-100 flex flex-col items-center justify-center gap-0.5">
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">{month}</span>
-          <span className="text-2xl font-black text-slate-700 leading-none">{day}</span>
-        </div>
-
-        {/* Contenu */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-3 mb-1">
-            <h3 className="font-bold text-[14px] text-slate-800 group-hover:text-happi-orange transition-colors truncate">{session.nom}</h3>
-            <StatusBadge statut={session.statut} />
+        <div className="flex items-start gap-4">
+          {/* Bloc date */}
+          <div className="flex-shrink-0 w-[56px] h-[56px] rounded-xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center gap-0.5">
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">{month}</span>
+            <span className="text-2xl font-black text-slate-700 leading-none">{day}</span>
           </div>
-          <div className="flex items-center gap-3 text-[11px] text-slate-400 mb-1.5">
-            <span className="flex items-center gap-1"><Clock size={11} />{session.heure}</span>
-            {session.lieu && <span className="flex items-center gap-1 truncate max-w-[160px]"><MapPin size={11} />{session.lieu}</span>}
-            <span className="flex items-center gap-1"><Users size={11} />{session.participants?.length || 0}/{data.participants?.length || 0}</span>
-          </div>
-          {session.type && (
-            <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-semibold">{session.type}</span>
-          )}
-        </div>
 
-        {/* Actions */}
-        <div className="flex-shrink-0 flex flex-col items-end gap-2" onClick={e => e.stopPropagation()}>
-          <button
-            onClick={() => navigate(`/sessions/${session.id}/player`)}
-            className="flex items-center gap-1.5 text-xs font-bold text-white bg-happi-orange hover:bg-happi-orange/90 px-3 py-1.5 rounded-xl transition-all"
-          >
-            <Play size={11} fill="white" /> Lancer
-          </button>
-          <div className="flex items-center gap-0.5">
-            <button onClick={() => handleDuplicate(session)} className="p-1.5 rounded-lg text-slate-300 hover:text-slate-600 hover:bg-slate-100 transition-all" title="Dupliquer"><Copy size={13} /></button>
-            <button onClick={() => setDeleteConfirm(session.id)} className="p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all" title="Supprimer"><Trash2 size={13} /></button>
-            <button onClick={() => navigate(`/sessions/${session.id}`)} className="p-1.5 rounded-lg text-slate-300 hover:text-happi-orange hover:bg-happi-orange-light transition-all"><ChevronRight size={13} /></button>
+          {/* Contenu principal */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2 mb-1.5">
+              <h3 className="font-bold text-[15px] text-slate-800 group-hover:text-happi-orange transition-colors leading-snug">{session.nom}</h3>
+              <StatusBadge statut={session.statut} />
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-slate-500 mb-2">
+              <span className="flex items-center gap-1"><Clock size={12} />{session.heure}</span>
+              {session.lieu && <span className="flex items-center gap-1"><MapPin size={12} />{session.lieu}</span>}
+              <span className="flex items-center gap-1"><Users size={12} />{session.participants?.length || 0} participant{(session.participants?.length || 0) !== 1 ? 's' : ''}</span>
+            </div>
+            {session.description && (
+              <p className="text-[12px] text-slate-400 line-clamp-1 mb-2">{session.description}</p>
+            )}
+            <div className="flex items-center justify-between gap-2">
+              {session.type && (
+                <span className="inline-block text-[11px] px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold">{session.type}</span>
+              )}
+              <div className="flex items-center gap-1 ml-auto" onClick={e => e.stopPropagation()}>
+                <button
+                  onClick={() => navigate(`/sessions/${session.id}/player`)}
+                  className="flex items-center gap-1.5 text-xs font-bold text-white bg-happi-orange hover:bg-happi-orange/90 px-3 py-1.5 rounded-xl transition-all"
+                >
+                  <Play size={11} fill="white" /> Lancer
+                </button>
+                <button onClick={() => handleDuplicate(session)} className="p-1.5 rounded-lg text-slate-300 hover:text-slate-600 hover:bg-slate-100 transition-all" title="Dupliquer"><Copy size={13} /></button>
+                <button onClick={() => setDeleteConfirm(session.id)} className="p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all" title="Supprimer"><Trash2 size={13} /></button>
+                <button onClick={() => navigate(`/sessions/${session.id}`)} className="p-1.5 rounded-lg text-slate-300 hover:text-happi-orange hover:bg-happi-orange-light transition-all"><ChevronRight size={13} /></button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -428,12 +431,44 @@ export default function Sessions({ data, update }) {
           <button onClick={openModal} className="btn-primary mx-auto mt-4"><Plus size={16} /> Créer une session</button>
         </div>
       ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {sorted.map(s => <SessionCard key={s.id} session={s} />)}
         </div>
       ) : (
-        <div className="space-y-3">
-          {sorted.map(s => <SessionCard key={s.id} session={s} />)}
+        <div className="space-y-8">
+          {ongoing.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
+                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">En cours · {ongoing.length}</h2>
+              </div>
+              <div className="space-y-3">
+                {ongoing.map(s => <SessionCard key={s.id} session={s} />)}
+              </div>
+            </div>
+          )}
+          {upcoming.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">À venir · {upcoming.length}</h2>
+              </div>
+              <div className="space-y-3">
+                {upcoming.map(s => <SessionCard key={s.id} session={s} />)}
+              </div>
+            </div>
+          )}
+          {done.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Terminées · {done.length}</h2>
+              </div>
+              <div className="space-y-3">
+                {done.map(s => <SessionCard key={s.id} session={s} />)}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -90,17 +90,17 @@ export default function Participants({ data, update }) {
           />
         </div>
 
-        <select value={filterAge} onChange={e => setFilterAge(e.target.value)} className="input w-auto min-w-32">
+        <select value={filterAge} onChange={e => setFilterAge(e.target.value)} className="input w-auto min-w-[8rem] max-w-[12rem]">
           <option value="">Tous les âges</option>
           {ages.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
 
-        <select value={filterVille} onChange={e => setFilterVille(e.target.value)} className="input w-auto min-w-36">
+        <select value={filterVille} onChange={e => setFilterVille(e.target.value)} className="input w-auto min-w-[8rem] max-w-[12rem] hidden sm:block">
           <option value="">Toutes les villes</option>
           {villes.map(v => <option key={v} value={v}>{v}</option>)}
         </select>
 
-        <select value={filterNiveau} onChange={e => setFilterNiveau(e.target.value)} className="input w-auto min-w-36">
+        <select value={filterNiveau} onChange={e => setFilterNiveau(e.target.value)} className="input w-auto min-w-[8rem] max-w-[12rem] hidden sm:block">
           <option value="">Tous les niveaux</option>
           {niveaux.map(n => <option key={n} value={n}>{n}</option>)}
         </select>
@@ -126,11 +126,11 @@ export default function Participants({ data, update }) {
             <thead className="bg-slate-50 border-b border-slate-100">
               <tr className="text-xs text-slate-500">
                 <th className="text-left py-3 px-4 font-medium">Participant</th>
-                <th className="text-left py-3 px-4 font-medium">Contact</th>
-                <th className="text-left py-3 px-4 font-medium">Âge</th>
-                <th className="text-left py-3 px-4 font-medium">Localisation</th>
-                <th className="text-left py-3 px-4 font-medium">Niveau</th>
-                <th className="text-left py-3 px-4 font-medium">Score moy.</th>
+                <th className="text-left py-3 px-4 font-medium hidden sm:table-cell">Contact</th>
+                <th className="text-left py-3 px-4 font-medium hidden md:table-cell">Âge</th>
+                <th className="text-left py-3 px-4 font-medium hidden lg:table-cell">Localisation</th>
+                <th className="text-left py-3 px-4 font-medium hidden lg:table-cell">Niveau</th>
+                <th className="text-left py-3 px-4 font-medium">Score</th>
                 <th className="py-3 px-4" />
               </tr>
             </thead>
@@ -157,13 +157,13 @@ export default function Participants({ data, update }) {
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4 hidden sm:table-cell">
                       <p className="text-sm text-slate-600">{p.email || '—'}</p>
                       <p className="text-xs text-slate-400">{p.telephone}</p>
                     </td>
-                    <td className="py-3 px-4 text-sm text-slate-600">{p.age}</td>
-                    <td className="py-3 px-4 text-sm text-slate-600">{ville}</td>
-                    <td className="py-3 px-4 text-sm text-slate-600">{p.niveauEtudes || '—'}</td>
+                    <td className="py-3 px-4 text-sm text-slate-600 hidden md:table-cell">{p.age}</td>
+                    <td className="py-3 px-4 text-sm text-slate-600 hidden lg:table-cell">{ville}</td>
+                    <td className="py-3 px-4 text-sm text-slate-600 hidden lg:table-cell">{p.niveauEtudes || '—'}</td>
                     <td className="py-3 px-4"><ScoreBadge score={score} /></td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
