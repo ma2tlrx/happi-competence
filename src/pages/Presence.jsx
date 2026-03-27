@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Download, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Save, Download, CheckCircle, XCircle, Clock, Users } from 'lucide-react';
 
 const STATUTS = ['présent', 'absent', 'retard'];
 

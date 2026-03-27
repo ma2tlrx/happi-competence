@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit2, Download, Mail, Phone, MapPin, BookOpen, Briefcase, Tag, Star, Calendar, Save, X, CheckCircle, AlertTriangle, Lightbulb } from 'lucide-react';
+import logo from '../assets/logo.png';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { HBS_CATEGORIES, CT_CATEGORIES, HBS_KEYS, CT_KEYS } from '../data/initialData';
 
@@ -58,6 +59,8 @@ export default function ParticipantDetail({ data, update }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const printRef = useRef();
+  const pdfHeaderRef = useRef();
+  const actionBarRef = useRef();
 
   const participant = data.participants?.find(p => p.id === id);
   const [editing, setEditing] = useState(false);
@@ -139,14 +142,47 @@ export default function ParticipantDetail({ data, update }) {
     try {
       const { default: jsPDF } = await import('jspdf');
       const { default: html2canvas } = await import('html2canvas');
-      const canvas = await html2canvas(printRef.current, { scale: 2, useCORS: true });
+
+      // Show branded header, hide action buttons
+      if (pdfHeaderRef.current) pdfHeaderRef.current.style.display = 'block';
+      if (actionBarRef.current) actionBarRef.current.style.display = 'none';
+
+      // Small delay for DOM to repaint
+      await new Promise(r => setTimeout(r, 80));
+
+      const canvas = await html2canvas(printRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#f8fafc',
+        logging: false,
+      });
+
+      // Restore DOM
+      if (pdfHeaderRef.current) pdfHeaderRef.current.style.display = 'none';
+      if (actionBarRef.current) actionBarRef.current.style.display = '';
+
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgH = (canvas.height * pageW) / canvas.width;
+
+      // Multi-page: split canvas image across A4 pages
+      let remaining = imgH;
+      let offset = 0;
+      while (remaining > 0) {
+        pdf.addImage(imgData, 'PNG', 0, offset, pageW, imgH);
+        remaining -= pageH;
+        if (remaining > 0) {
+          pdf.addPage();
+          offset -= pageH;
+        }
+      }
+
       pdf.save(`${participant.prenom}_${participant.nom}_profil.pdf`);
     } catch (e) {
+      if (pdfHeaderRef.current) pdfHeaderRef.current.style.display = 'none';
+      if (actionBarRef.current) actionBarRef.current.style.display = '';
       alert('Erreur lors de l\'export PDF');
     }
   };
@@ -157,8 +193,34 @@ export default function ParticipantDetail({ data, update }) {
 
   return (
     <div className="space-y-6" ref={printRef}>
+
+      {/* ── PDF branded header — hidden on screen, visible during export ── */}
+      <div ref={pdfHeaderRef} style={{ display: 'none' }} className="rounded-2xl overflow-hidden mb-2" >
+        <div style={{ background: 'linear-gradient(135deg,#102C32 0%,#1A3F48 100%)' }} className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <img src={logo} alt="Happi" className="w-12 h-12 rounded-xl object-contain bg-white p-1" />
+              <div>
+                <p className="text-xs uppercase tracking-widest text-white/60" style={{ fontFamily: 'DM Sans,sans-serif' }}>Happi Compétence</p>
+                <p className="text-xl font-bold text-white" style={{ fontFamily: 'Poppins,sans-serif' }}>Bilan de compétences</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-white" style={{ fontFamily: 'Poppins,sans-serif' }}>{participant.prenom} {participant.nom}</p>
+              <p className="text-sm text-white/60 mt-0.5">Généré le {new Date().toLocaleDateString('fr-FR')}</p>
+            </div>
+          </div>
+          <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap gap-6 text-sm text-white/70">
+            {participant.email && <span>✉ {participant.email}</span>}
+            {participant.telephone && <span>☏ {participant.telephone}</span>}
+            {(participant.village || participant.residence) && <span>📍 {participant.village || participant.residence}</span>}
+          </div>
+        </div>
+        <div style={{ background: '#FF8650' }} className="h-1" />
+      </div>
+
       {/* Header */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div ref={actionBarRef} className="flex items-center gap-2 flex-wrap">
         <button onClick={() => navigate('/participants')} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all flex-shrink-0">
           <ArrowLeft size={20} />
         </button>

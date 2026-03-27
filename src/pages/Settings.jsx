@@ -109,7 +109,11 @@ export default function Settings({ data, update }) {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl w-full">
+    <div className="space-y-6 w-full max-w-4xl">
+
+      {/* Profile + Sécurité côte à côte sur PC */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
       {/* Profile */}
       <div className="card">
         <div className="flex items-center gap-3 mb-6">
@@ -186,6 +190,8 @@ export default function Settings({ data, update }) {
           </button>
         </div>
       </div>
+
+      </div>{/* end lg:grid-cols-2 */}
 
       {/* Account management — admin only */}
       {isAdmin && (
