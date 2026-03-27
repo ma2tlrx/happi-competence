@@ -165,23 +165,22 @@ export default function ParticipantDetail({ data, update }) {
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
-      // 100px margin each side (at scale:2, 1px = 0.5 real px; convert to mm at 96dpi)
-      const marginPx = 100; // px in the source DOM
       const pxToMm = 25.4 / 96;
-      const marginMm = marginPx * pxToMm;
-      const contentW = pageW - marginMm * 2;
+      const marginXMm = 70 * pxToMm;
+      const marginTopMm = 20 * pxToMm;
+      const contentW = pageW - marginXMm * 2;
       const imgH = (canvas.height * contentW) / canvas.width;
 
-      // Multi-page: split canvas image across A4 pages
-      let remaining = imgH;
-      let offset = 0;
-      while (remaining > 0) {
-        pdf.addImage(imgData, 'PNG', marginMm, offset, contentW, imgH);
-        remaining -= pageH;
-        if (remaining > 0) {
-          pdf.addPage();
-          offset -= pageH;
-        }
+      // Multi-page with top + side margins on every page
+      let heightLeft = imgH;
+      let yPos = marginTopMm;
+      pdf.addImage(imgData, 'PNG', marginXMm, yPos, contentW, imgH);
+      heightLeft -= (pageH - marginTopMm);
+      while (heightLeft > 0) {
+        pdf.addPage();
+        yPos = marginTopMm - (imgH - heightLeft);
+        pdf.addImage(imgData, 'PNG', marginXMm, yPos, contentW, imgH);
+        heightLeft -= (pageH - marginTopMm);
       }
 
       pdf.save(`${participant.prenom}_${participant.nom}_profil.pdf`);
