@@ -23,6 +23,7 @@ function StatusBadge({ statut }) {
 const SESSION_TEMPLATES = [
   {
     id: 'tpl_communication',
+    sessionId: 'sess_1',
     baremeId: 'b_sess_1',
     nom: 'SESSION 1 - LA COMMUNICATION',
     type: 'Atelier HaPPi',
@@ -52,6 +53,7 @@ const SESSION_TEMPLATES = [
   },
   {
     id: 'tpl_adaptabilite',
+    sessionId: 'sess_2',
     baremeId: 'b_sess_2',
     nom: 'SESSION 2 - ADAPTABILITÉ & GESTION DU STRESS',
     type: 'Atelier HaPPi',
@@ -80,6 +82,7 @@ const SESSION_TEMPLATES = [
   },
   {
     id: 'tpl_leadership',
+    sessionId: 'sess_3',
     baremeId: 'b_sess_3',
     nom: 'SESSION 3 - LEADERSHIP',
     type: 'Atelier HaPPi',
@@ -108,6 +111,7 @@ const SESSION_TEMPLATES = [
   },
   {
     id: 'tpl_analyse',
+    sessionId: 'sess_4',
     baremeId: 'b_sess_4',
     nom: 'SESSION 4 - ANALYSE DES PROBLÈMES',
     type: 'Atelier HaPPi',
@@ -136,6 +140,7 @@ const SESSION_TEMPLATES = [
   },
   {
     id: 'tpl_autonomie',
+    sessionId: 'sess_5',
     baremeId: 'b_sess_5',
     nom: 'SESSION 5 - AUTONOMIE & COMPÉTITIVITÉ',
     type: 'Atelier HaPPi',
@@ -231,6 +236,14 @@ export default function Sessions({ data, update }) {
   /* ── Création ── */
   const handleCreate = () => {
     if (!form.nom || !form.date) return;
+    // If created from a template linked to an existing session, navigate to that session's player
+    if (selectedTemplate?.sessionId) {
+      const newS = { ...form, id: 's' + Date.now(), templateSessionId: selectedTemplate.sessionId };
+      update(prev => ({ ...prev, sessions: [...(prev.sessions || []), newS] }));
+      closeModal();
+      navigate(`/sessions/${selectedTemplate.sessionId}/player`);
+      return;
+    }
     const newS = { ...form, id: 's' + Date.now() };
     update(prev => ({ ...prev, sessions: [...(prev.sessions || []), newS] }));
     closeModal();
