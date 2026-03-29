@@ -198,10 +198,13 @@ function TimerRing({ timeLeft, totalTime, isPaused }) {
 }
 
 /* ── Main component ───────────────────────────────────────────── */
-export default function SessionPlayer() {
+export default function SessionPlayer({ data: dataProp }) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data } = useStore();
+  const { data: dataStore } = useStore();
+  // Prefer the prop (in-memory, includes just-created sessions) over the store
+  // which reads from localStorage and may not yet have the new session
+  const data = dataProp || dataStore;
 
   const session = data.sessions?.find(s => s.id === id);
   const bareme  = session?.baremeId ? data.baremes?.find(b => b.id === session.baremeId) : null;
