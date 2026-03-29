@@ -243,7 +243,7 @@ export default function SessionDetail({ data, update }) {
             style={{ borderColor: '#FF8650', color: '#FF8650' }}>
             <Star size={13} /> Évaluer
           </button>
-          <button onClick={() => navigate(`/sessions/${id}/player`)}
+          <button onClick={() => navigate(`/sessions/${session.templateSessionId || id}/player`)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all shrink-0"
             style={{ background: 'linear-gradient(135deg,#FF8650,#ff6b2b)' }}>
             <Play size={11} fill="white" /> Lancer la session

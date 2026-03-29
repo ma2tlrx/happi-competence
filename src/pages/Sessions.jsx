@@ -395,7 +395,7 @@ export default function Sessions({ data, update }) {
               )}
               <div className="flex items-center gap-1 ml-auto" onClick={e => e.stopPropagation()}>
                 <button
-                  onClick={() => navigate(`/sessions/${session.id}/player`)}
+                  onClick={() => navigate(`/sessions/${session.templateSessionId || session.id}/player`)}
                   className="flex items-center gap-1.5 text-xs font-bold text-white bg-happi-orange hover:bg-happi-orange/90 px-3 py-1.5 rounded-xl transition-all"
                 >
                   <Play size={11} fill="white" /> Lancer
