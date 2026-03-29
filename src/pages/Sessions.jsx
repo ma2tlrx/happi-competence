@@ -234,7 +234,7 @@ export default function Sessions({ data, update }) {
     const newS = { ...form, id: 's' + Date.now() };
     update(prev => ({ ...prev, sessions: [...(prev.sessions || []), newS] }));
     closeModal();
-    navigate(`/sessions/${newS.id}`);
+    navigate(`/sessions/${newS.id}/player`);
   };
 
   /* ── Suppression ── */
