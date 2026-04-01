@@ -33,7 +33,7 @@ export default function SessionPlayer({ data: dataProp, update }) {
   const [pdfDoc, setPdfDoc] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const [scale, setScale] = useState(1.5);
+  const [scale, setScale] = useState(1.25);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
