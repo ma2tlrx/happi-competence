@@ -131,6 +131,58 @@ export default function SessionPlayer({ data: dataProp, update }) {
     return () => window.removeEventListener('keydown', handler);
   }, [totalPages, navigate]);
 
+  /* ── Swipe navigation (touch + mouse drag) ──────────────────── */
+  useEffect(() => {
+    const el = canvasContainerRef.current;
+    if (!el) return;
+    let startX = 0;
+    let startY = 0;
+    let dragging = false;
+
+    // Touch events (mobile)
+    const onTouchStart = (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    };
+    const onTouchEnd = (e) => {
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
+      if (dx < 0) setPage(p => Math.min(p + 1, totalPages));
+      else        setPage(p => Math.max(p - 1, 1));
+    };
+
+    // Mouse events (desktop drag)
+    const onMouseDown = (e) => {
+      dragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+    };
+    const onMouseUp = (e) => {
+      if (!dragging) return;
+      dragging = false;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
+      if (dx < 0) setPage(p => Math.min(p + 1, totalPages));
+      else        setPage(p => Math.max(p - 1, 1));
+    };
+    const onMouseLeave = () => { dragging = false; };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    el.addEventListener('mousedown', onMouseDown);
+    el.addEventListener('mouseup', onMouseUp);
+    el.addEventListener('mouseleave', onMouseLeave);
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('mousedown', onMouseDown);
+      el.removeEventListener('mouseup', onMouseUp);
+      el.removeEventListener('mouseleave', onMouseLeave);
+    };
+  }, [totalPages]);
+
   /* ── Fullscreen tracking ────────────────────────────────────── */
   useEffect(() => {
     const handler = () => setIsFullscreen(!!document.fullscreenElement);
@@ -316,7 +368,7 @@ export default function SessionPlayer({ data: dataProp, update }) {
         )}
         <div
           ref={canvasContainerRef}
-          className="py-6"
+          className="py-6 cursor-grab active:cursor-grabbing"
           style={{ display: loading || error ? 'none' : 'block' }}
         />
       </div>
