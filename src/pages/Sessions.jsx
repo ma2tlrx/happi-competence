@@ -206,6 +206,7 @@ export default function Sessions({ data, update }) {
 
   /* PDF flow */
   const [pdfFile, setPdfFile]       = useState(null);
+  const [pdfDataUrl, setPdfDataUrl] = useState(null);
   const [pdfDrag, setPdfDrag]       = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError]     = useState('');
@@ -223,6 +224,7 @@ export default function Sessions({ data, update }) {
     setSelectedTemplate(null);
     setTemplateSearch('');
     setPdfFile(null);
+    setPdfDataUrl(null);
     setPdfError('');
     setPdfLoading(false);
     setShowModal(true);
@@ -244,9 +246,10 @@ export default function Sessions({ data, update }) {
       navigate(`/sessions/${selectedTemplate.sessionId}/player`);
       return;
     }
-    const newS = { ...form, id: 's' + Date.now() };
+    const newS = { ...form, id: 's' + Date.now(), ...(pdfDataUrl ? { pdfData: pdfDataUrl } : {}) };
     update(prev => ({ ...prev, sessions: [...(prev.sessions || []), newS] }));
     closeModal();
+    setPdfDataUrl(null);
     navigate(`/sessions/${newS.id}/player`);
   };
 
@@ -280,21 +283,29 @@ export default function Sessions({ data, update }) {
     setModalMode('template_step2');
   };
 
-  /* ── PDF → extraction du nom + pré-remplissage ── */
+  /* ── PDF → extraction du nom + sauvegarde base64 ── */
   const processPdf = (file) => {
     if (!file || !file.type.includes('pdf')) {
       setPdfError('Veuillez envoyer un fichier PDF valide.');
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      setPdfError('Le fichier est trop volumineux (max 15 Mo).');
       return;
     }
     setPdfLoading(true);
     setPdfError('');
     setPdfFile(file);
 
-    // Extraire le nom du fichier comme titre par défaut
     const rawName = file.name.replace(/\.pdf$/i, '').replace(/[-_]/g, ' ');
     const cleanName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
 
-    // Lecture binaire pour extraire du texte brut (meilleur effort)
+    // 1. Lire en base64 pour stocker le PDF complet
+    const b64Reader = new FileReader();
+    b64Reader.onload = (e) => setPdfDataUrl(e.target.result);
+    b64Reader.readAsDataURL(file);
+
+    // 2. Lire en binaire pour extraire du texte (titre / description)
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -305,29 +316,18 @@ export default function Sessions({ data, update }) {
           if (c >= 32 && c < 127) text += String.fromCharCode(c);
           else if (c === 10 || c === 13) text += ' ';
         }
-        // Chercher des lignes lisibles (≥ 20 chars sans trop de symboles)
         const lines = text.split(/\s{3,}/)
           .map(l => l.replace(/[^\w\sàâäéèêëîïôùûü',.\-]/gi, '').trim())
           .filter(l => l.length >= 20 && l.length < 150 && /\w/.test(l));
-
         const description = lines.slice(0, 3).join(' · ') || '';
-
-        setForm(f => ({
-          ...f,
-          nom: cleanName,
-          description: description || f.description,
-          type: 'Formation',
-        }));
+        setForm(f => ({ ...f, nom: cleanName, description: description || f.description, type: 'Formation' }));
       } catch {
         setForm(f => ({ ...f, nom: cleanName }));
       }
       setPdfLoading(false);
       setModalMode('form');
     };
-    reader.onerror = () => {
-      setPdfError('Impossible de lire le fichier.');
-      setPdfLoading(false);
-    };
+    reader.onerror = () => { setPdfError('Impossible de lire le fichier.'); setPdfLoading(false); };
     reader.readAsArrayBuffer(file);
   };
 
