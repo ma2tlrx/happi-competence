@@ -15,6 +15,7 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import TalentPortal from './pages/TalentPortal';
 import Baremes from './pages/Baremes';
+import Ressources from './pages/Ressources';
 
 export default function App() {
   const { data, update } = useStore();
@@ -64,6 +65,7 @@ export default function App() {
               <Route path="/reports" element={<Reports data={data} update={update} />} />
               <Route path="/settings" element={<Settings data={data} update={update} />} />
               <Route path="/baremes" element={<Baremes data={data} update={update} />} />
+              <Route path="/ressources" element={<Ressources data={data} update={update} />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Layout>

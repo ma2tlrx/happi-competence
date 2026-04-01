@@ -239,6 +239,15 @@ function migrateData(parsed) {
     parsed.evaluations = defaultData.evaluations;
   }
 
+  // Migrate: inject pdfUrl into canonical sessions if missing
+  const pdfUrlMap = { sess_1: '/pdfs/session-1.pdf', sess_2: '/pdfs/session-2.pdf', sess_3: '/pdfs/session-3.pdf', sess_4: '/pdfs/session-4.pdf', sess_5: '/pdfs/session-5.pdf' };
+  if (parsed.sessions) {
+    parsed.sessions = parsed.sessions.map(s => {
+      if (pdfUrlMap[s.id] && !s.pdfUrl) return { ...s, pdfUrl: pdfUrlMap[s.id] };
+      return s;
+    });
+  }
+
   return parsed;
 }
 

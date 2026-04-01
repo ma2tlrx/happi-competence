@@ -1,11 +1,11 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { X, Maximize, Minimize, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Upload, FileText } from 'lucide-react';
 
 /* ══════════════════════════════════════════════════════════════════
    PDF READER — liseuse de session
-   Affiche le PDF attaché à la session (pdfData base64).
+   Affiche le PDF attaché à la session (pdfData base64 ou pdfUrl).
    Utilise pdfjs-dist pour un rendu canvas cohérent sur tous navigateurs.
 ══════════════════════════════════════════════════════════════════ */
 
@@ -13,7 +13,7 @@ let pdfjsLib = null;
 async function loadPdfjs() {
   if (pdfjsLib) return pdfjsLib;
   const mod = await import('pdfjs-dist');
-  mod.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${mod.version}/build/pdf.worker.min.mjs`;
+  mod.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${mod.version}/build/pdf.worker.min.js`;
   pdfjsLib = mod;
   return mod;
 }
@@ -38,9 +38,12 @@ export default function SessionPlayer({ data: dataProp, update }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  /* ── Load PDF from session data ─────────────────────────────── */
+  /* ── Load PDF from session data (base64) or pdfUrl ─────────── */
   useEffect(() => {
-    if (!session?.pdfData) { setPdfDoc(null); return; }
+    const hasPdfData = !!session?.pdfData;
+    const hasPdfUrl = !!session?.pdfUrl;
+    if (!hasPdfData && !hasPdfUrl) { setPdfDoc(null); return; }
+
     let cancelled = false;
     setLoading(true);
     setError('');
@@ -48,11 +51,19 @@ export default function SessionPlayer({ data: dataProp, update }) {
     (async () => {
       try {
         const pdfjs = await loadPdfjs();
-        // base64 data URL → binary
-        const raw = atob(session.pdfData.split(',')[1]);
-        const bytes = new Uint8Array(raw.length);
-        for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-        const doc = await pdfjs.getDocument({ data: bytes }).promise;
+        let doc;
+
+        if (hasPdfData) {
+          // base64 data URL → binary
+          const raw = atob(session.pdfData.split(',')[1]);
+          const bytes = new Uint8Array(raw.length);
+          for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+          doc = await pdfjs.getDocument({ data: bytes }).promise;
+        } else {
+          // Load from URL (public folder)
+          doc = await pdfjs.getDocument(session.pdfUrl).promise;
+        }
+
         if (!cancelled) {
           setPdfDoc(doc);
           setTotalPages(doc.numPages);
@@ -67,7 +78,7 @@ export default function SessionPlayer({ data: dataProp, update }) {
     })();
 
     return () => { cancelled = true; };
-  }, [session?.pdfData]);
+  }, [session?.pdfData, session?.pdfUrl]);
 
   /* ── Render current page to canvas ──────────────────────────── */
   useEffect(() => {
@@ -157,7 +168,7 @@ export default function SessionPlayer({ data: dataProp, update }) {
   /* ── Session not found ──────────────────────────────────────── */
   if (!session) {
     return (
-      <div className="min-h-screen bg-[#1e1e2e] flex items-center justify-center text-white">
+      <div className="min-h-screen bg-happi-teal flex items-center justify-center text-white">
         <div className="text-center">
           <p className="text-lg mb-4">Session introuvable</p>
           <button onClick={() => navigate('/sessions')} className="underline opacity-70 hover:opacity-100">
@@ -169,15 +180,15 @@ export default function SessionPlayer({ data: dataProp, update }) {
   }
 
   /* ── No PDF → upload prompt ─────────────────────────────────── */
-  if (!session.pdfData) {
+  if (!session.pdfData && !session.pdfUrl) {
     return (
-      <div className="min-h-screen bg-[#1e1e2e] flex items-center justify-center text-white">
+      <div className="min-h-screen bg-happi-teal flex items-center justify-center text-white">
         <div className="text-center max-w-md px-6">
-          <div className="w-20 h-20 rounded-3xl bg-white/5 flex items-center justify-center mx-auto mb-6">
-            <FileText size={36} className="text-white/30" />
+          <div className="w-20 h-20 rounded-3xl bg-happi-teal-light flex items-center justify-center mx-auto mb-6">
+            <FileText size={36} className="text-happi-teal-muted" />
           </div>
           <h2 className="text-xl font-semibold mb-2">{session.nom}</h2>
-          <p className="text-white/50 text-sm mb-8">
+          <p className="text-happi-teal-muted text-sm mb-8">
             Aucun document PDF n'est rattaché à cette session.<br />
             Importez un fichier pour commencer la lecture.
           </p>
@@ -191,12 +202,12 @@ export default function SessionPlayer({ data: dataProp, update }) {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-happi-orange text-white font-semibold hover:bg-happi-orange-dark transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-happi-orange text-white font-semibold hover:bg-happi-orange-dark transition-colors shadow-orange"
           >
             <Upload size={18} /> Importer un PDF
           </button>
           <div className="mt-4">
-            <button onClick={() => navigate(-1)} className="text-sm text-white/40 hover:text-white/70 underline">
+            <button onClick={() => navigate(-1)} className="text-sm text-happi-teal-muted hover:text-white underline">
               Retour
             </button>
           </div>
@@ -207,13 +218,13 @@ export default function SessionPlayer({ data: dataProp, update }) {
 
   /* ── PDF Viewer ─────────────────────────────────────────────── */
   return (
-    <div ref={containerRef} className="h-screen flex flex-col bg-[#1e1e2e] text-white select-none">
+    <div ref={containerRef} className="h-screen flex flex-col bg-happi-teal text-white select-none">
 
       {/* ── Top bar ── */}
-      <div className="flex items-center gap-2 px-3 py-2 bg-[#2a2a3e] border-b border-white/5 flex-shrink-0 z-10">
+      <div className="flex items-center gap-2 px-3 py-2 bg-happi-teal-light border-b border-white/5 flex-shrink-0 z-10">
         <button
           onClick={() => navigate(-1)}
-          className="p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+          className="p-2 rounded-lg hover:bg-happi-teal-mid text-happi-teal-muted hover:text-white transition-colors"
           title="Fermer"
         >
           <X size={18} />
@@ -224,41 +235,41 @@ export default function SessionPlayer({ data: dataProp, update }) {
         </h1>
 
         {/* Page navigation */}
-        <div className="flex items-center gap-1 bg-white/5 rounded-lg px-1">
+        <div className="flex items-center gap-1 bg-happi-teal/50 rounded-lg px-1">
           <button
             onClick={() => setPage(p => Math.max(p - 1, 1))}
             disabled={page <= 1}
-            className="p-1.5 rounded hover:bg-white/10 disabled:opacity-20 transition-colors"
+            className="p-1.5 rounded hover:bg-happi-teal-mid disabled:opacity-20 transition-colors"
           >
             <ChevronLeft size={16} />
           </button>
-          <span className="text-xs text-white/60 tabular-nums min-w-[4rem] text-center">
+          <span className="text-xs text-happi-teal-muted tabular-nums min-w-[4rem] text-center">
             {page} / {totalPages}
           </span>
           <button
             onClick={() => setPage(p => Math.min(p + 1, totalPages))}
             disabled={page >= totalPages}
-            className="p-1.5 rounded hover:bg-white/10 disabled:opacity-20 transition-colors"
+            className="p-1.5 rounded hover:bg-happi-teal-mid disabled:opacity-20 transition-colors"
           >
             <ChevronRight size={16} />
           </button>
         </div>
 
         {/* Zoom */}
-        <div className="flex items-center gap-1 bg-white/5 rounded-lg px-1">
+        <div className="flex items-center gap-1 bg-happi-teal/50 rounded-lg px-1">
           <button
             onClick={() => setScale(s => Math.max(s - 0.25, 0.5))}
-            className="p-1.5 rounded hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded hover:bg-happi-teal-mid transition-colors"
             title="Zoom arrière"
           >
             <ZoomOut size={16} />
           </button>
-          <span className="text-xs text-white/60 tabular-nums min-w-[3rem] text-center">
+          <span className="text-xs text-happi-teal-muted tabular-nums min-w-[3rem] text-center">
             {Math.round(scale * 100)}%
           </span>
           <button
             onClick={() => setScale(s => Math.min(s + 0.25, 4))}
-            className="p-1.5 rounded hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded hover:bg-happi-teal-mid transition-colors"
             title="Zoom avant"
           >
             <ZoomIn size={16} />
@@ -268,7 +279,7 @@ export default function SessionPlayer({ data: dataProp, update }) {
         {/* Fullscreen */}
         <button
           onClick={toggleFullscreen}
-          className="p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+          className="p-2 rounded-lg hover:bg-happi-teal-mid text-happi-teal-muted hover:text-white transition-colors"
           title={isFullscreen ? 'Quitter plein écran' : 'Plein écran'}
         >
           {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
@@ -284,7 +295,7 @@ export default function SessionPlayer({ data: dataProp, update }) {
         />
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+          className="p-2 rounded-lg hover:bg-happi-teal-mid text-happi-teal-muted hover:text-white transition-colors"
           title="Changer le PDF"
         >
           <Upload size={18} />
@@ -292,10 +303,10 @@ export default function SessionPlayer({ data: dataProp, update }) {
       </div>
 
       {/* ── Canvas area ── */}
-      <div className="flex-1 overflow-auto flex justify-center bg-[#1a1a2a]">
+      <div className="flex-1 overflow-auto flex justify-center bg-happi-teal">
         {loading && (
           <div className="flex items-center justify-center h-full">
-            <div className="w-8 h-8 border-2 border-white/20 border-t-happi-orange rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-happi-teal-muted border-t-happi-orange rounded-full animate-spin" />
           </div>
         )}
         {error && (

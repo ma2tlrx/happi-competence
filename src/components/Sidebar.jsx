@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Calendar, BarChart2, Settings, LogOut, SlidersHorizontal, ChevronLeft } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, BarChart2, Settings, LogOut, SlidersHorizontal, ChevronLeft, FileText } from 'lucide-react';
 import logo from '../assets/logo.png';
 
 const navSections = [
@@ -15,8 +15,9 @@ const navSections = [
   {
     label: 'Outils',
     items: [
-      { path: '/baremes',  icon: SlidersHorizontal, label: 'Barèmes'    },
-      { path: '/settings', icon: Settings,          label: 'Paramètres' },
+      { path: '/ressources', icon: FileText,           label: 'Ressources' },
+      { path: '/baremes',    icon: SlidersHorizontal,  label: 'Barèmes'    },
+      { path: '/settings',   icon: Settings,           label: 'Paramètres' },
     ],
   },
 ];
