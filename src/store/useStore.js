@@ -199,49 +199,26 @@ const defaultData = {
 
 /* ─── Migrate / validate a parsed data object ─────────────────────────── */
 function migrateData(parsed) {
-  const firstP = parsed.participants?.[0];
-  const hasOldCompetences = firstP && (
-    'Bon relationnel' in (firstP.competences || {}) ||
-    'Adaptabilité'    in (firstP.competences || {}) ||
-    ('Sensibilité sociale' in (firstP.competences || {}))
-  );
-  const missingHbs        = firstP && !firstP.hbs;
-  const missingCTFormat   = firstP && firstP.competences && !('Rigueur' in (firstP.competences || {}));
-  const missingHbsJeu     = firstP && !('hbsJeu'      in firstP);
-  const missingCtAutoEval = firstP && !('ctAutoEval'  in firstP);
-
-  if (hasOldCompetences || missingHbs || missingCTFormat || missingHbsJeu || missingCtAutoEval) {
-    return {
-      ...defaultData,
-      isLoggedIn:      parsed.isLoggedIn,
-      user:            parsed.user,
-      users:           parsed.users           || defaultData.users,
-      talentPasswords: parsed.talentPasswords || {},
-    };
-  }
-
+  // Ensure required collections exist (non-destructive — never wipe user data)
   if (!parsed.participants || parsed.participants.length === 0) parsed.participants = initialParticipants;
   if (!parsed.sessions    || parsed.sessions.length    === 0) parsed.sessions    = initialSessions;
   if (!parsed.presences)   parsed.presences   = initialPresences;
   if (!parsed.evaluations) parsed.evaluations = initialEvaluations;
-
   if (!parsed.users || parsed.users.length === 0) parsed.users = defaultData.users;
   if (!parsed.talentPasswords) parsed.talentPasswords = {};
   if (!parsed.baremes || !parsed.baremes.some(b => b.id === 'b_sess_1')) {
     parsed.baremes = DEFAULT_BAREMES;
   }
+  if (!parsed.hiddenTemplates) parsed.hiddenTemplates = [];
 
-  const sess1 = parsed.sessions?.find(s => s.id === 'sess_1');
-  const hasNewStepContent = sess1?.steps?.[0]?.content?.includes('Objectifs de la session');
-  if (!parsed.sessions || !parsed.sessions.some(s => s.id === 'sess_1') || !hasNewStepContent) {
-    parsed.sessions    = defaultData.sessions;
-    parsed.presences   = defaultData.presences;
-    parsed.evaluations = defaultData.evaluations;
-  }
-
-  // Migrate: inject pdfUrl into canonical sessions if missing
+  // Ensure canonical sessions exist (add missing ones, keep user-created ones)
   const pdfUrlMap = { sess_1: '/pdfs/session-1.pdf', sess_2: '/pdfs/session-2.pdf', sess_3: '/pdfs/session-3.pdf', sess_4: '/pdfs/session-4.pdf', sess_5: '/pdfs/session-5.pdf' };
   if (parsed.sessions) {
+    for (const defSess of defaultData.sessions) {
+      if (!parsed.sessions.some(s => s.id === defSess.id)) {
+        parsed.sessions.push(defSess);
+      }
+    }
     parsed.sessions = parsed.sessions.map(s => {
       if (pdfUrlMap[s.id] && !s.pdfUrl) return { ...s, pdfUrl: pdfUrlMap[s.id] };
       return s;
@@ -262,51 +239,73 @@ function loadLocalData() {
   return defaultData;
 }
 
-/* ─── Push data to Supabase (fire-and-forget) ────────────────────────── */
+/* ─── Push data to Supabase ──────────────────────────────────────────── */
 async function pushToSupabase(data) {
   if (!supabase) return;
   try {
-    await supabase.from('app_data').upsert(
-      { org_id: 'default', data, updated_at: new Date().toISOString() },
-      { onConflict: 'org_id' }
-    );
+    const payload = { data, updated_at: new Date().toISOString() };
+    const { data: updated, error: updateErr } = await supabase
+      .from('app_data')
+      .update(payload)
+      .eq('org_id', 'default')
+      .select('org_id');
+    if (!updateErr && updated && updated.length > 0) return;
+    // Row doesn't exist — insert
+    const { error: insertErr } = await supabase
+      .from('app_data')
+      .insert({ org_id: 'default', ...payload });
+    if (insertErr) console.warn('Supabase insert failed:', insertErr);
   } catch (e) {
     console.warn('Supabase sync failed (push):', e);
   }
 }
 
+/* ─── Pull data from Supabase ────────────────────────────────────────── */
+async function pullFromSupabase() {
+  if (!supabase) return null;
+  try {
+    const { data: row, error } = await supabase
+      .from('app_data')
+      .select('data')
+      .eq('org_id', 'default')
+      .single();
+    if (error || !row?.data) return null;
+    return migrateData(row.data);
+  } catch (e) {
+    console.warn('Supabase sync failed (pull):', e);
+    return null;
+  }
+}
+
 export function useStore() {
   const [data, setData] = useState(loadLocalData);
-  const syncedRef = useRef(false); // has Supabase data been fetched once?
-  const isInitialMount = useRef(true); // skip first Supabase push to avoid overwriting remote
+  const readyRef = useRef(false);   // true after initial Supabase pull is done
 
-  /* ── On mount: pull latest data from Supabase ─────────────────────── */
+  /* ── On mount: pull from Supabase, use newer version ─────────────── */
   useEffect(() => {
-    if (!supabase || syncedRef.current) return;
-    syncedRef.current = true;
+    if (!supabase) { readyRef.current = true; return; }
 
-    supabase.from('app_data').select('data').eq('org_id', 'default').single()
-      .then(({ data: row, error }) => {
-        if (error || !row?.data) {
-          // No remote data yet — push local data to bootstrap Supabase
-          setData(prev => { pushToSupabase(prev); return prev; });
-          return;
+    pullFromSupabase().then(remoteData => {
+      if (!remoteData) {
+        // No remote data — bootstrap Supabase with local
+        readyRef.current = true;
+        pushToSupabase(loadLocalData());
+        return;
+      }
+      setData(prev => {
+        const localTs  = prev._updatedAt  || 0;
+        const remoteTs = remoteData._updatedAt || 0;
+        if (remoteTs > localTs) {
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteData)); } catch (_) {}
+          readyRef.current = true;
+          return remoteData;
         }
-        const remoteData = migrateData(row.data);
-        setData(prev => {
-          const localTs  = prev._updatedAt  || 0;
-          const remoteTs = remoteData._updatedAt || 0;
-          if (remoteTs > localTs) {
-            // Remote is newer — use it and sync localStorage
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteData)); } catch (_) {}
-            return remoteData;
-          }
-          // Local is newer or equal — push local to Supabase to sync remote
-          pushToSupabase(prev);
-          return prev;
-        });
-      })
-      .catch(e => console.warn('Supabase sync failed (pull):', e));
+        // Local is newer — push it
+        readyRef.current = true;
+        pushToSupabase(prev);
+        return prev;
+      });
+    }).catch(() => { readyRef.current = true; });
   }, []);
 
   /* ── Persist every state change to localStorage + Supabase ─────────── */
@@ -314,13 +313,10 @@ export function useStore() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {
       console.error('Failed to save to localStorage', e);
     }
-    // Skip the very first render to avoid overwriting newer Supabase data
-    // with potentially stale local data before the pull completes
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
+    // Only push to Supabase AFTER the initial pull is done (avoid overwriting remote)
+    if (readyRef.current && data._updatedAt) {
+      pushToSupabase(data);
     }
-    pushToSupabase(data);
   }, [data]);
 
   const update = (updater) => {
