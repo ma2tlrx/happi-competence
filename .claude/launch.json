@@ -2,16 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "Vite Dev Server",
+      "name": "Next.js (développement)",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["node_modules/vite/bin/vite.js", "--port", "5173"],
-      "port": 5173
+      "runtimeArgs": ["node_modules/next/dist/bin/next", "dev", "--port", "3000"],
+      "port": 3000
     },
     {
-      "name": "Vite Preview",
+      "name": "Next.js (production locale)",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["node_modules/vite/bin/vite.js", "preview", "--port", "4173"],
-      "port": 4173
+      "runtimeArgs": ["node_modules/next/dist/bin/next", "start", "--port", "3000"],
+      "port": 3000
     }
   ]
 }

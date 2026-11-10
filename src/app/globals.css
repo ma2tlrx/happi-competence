@@ -1,0 +1,358 @@
+@import 'tailwindcss';
+
+/*
+ * Design system HAPPI — jetons
+ * Deux couleurs identitaires : vert pétrole (structure) et orange (action).
+ * L'orange reste rare : boutons principaux, élément actif, focus.
+ */
+@theme {
+  /* Typographie */
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: var(--font-poppins), var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+
+  /* Couleurs : on repart d'une palette vide pour ne garder que l'identité HAPPI */
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --color-petrol-950: #0a1e22;
+  --color-petrol-900: #102c32;
+  --color-petrol-800: #173a41;
+  --color-petrol-700: #21505a;
+  --color-petrol-600: #2f6873;
+  --color-petrol-500: #47828d;
+  --color-petrol-400: #76a3ac;
+  --color-petrol-300: #a5c3c9;
+  --color-petrol-200: #cadce0;
+  --color-petrol-100: #e3edef;
+  --color-petrol-50: #f1f6f7;
+
+  --color-orange-700: #b8431a;
+  --color-orange-600: #d2541f;
+  --color-orange-500: #ea632e;
+  --color-orange-400: #f0733f;
+  --color-orange-300: #f4a17e;
+  --color-orange-200: #f9cdb9;
+  --color-orange-100: #fce5da;
+  --color-orange-50: #fef3ee;
+
+  --color-paper: #f5f5f2;
+  --color-line: #e5e5e0;
+  --color-line-strong: #d3d3cb;
+
+  --color-ink: #102c32;
+  --color-ink-muted: #4b6166;
+  --color-ink-subtle: #5c7277;
+
+  /* États : toujours accompagnés d'une icône et d'un libellé */
+  --color-success: #1f7a5c;
+  --color-success-soft: #e4f3ec;
+  --color-warning: #8a5b00;
+  --color-warning-soft: #fbf0d9;
+  --color-danger: #b42318;
+  --color-danger-soft: #fde9e7;
+
+  /* Graphiques : couple validé (daltonisme, contraste) sur fond clair et sur fond pétrole */
+  --color-chart-observed: #00819b;
+  --color-chart-self: #ea632e;
+  --color-chart-observed-dark: #33a0b8;
+  --color-chart-grid: #e5e5e0;
+
+  /* Formes */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+
+  --shadow-xs: 0 1px 2px rgb(16 44 50 / 0.06);
+  --shadow-sm: 0 1px 2px rgb(16 44 50 / 0.06), 0 2px 6px -2px rgb(16 44 50 / 0.08);
+  --shadow-md: 0 8px 24px -8px rgb(16 44 50 / 0.16);
+  --shadow-lg: 0 24px 56px -20px rgb(16 44 50 / 0.28);
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-quad: cubic-bezier(0.45, 0, 0.55, 1);
+
+  --animate-fade-in: fade-in 0.25s var(--ease-out-quint) both;
+  --animate-rise: rise 0.4s var(--ease-out-quint) both;
+  --animate-pop: pop 0.3s var(--ease-out-quint) both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes pop {
+    0% {
+      opacity: 0;
+      transform: scale(0.94);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-padding-top: 5.5rem;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--color-ink);
+    text-wrap: balance;
+  }
+
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: var(--color-orange-200);
+    color: var(--color-petrol-950);
+  }
+
+  /* Focus clavier : visible sur fond clair comme sur fond pétrole */
+  :focus-visible {
+    outline: 2px solid var(--color-orange-500);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+
+  button,
+  [role='button'],
+  summary {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+
+  /* Empêche le zoom automatique d'iOS dans les champs de formulaire */
+  @media (max-width: 640px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+}
+
+@layer utilities {
+  /* Titres : interlettrage resserré aux grandes tailles */
+  .text-display-xl {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
+    line-height: 1.03;
+    letter-spacing: -0.035em;
+  }
+  .text-display-lg {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2rem, 1.5rem + 2.1vw, 3.25rem);
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+  }
+  .text-display-md {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.625rem, 1.35rem + 1.1vw, 2.25rem);
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+  }
+  .text-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.25rem;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+  }
+  .text-lead {
+    font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+    line-height: 1.55;
+    color: var(--color-ink-muted);
+  }
+
+  /* Conteneurs */
+  .container-site {
+    width: 100%;
+    max-width: 76rem;
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+  }
+  .container-prose {
+    width: 100%;
+    max-width: 44rem;
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+  }
+
+  /* Motif « pixel » : clin d'œil discret au jeu vidéo, sur fond pétrole uniquement */
+  .bg-pixel-grid {
+    background-image: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.07) 1px, transparent 0);
+    background-size: 18px 18px;
+  }
+
+  .skeleton {
+    border-radius: var(--radius-sm);
+    background: linear-gradient(90deg, var(--color-line) 25%, #efefeb 37%, var(--color-line) 63%);
+    background-size: 400% 100%;
+    animation: var(--animate-shimmer);
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pb-safe {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Contenu Markdown (supports pédagogiques, pages légales) */
+.prose-happi {
+  color: var(--color-ink);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+}
+.prose-happi > * + * {
+  margin-top: 0.85em;
+}
+.prose-happi h3 {
+  font-size: 1.125rem;
+  margin-top: 1.6em;
+}
+.prose-happi h4 {
+  font-size: 1rem;
+  margin-top: 1.4em;
+}
+.prose-happi ul,
+.prose-happi ol {
+  padding-left: 1.3em;
+}
+.prose-happi ul {
+  list-style: disc;
+}
+.prose-happi ol {
+  list-style: decimal;
+}
+.prose-happi li + li {
+  margin-top: 0.35em;
+}
+.prose-happi li::marker {
+  color: var(--color-petrol-400);
+}
+.prose-happi strong {
+  font-weight: 600;
+}
+.prose-happi a {
+  color: var(--color-petrol-700);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose-happi blockquote {
+  border-left: 3px solid var(--color-orange-300);
+  padding: 0.35em 0 0.35em 1em;
+  color: var(--color-ink-muted);
+}
+.prose-happi code {
+  font-size: 0.9em;
+  background: var(--color-petrol-50);
+  border-radius: var(--radius-xs);
+  padding: 0.1em 0.35em;
+}
+.prose-happi hr {
+  border: 0;
+  border-top: 1px solid var(--color-line);
+  margin-block: 1.6em;
+}
+.prose-happi table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95em;
+  display: block;
+  overflow-x: auto;
+}
+.prose-happi th,
+.prose-happi td {
+  border: 1px solid var(--color-line);
+  padding: 0.55em 0.75em;
+  text-align: left;
+  vertical-align: top;
+}
+.prose-happi th {
+  background: var(--color-petrol-50);
+  font-weight: 600;
+}
+
+/* Mouvement réduit : on coupe les animations décoratives */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Impression (feuilles de présence, bilans) */
+@media print {
+  body {
+    background: #fff;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
