@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: 'Mon passeport' };
 export default async function ParticipantDashboard({ searchParams }: { searchParams: Promise<{ bienvenue?: string }> }) {
   const { bienvenue } = await searchParams;
   const { passport } = await getMyPassport();
-  const { participant, group, sessions } = passport;
+  const { participant, group } = passport;
   const total = group?.sessionsCount ?? 6;
   const observed = passport.frameworks.reduce((sum, framework) => sum + framework.observedCount, 0);
   const skillsTotal = passport.frameworks.reduce((sum, framework) => sum + framework.skills.length, 0);

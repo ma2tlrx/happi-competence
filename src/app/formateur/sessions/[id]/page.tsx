@@ -3,7 +3,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { AttendanceBadge } from '@/components/passport/session-status';
-import { Button } from '@/components/ui/button';
 import { Avatar, Badge, Card, CardBody, CardHeader, EmptyState, ProvisionalBadge } from '@/components/ui/primitives';
 import { hasPermission } from '@/lib/auth/session';
 

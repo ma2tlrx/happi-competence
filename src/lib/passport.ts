@@ -218,7 +218,11 @@ export async function getPassport(supabase: ServerClient, participantId: string)
   if (versionIds.size === 0) {
     const { data: published } = await supabase.from('framework_versions').select('id, framework_id, version_number').eq('status', 'published').order('version_number', { ascending: false });
     const seen = new Set<string>();
-    for (const row of published ?? []) if (!seen.has(row.framework_id)) (seen.add(row.framework_id), versionIds.add(row.id));
+    for (const row of published ?? []) {
+      if (seen.has(row.framework_id)) continue;
+      seen.add(row.framework_id);
+      versionIds.add(row.id);
+    }
   }
 
   const [versionsResult, skillsResult, categoriesResult, levelsResult] = await Promise.all([
