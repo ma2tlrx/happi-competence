@@ -112,3 +112,10 @@ export function safeInternalPath(value: string | null | undefined, fallback = '/
   if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return fallback;
   return value;
 }
+
+/** Date ISO située `days` jours avant maintenant (utilisable dans les composants serveur). */
+export function isoDaysAgo(days: number) {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString();
+}
