@@ -899,11 +899,14 @@ begin
   if v_status is distinct from 'draft' then
     raise exception 'Cette version du référentiel est publiée : elle ne peut plus être modifiée. Créez une nouvelle version.' using errcode = 'P0001';
   end if;
-  if tg_op = 'UPDATE' and tg_table_name not in ('skill_level_descriptors', 'skill_criteria')
-     and new.version_id is distinct from old.version_id then
-    raise exception 'Un élément ne peut pas changer de version.' using errcode = 'P0001';
+  -- Test imbriqué : new.version_id n'existe pas sur les tables rattachées à une compétence.
+  if tg_op = 'UPDATE' and tg_table_name not in ('skill_level_descriptors', 'skill_criteria') then
+    if new.version_id is distinct from old.version_id then
+      raise exception 'Un élément ne peut pas changer de version.' using errcode = 'P0001';
+    end if;
   end if;
-  return case when tg_op = 'DELETE' then old else new end;
+  if tg_op = 'DELETE' then return old; end if;
+  return new;
 end;
 $$;
 create trigger scale_levels_guard before insert or update or delete on public.scale_levels
@@ -999,7 +1002,8 @@ begin
   if v_status is distinct from 'draft' then
     raise exception 'Ce questionnaire est publié : il ne peut plus être modifié. Créez une nouvelle version.' using errcode = 'P0001';
   end if;
-  return case when tg_op = 'DELETE' then old else new end;
+  if tg_op = 'DELETE' then return old; end if;
+  return new;
 end;
 $$;
 create trigger questionnaire_questions_guard before insert or update or delete on public.questionnaire_questions
