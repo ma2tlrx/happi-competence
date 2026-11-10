@@ -35,7 +35,12 @@ export function SiteHeader({ account, tone = 'light' }: { account: HeaderAccount
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  useEffect(() => setOpen(false), [pathname]);
+  // Ferme le menu lors d'un changement de page (ajustement d'état pendant le rendu, sans effet).
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
+    setOpen(false);
+  }
 
   // En haut d'une page à fond pétrole, l'en-tête est transparent et clair ; au défilement il devient blanc.
   const dark = tone === 'dark' && !scrolled && !open;

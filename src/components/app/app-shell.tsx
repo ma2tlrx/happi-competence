@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 
 import { Avatar } from '@/components/ui/primitives';
 import { Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger } from '@/components/ui/overlays';
@@ -37,7 +37,7 @@ function Sidebar({ space, onNavigate }: { space: AppSpace; onNavigate?: () => vo
                     onClick={onNavigate}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
-                      'relative flex h-10 items-center gap-3 rounded-md px-3 text-[0.9375rem] font-medium transition-colors',
+                      'relative flex min-h-10 items-center gap-3 rounded-md px-3 py-2 text-[0.9375rem] leading-snug font-medium transition-colors',
                       active ? 'bg-white/10 text-white' : 'text-white/65 hover:bg-white/5 hover:text-white',
                     )}
                   >
@@ -70,7 +70,12 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const [drawer, setDrawer] = useState(false);
-  useEffect(() => setDrawer(false), [pathname]);
+  // Ferme le menu lors d'un changement de page (ajustement d'état pendant le rendu, sans effet).
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
+    setDrawer(false);
+  }
   const person = { first_name: user.firstName, last_name: user.lastName };
   const mobileItems = NAVIGATION[space].flatMap((group) => group.items).filter((item) => item.mobile).slice(0, 5);
 
