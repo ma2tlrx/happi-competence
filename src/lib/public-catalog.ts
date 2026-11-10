@@ -6,7 +6,7 @@ import { cache } from 'react';
 import type { Database } from '@/lib/supabase/database.types';
 import { isSupabaseConfigured } from '@/lib/supabase/env';
 
-export type PublicSkill = { code: string; name: string; description: string | null };
+export type PublicSkill = { code: string; name: string; description: string | null; sessions?: number[] };
 export type PublicCategory = { code: string; name: string; description: string | null; skills: PublicSkill[] };
 export type PublicFramework = {
   code: string;
