@@ -150,12 +150,12 @@ export function Pagination({ page, pageCount, total, label = 'résultats' }: { p
 }
 
 /** Onglets de navigation entre pages (état actif d'après l'URL). */
-export function LinkTabs({ tabs, className, label }: { tabs: { href: string; label: ReactNode; exact?: boolean }[]; className?: string; label: string }) {
+export function LinkTabs({ tabs, className, label }: { tabs: { href: string; label: ReactNode; exact?: boolean; active?: boolean }[]; className?: string; label: string }) {
   const pathname = usePathname();
   return (
     <nav aria-label={label} className={cn('scrollbar-none -mx-1 flex gap-1 overflow-x-auto border-b border-line px-1', className)}>
       {tabs.map((tab) => {
-        const active = tab.exact ? pathname === tab.href : pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+        const active = tab.active !== undefined ? tab.active : tab.exact ? pathname === tab.href : pathname === tab.href || pathname.startsWith(`${tab.href}/`);
         return (
           <Link
             key={tab.href}
