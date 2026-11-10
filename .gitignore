@@ -33,3 +33,6 @@ coverage
 .idea
 .vscode/*
 !.vscode/extensions.json
+
+# Captures d’écran locales
+/captures/
