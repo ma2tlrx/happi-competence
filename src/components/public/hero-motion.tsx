@@ -1,35 +1,23 @@
-"use client";
+'use client';
 
-import {
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useSpring,
-  useTransform,
-} from "motion/react";
-import Image from "next/image";
-import { Fragment, useEffect, useRef, type ReactNode } from "react";
+import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'motion/react';
+import Image from 'next/image';
+import { Fragment, useEffect, useRef, type ReactNode } from 'react';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 /** Titre dévoilé ligne par ligne au chargement (masque + glissement). */
-export function SplitHeadline({
-  lines,
-  className,
-}: {
-  lines: string[];
-  className?: string;
-}) {
+export function SplitHeadline({ lines, className }: { lines: string[]; className?: string }) {
   return (
     <h1 className={className}>
       {lines.map((line, index) => (
         <Fragment key={line}>
-          {index > 0 ? " " : null}
+          {index > 0 ? ' ' : null}
           <span className="block overflow-hidden pb-[0.08em]">
             <motion.span
               className="block"
-              initial={{ y: "110%", rotate: 2 }}
-              animate={{ y: "0%", rotate: 0 }}
+              initial={{ y: '110%', rotate: 2 }}
+              animate={{ y: '0%', rotate: 0 }}
               transition={{
                 duration: 0.9,
                 delay: 0.1 + index * 0.09,
@@ -46,15 +34,7 @@ export function SplitHeadline({
 }
 
 /** Apparition au chargement, synchronisée avec le titre. */
-export function Intro({
-  children,
-  delay = 0,
-  className,
-}: {
-  children: ReactNode;
-  delay?: number;
-  className?: string;
-}) {
+export function Intro({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) {
   return (
     <motion.div
       className={className}
@@ -68,13 +48,7 @@ export function Intro({
 }
 
 /** Élément attiré par le curseur (souris uniquement). */
-export function Magnetic({
-  children,
-  strength = 0.28,
-}: {
-  children: ReactNode;
-  strength?: number;
-}) {
+export function Magnetic({ children, strength = 0.28 }: { children: ReactNode; strength?: number }) {
   const ref = useRef<HTMLSpanElement>(null);
   const reduce = useReducedMotion();
   const x = useSpring(0, { stiffness: 220, damping: 16, mass: 0.4 });
@@ -86,7 +60,7 @@ export function Magnetic({
       className="inline-flex"
       style={{ x, y }}
       onPointerMove={(event) => {
-        if (reduce || event.pointerType !== "mouse" || !ref.current) return;
+        if (reduce || event.pointerType !== 'mouse' || !ref.current) return;
         const rect = ref.current.getBoundingClientRect();
         x.set((event.clientX - rect.left - rect.width / 2) * strength);
         y.set((event.clientY - rect.top - rect.height / 2) * strength);
@@ -125,8 +99,8 @@ export function HeroMascot() {
       px.set((event.clientX / window.innerWidth) * 2 - 1);
       py.set((event.clientY / window.innerHeight) * 2 - 1);
     };
-    window.addEventListener("pointermove", onMove);
-    return () => window.removeEventListener("pointermove", onMove);
+    window.addEventListener('pointermove', onMove);
+    return () => window.removeEventListener('pointermove', onMove);
   }, [px, py, reduce]);
 
   return (
@@ -141,7 +115,7 @@ export function HeroMascot() {
       <motion.div
         style={{ rotateX, rotateY, x: shiftX }}
         animate={reduce ? undefined : { y: [0, -10, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
       >
         <Image
           src="/brand/happi-mascotte-3d.webp"

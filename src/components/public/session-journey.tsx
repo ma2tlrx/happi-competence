@@ -1,13 +1,7 @@
-"use client";
+'use client';
 
-import {
-  AnimatePresence,
-  motion,
-  useMotionValueEvent,
-  useScroll,
-  useSpring,
-} from "motion/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useMotionValueEvent, useScroll, useSpring } from 'motion/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export type JourneySession = {
   number: number;
@@ -16,7 +10,7 @@ export type JourneySession = {
 };
 export type JourneySkill = {
   name: string;
-  kind: "ct" | "hbs";
+  kind: 'ct' | 'hbs';
   sessions: number[];
 };
 
@@ -45,21 +39,15 @@ function ring(skills: JourneySkill[], radius: number, offset: number): Point[] {
  * constellation des compétences s'allume session après session, d'après la
  * correspondance sessions / compétences du référentiel publié.
  */
-export function SessionJourney({
-  sessions,
-  skills,
-}: {
-  sessions: JourneySession[];
-  skills: JourneySkill[];
-}) {
+export function SessionJourney({ sessions, skills }: { sessions: JourneySession[]; skills: JourneySkill[] }) {
   // Lu après l'hydratation : le serveur ne connaît pas la préférence du visiteur.
   const [reduce, setReduce] = useState(false);
   useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
     const update = () => setReduce(query.matches);
     update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
   }, []);
   if (reduce) return <StaticJourney sessions={sessions} skills={skills} />;
   return <PinnedJourney sessions={sessions} skills={skills} />;
@@ -67,27 +55,17 @@ export function SessionJourney({
 
 function skillsOf(skills: JourneySkill[], session: number) {
   return {
-    ct: skills.filter(
-      (skill) => skill.kind === "ct" && skill.sessions.includes(session),
-    ),
-    hbs: skills.filter(
-      (skill) => skill.kind === "hbs" && skill.sessions.includes(session),
-    ),
+    ct: skills.filter((skill) => skill.kind === 'ct' && skill.sessions.includes(session)),
+    hbs: skills.filter((skill) => skill.kind === 'hbs' && skill.sessions.includes(session)),
   };
 }
 
-function PinnedJourney({
-  sessions,
-  skills,
-}: {
-  sessions: JourneySession[];
-  skills: JourneySkill[];
-}) {
+function PinnedJourney({ sessions, skills }: { sessions: JourneySession[]; skills: JourneySkill[] }) {
   const ref = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["start start", "end end"],
+    offset: ['start start', 'end end'],
   });
   const progress = useSpring(scrollYProgress, {
     stiffness: 140,
@@ -96,19 +74,19 @@ function PinnedJourney({
   });
   const count = sessions.length;
 
-  useMotionValueEvent(scrollYProgress, "change", (value) => {
+  useMotionValueEvent(scrollYProgress, 'change', (value) => {
     setActive(Math.min(count - 1, Math.max(0, Math.floor(value * count))));
   });
 
   const points = useMemo(
     () => [
       ...ring(
-        skills.filter((skill) => skill.kind === "ct"),
+        skills.filter((skill) => skill.kind === 'ct'),
         OUTER,
         0,
       ),
       ...ring(
-        skills.filter((skill) => skill.kind === "hbs"),
+        skills.filter((skill) => skill.kind === 'hbs'),
         INNER,
         Math.PI / 16,
       ),
@@ -122,11 +100,7 @@ function PinnedJourney({
   const mobilised = skillsOf(skills, current);
 
   return (
-    <div
-      ref={ref}
-      style={{ height: `${count * 70 + 40}svh` }}
-      className="relative"
-    >
+    <div ref={ref} style={{ height: `${count * 70 + 40}svh` }} className="relative">
       <div className="sticky top-16 flex h-[calc(100svh-4rem)] flex-col overflow-hidden lg:top-[4.5rem] lg:h-[calc(100svh-4.5rem)]">
         {/* Jauge d'expérience */}
         <div className="container-site pt-6 sm:pt-8">
@@ -153,14 +127,14 @@ function PinnedJourney({
                   <motion.span
                     key={current}
                     className="block"
-                    initial={{ y: "100%" }}
+                    initial={{ y: '100%' }}
                     animate={{
-                      y: "0%",
+                      y: '0%',
                       transition: { duration: 0.4, ease: EASE },
                     }}
                     exit={{
-                      y: "-100%",
-                      transition: { duration: 0.2, ease: "easeIn" },
+                      y: '-100%',
+                      transition: { duration: 0.2, ease: 'easeIn' },
                     }}
                   >
                     {current}
@@ -177,19 +151,10 @@ function PinnedJourney({
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.35, ease: EASE }}
               >
-                <h3 className="mt-3 text-display-md text-white">
-                  {session.title}
-                </h3>
-                {session.summary ? (
-                  <p className="mt-3 max-w-lg text-white/70 max-lg:line-clamp-3">
-                    {session.summary}
-                  </p>
-                ) : null}
+                <h3 className="mt-3 text-display-md text-white">{session.title}</h3>
+                {session.summary ? <p className="mt-3 max-w-lg text-white/70 max-lg:line-clamp-3">{session.summary}</p> : null}
                 {mobilised.ct.length + mobilised.hbs.length > 0 ? (
-                  <ul
-                    className="mt-5 flex max-w-xl flex-wrap gap-1.5"
-                    aria-label={`Compétences mobilisées en session ${current}`}
-                  >
+                  <ul className="mt-5 flex max-w-xl flex-wrap gap-1.5" aria-label={`Compétences mobilisées en session ${current}`}>
                     {mobilised.ct.map((skill, index) => (
                       <motion.li
                         key={skill.name}
@@ -226,25 +191,13 @@ function PinnedJourney({
 
         <div className="container-site flex flex-wrap gap-x-6 gap-y-2 pb-6 text-sm text-white/60 max-sm:hidden">
           <span className="inline-flex items-center gap-2">
-            <span
-              className="size-2.5 rounded-[2px] bg-orange-500"
-              aria-hidden
-            />{" "}
-            Compétence transversale mobilisée
+            <span className="size-2.5 rounded-[2px] bg-orange-500" aria-hidden /> Compétence transversale mobilisée
           </span>
           <span className="inline-flex items-center gap-2">
-            <span
-              className="size-2.5 rounded-[2px] bg-orange-300"
-              aria-hidden
-            />{" "}
-            Habileté socio-cognitive mobilisée
+            <span className="size-2.5 rounded-[2px] bg-orange-300" aria-hidden /> Habileté socio-cognitive mobilisée
           </span>
           <span className="inline-flex items-center gap-2">
-            <span
-              className="size-2.5 rounded-[2px] bg-petrol-400"
-              aria-hidden
-            />{" "}
-            Déjà travaillée
+            <span className="size-2.5 rounded-[2px] bg-petrol-400" aria-hidden /> Déjà travaillée
           </span>
         </div>
       </div>
@@ -252,43 +205,13 @@ function PinnedJourney({
   );
 }
 
-function Constellation({
-  points,
-  current,
-}: {
-  points: Point[];
-  current: number;
-}) {
+function Constellation({ points, current }: { points: Point[]; current: number }) {
   return (
-    <svg
-      viewBox={`-130 -10 ${SIZE + 260} ${SIZE + 20}`}
-      className="size-full"
-      aria-hidden
-    >
+    <svg viewBox={`-130 -10 ${SIZE + 260} ${SIZE + 20}`} className="size-full" aria-hidden>
       {/* Anneaux */}
-      <circle
-        cx={C}
-        cy={C}
-        r={OUTER}
-        fill="none"
-        stroke="rgb(255 255 255 / 0.08)"
-        strokeDasharray="2 6"
-      />
-      <circle
-        cx={C}
-        cy={C}
-        r={INNER}
-        fill="none"
-        stroke="rgb(255 255 255 / 0.08)"
-        strokeDasharray="2 6"
-      />
-      <circle
-        cx={C}
-        cy={C}
-        r={60}
-        fill="rgb(234 99 46 / 0.08)"
-        stroke="rgb(234 99 46 / 0.35)"
-      />
+      <circle cx={C} cy={C} r={OUTER} fill="none" stroke="rgb(255 255 255 / 0.08)" strokeDasharray="2 6" />
+      <circle cx={C} cy={C} r={INNER} fill="none" stroke="rgb(255 255 255 / 0.08)" strokeDasharray="2 6" />
+      <circle cx={C} cy={C} r={60} fill="rgb(234 99 46 / 0.08)" stroke="rgb(234 99 46 / 0.35)" />
 
       {/* Liaisons vers la session */}
       {points.map((point) => {
@@ -300,7 +223,7 @@ function Constellation({
             y1={C}
             x2={point.x}
             y2={point.y}
-            stroke={point.kind === "ct" ? "#ea632e" : "#f4a17e"}
+            stroke={point.kind === 'ct' ? '#ea632e' : '#f4a17e'}
             strokeWidth={1.25}
             initial={false}
             animate={{ pathLength: on ? 1 : 0, opacity: on ? 0.55 : 0 }}
@@ -312,18 +235,11 @@ function Constellation({
       {/* Compétences */}
       {points.map((point) => {
         const on = point.sessions.includes(current);
-        const before =
-          !on && point.sessions.some((session) => session < current);
-        const color = on
-          ? point.kind === "ct"
-            ? "#ea632e"
-            : "#f4a17e"
-          : before
-            ? "#76a3ac"
-            : "rgb(255 255 255 / 0.18)";
+        const before = !on && point.sessions.some((session) => session < current);
+        const color = on ? (point.kind === 'ct' ? '#ea632e' : '#f4a17e') : before ? '#76a3ac' : 'rgb(255 255 255 / 0.18)';
         const size = on ? 14 : before ? 9 : 7;
         const cos = Math.cos(point.angle);
-        const label = point.kind === "ct";
+        const label = point.kind === 'ct';
         return (
           <g key={point.name}>
             <motion.rect
@@ -342,14 +258,14 @@ function Constellation({
               <motion.text
                 x={point.x + cos * 18}
                 y={point.y + Math.sin(point.angle) * 18}
-                textAnchor={cos > 0.2 ? "start" : cos < -0.2 ? "end" : "middle"}
+                textAnchor={cos > 0.2 ? 'start' : cos < -0.2 ? 'end' : 'middle'}
                 dominantBaseline="middle"
                 className="font-sans"
                 fontSize={17}
                 initial={false}
                 animate={{
                   opacity: on ? 1 : before ? 0.4 : 0.22,
-                  fill: on ? "#ffffff" : "#a5c3c9",
+                  fill: on ? '#ffffff' : '#a5c3c9',
                 }}
                 transition={{ duration: 0.4 }}
               >
@@ -386,33 +302,18 @@ function Constellation({
 }
 
 /** Version sans animation (préférence « réduire les animations »). */
-function StaticJourney({
-  sessions,
-  skills,
-}: {
-  sessions: JourneySession[];
-  skills: JourneySkill[];
-}) {
+function StaticJourney({ sessions, skills }: { sessions: JourneySession[]; skills: JourneySkill[] }) {
   return (
     <ol className="container-site grid gap-px overflow-hidden py-10 sm:grid-cols-2 lg:grid-cols-3">
       {sessions.map((session) => {
         const mobilised = skillsOf(skills, session.number);
         return (
-          <li
-            key={session.number}
-            className="border-t border-white/10 py-6 pr-6"
-          >
-            <span className="font-display text-4xl font-semibold text-orange-500">
-              {session.number}
-            </span>
+          <li key={session.number} className="border-t border-white/10 py-6 pr-6">
+            <span className="font-display text-4xl font-semibold text-orange-500">{session.number}</span>
             <h3 className="mt-2 text-title text-white">{session.title}</h3>
-            {session.summary ? (
-              <p className="mt-2 text-white/70">{session.summary}</p>
-            ) : null}
+            {session.summary ? <p className="mt-2 text-white/70">{session.summary}</p> : null}
             {mobilised.ct.length ? (
-              <p className="mt-3 text-sm text-orange-200">
-                {mobilised.ct.map((skill) => skill.name).join(", ")}
-              </p>
+              <p className="mt-3 text-sm text-orange-200">{mobilised.ct.map((skill) => skill.name).join(', ')}</p>
             ) : null}
           </li>
         );

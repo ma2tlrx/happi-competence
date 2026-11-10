@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from 'react';
 
-export type FieldSkill = { name: string; kind: "ct" | "hbs" };
+export type FieldSkill = { name: string; kind: 'ct' | 'hbs' };
 
 type Node = {
   x: number;
   y: number;
   name: string;
-  kind: FieldSkill["kind"];
+  kind: FieldSkill['kind'];
   found: boolean;
   flash: number;
   labelled: boolean;
@@ -49,12 +49,10 @@ export function SkillField({ skills }: { skills: FieldSkill[] }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     const host = canvas?.parentElement;
-    const ctx = canvas?.getContext("2d");
+    const ctx = canvas?.getContext('2d');
     if (!canvas || !host || !ctx || total === 0) return;
 
-    const reduce = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     setReduced(reduce);
     const fontFamily = getComputedStyle(document.body).fontFamily;
 
@@ -111,10 +109,7 @@ export function SkillField({ skills }: { skills: FieldSkill[] }) {
           y1: height,
         });
       const free = (box: { x0: number; y0: number; x1: number; y1: number }) =>
-        !boxes.some(
-          (b) =>
-            box.x0 < b.x1 && box.x1 > b.x0 && box.y0 < b.y1 && box.y1 > b.y0,
-        );
+        !boxes.some((b) => box.x0 < b.x1 && box.x1 > b.x0 && box.y0 < b.y1 && box.y1 > b.y0);
       const placed: Node[] = [];
       for (const skill of skills) {
         const labelWidth = ctx.measureText(skill.name).width;
@@ -123,21 +118,9 @@ export function SkillField({ skills }: { skills: FieldSkill[] }) {
         for (const withLabel of [true, false]) {
           for (let attempt = 0; attempt < 500 && !best; attempt += 1) {
             const x =
-              Math.floor(
-                (area.x0 +
-                  random() *
-                    Math.max(
-                      1,
-                      area.x1 - area.x0 - (withLabel ? labelWidth + 14 : 0),
-                    )) /
-                  CELL,
-              ) *
-                CELL +
+              Math.floor((area.x0 + random() * Math.max(1, area.x1 - area.x0 - (withLabel ? labelWidth + 14 : 0))) / CELL) * CELL +
               CELL / 2;
-            const y =
-              Math.floor((area.y0 + random() * (area.y1 - area.y0)) / CELL) *
-                CELL +
-              CELL / 2;
+            const y = Math.floor((area.y0 + random() * (area.y1 - area.y0)) / CELL) * CELL + CELL / 2;
             const box = withLabel
               ? { x0: x - 14, y0: y - 13, x1: x + 26 + labelWidth, y1: y + 13 }
               : { x0: x - 12, y0: y - 12, x1: x + 12, y1: y + 12 };
@@ -180,17 +163,10 @@ export function SkillField({ skills }: { skills: FieldSkill[] }) {
       light.y += (light.ty - light.y) * 0.09;
 
       // Halo de la lumière.
-      const halo = ctx.createRadialGradient(
-        light.x,
-        light.y,
-        0,
-        light.x,
-        light.y,
-        RADIUS * 1.15,
-      );
-      halo.addColorStop(0, "rgba(234, 99, 46, 0.13)");
-      halo.addColorStop(0.45, "rgba(71, 130, 141, 0.07)");
-      halo.addColorStop(1, "rgba(16, 44, 50, 0)");
+      const halo = ctx.createRadialGradient(light.x, light.y, 0, light.x, light.y, RADIUS * 1.15);
+      halo.addColorStop(0, 'rgba(234, 99, 46, 0.13)');
+      halo.addColorStop(0.45, 'rgba(71, 130, 141, 0.07)');
+      halo.addColorStop(1, 'rgba(16, 44, 50, 0)');
       ctx.fillStyle = halo;
       ctx.fillRect(0, 0, width, height);
 
@@ -202,10 +178,7 @@ export function SkillField({ skills }: { skills: FieldSkill[] }) {
           const cy = row * CELL + CELL / 2;
           const d = Math.hypot(cx - light.x, cy - light.y);
           const lit = d < RADIUS ? (1 - d / RADIUS) ** 2 : 0;
-          memory[i] = Math.max(
-            memory[i]! * (staticFrame ? 1 : 0.985),
-            lit * 0.5,
-          );
+          memory[i] = Math.max(memory[i]! * (staticFrame ? 1 : 0.985), lit * 0.5);
           const energy = Math.min(1, lit + memory[i]! * 0.6);
           const alpha = 0.07 + energy * 0.75;
           const size = 1.5 + energy * 3.5;
@@ -216,7 +189,7 @@ export function SkillField({ skills }: { skills: FieldSkill[] }) {
 
       // Compétences cachées.
       ctx.font = `500 13px ${fontFamily}`;
-      ctx.textBaseline = "middle";
+      ctx.textBaseline = 'middle';
       let newlyFound = 0;
       for (const node of nodes) {
         const d = Math.hypot(node.x - light.x, node.y - light.y);
@@ -233,23 +206,15 @@ export function SkillField({ skills }: { skills: FieldSkill[] }) {
             const ring = (1 - node.flash) * 34;
             ctx.strokeStyle = `rgba(234, 99, 46, ${node.flash * 0.9})`;
             ctx.lineWidth = 1.5;
-            ctx.strokeRect(
-              node.x - ring / 2 - 4,
-              node.y - ring / 2 - 4,
-              ring + 8,
-              ring + 8,
-            );
+            ctx.strokeRect(node.x - ring / 2 - 4, node.y - ring / 2 - 4, ring + 8, ring + 8);
             node.flash = Math.max(0, node.flash - 0.025);
           }
           const pulse = staticFrame ? 0 : Math.sin(t * 2 + node.x) * 0.5 + 0.5;
-          ctx.fillStyle =
-            node.kind === "ct" ? "rgb(234, 99, 46)" : "rgb(244, 161, 126)";
+          ctx.fillStyle = node.kind === 'ct' ? 'rgb(234, 99, 46)' : 'rgb(244, 161, 126)';
           ctx.fillRect(node.x - 4, node.y - 4, 8, 8);
           ctx.fillStyle = `rgba(234, 99, 46, ${0.15 + pulse * 0.1})`;
           ctx.fillRect(node.x - 8, node.y - 8, 16, 16);
-          const labelAlpha = node.labelled
-            ? 0.55 + proximity * 0.45
-            : Math.max(0, proximity * 1.6 - 0.6);
+          const labelAlpha = node.labelled ? 0.55 + proximity * 0.45 : Math.max(0, proximity * 1.6 - 0.6);
           if (labelAlpha > 0) {
             ctx.fillStyle = `rgba(255, 255, 255, ${labelAlpha})`;
             ctx.fillText(node.name, node.x + 14, node.y + 0.5);
@@ -308,17 +273,17 @@ export function SkillField({ skills }: { skills: FieldSkill[] }) {
     resize.observe(host);
     seen.observe(host);
     if (!reduce) {
-      host.addEventListener("pointermove", onPointer);
-      host.addEventListener("pointerdown", onPointer);
+      host.addEventListener('pointermove', onPointer);
+      host.addEventListener('pointerdown', onPointer);
     }
-    document.addEventListener("visibilitychange", onVisibility);
+    document.addEventListener('visibilitychange', onVisibility);
     return () => {
       cancelAnimationFrame(frame);
       resize.disconnect();
       seen.disconnect();
-      host.removeEventListener("pointermove", onPointer);
-      host.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("visibilitychange", onVisibility);
+      host.removeEventListener('pointermove', onPointer);
+      host.removeEventListener('pointerdown', onPointer);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [skills, total]);
 
@@ -327,19 +292,13 @@ export function SkillField({ skills }: { skills: FieldSkill[] }) {
 
   return (
     <>
-      <canvas
-        ref={canvasRef}
-        className="pointer-events-none absolute inset-0"
-        aria-hidden
-      />
+      <canvas ref={canvasRef} className="pointer-events-none absolute inset-0" aria-hidden />
       <div
         aria-hidden
         className="pointer-events-none absolute right-5 bottom-5 z-10 w-56 rounded-lg border border-white/10 bg-petrol-950/70 p-3.5 backdrop-blur-sm sm:right-8 lg:top-8 lg:bottom-auto"
       >
         <div className="flex items-baseline justify-between gap-3">
-          <span className="text-sm text-white/70">
-            {complete ? "Toutes révélées" : "Compétences révélées"}
-          </span>
+          <span className="text-sm text-white/70">{complete ? 'Toutes révélées' : 'Compétences révélées'}</span>
           <span className="font-display text-lg font-semibold text-white tabular-nums">
             {found}
             <span className="text-white/45">/{total}</span>
@@ -349,15 +308,11 @@ export function SkillField({ skills }: { skills: FieldSkill[] }) {
           {Array.from({ length: 12 }, (_, index) => (
             <span
               key={index}
-              className={`h-1.5 flex-1 rounded-[1px] transition-colors duration-500 ${index < Math.round((found / total) * 12) ? "bg-orange-500" : "bg-white/12"}`}
+              className={`h-1.5 flex-1 rounded-[1px] transition-colors duration-500 ${index < Math.round((found / total) * 12) ? 'bg-orange-500' : 'bg-white/12'}`}
             />
           ))}
         </div>
-        {!reduced && found === 0 ? (
-          <p className="mt-2 text-xs text-white/55">
-            Survolez ou touchez la carte pour explorer
-          </p>
-        ) : null}
+        {!reduced && found === 0 ? <p className="mt-2 text-xs text-white/55">Survolez ou touchez la carte pour explorer</p> : null}
       </div>
     </>
   );
