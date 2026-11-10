@@ -1,8 +1,7 @@
 'use client';
 
 import { Check, CloudCheck, LoaderCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useActionState, useEffect, useState, useTransition } from 'react';
+import { useActionState, useState, useTransition } from 'react';
 
 import { FormMessage, SubmitButton, Textarea } from '@/components/ui/form';
 import { cn } from '@/lib/utils';
@@ -17,26 +16,19 @@ export function Questionnaire({
   questions,
   scale,
   initialAnswers,
-  next,
 }: {
   assessmentId: string;
   intro: string | null;
   questions: Question[];
   scale: { value: number; label: string }[];
   initialAnswers: Record<string, number>;
-  next: string;
 }) {
-  const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, number>>(initialAnswers);
   const [saving, startSaving] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [state, action] = useActionState(completeSelfAssessment, null);
   const answered = questions.filter((question) => answers[question.id] !== undefined).length;
   const complete = answered === questions.length;
-
-  useEffect(() => {
-    if (state?.ok) router.push(next);
-  }, [state, router, next]);
 
   const choose = (questionId: string, value: number) => {
     setAnswers((current) => ({ ...current, [questionId]: value }));
@@ -114,6 +106,7 @@ export function Questionnaire({
 
       <form action={action} className="space-y-4 rounded-lg border border-line bg-white p-5">
         <input type="hidden" name="assessmentId" value={assessmentId} />
+        <input type="hidden" name="answers" value={JSON.stringify(answers)} />
         <label className="block">
           <span className="text-sm font-semibold text-ink">
             Un commentaire sur vos réponses ? <span className="font-normal text-ink-subtle">facultatif</span>

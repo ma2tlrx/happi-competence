@@ -146,11 +146,16 @@ export function SessionPlayer({
     persist(next);
   };
 
-  const go = (target: number) => {
+  // Référence toujours à jour : deux appuis rapides sur une flèche avancent bien de deux séquences.
+  // (toute navigation passe par go(), qui tient la référence à jour)
+  const currentRef = useRef(current);
+  const go = (target: number | ((value: number) => number)) => {
+    const from = currentRef.current;
     const min = hasPrep ? -1 : 0;
-    const bounded = Math.max(min, Math.min(sequences.length - 1, target));
-    if (bounded === current) return;
-    setDirection(bounded > current ? 1 : -1);
+    const bounded = Math.max(min, Math.min(sequences.length - 1, typeof target === 'function' ? target(from) : target));
+    if (bounded === from) return;
+    currentRef.current = bounded;
+    setDirection(bounded > from ? 1 : -1);
     commit({ current: bounded });
     document.getElementById('lecteur-contenu')?.scrollTo({ top: 0 });
   };
@@ -189,10 +194,10 @@ export function SessionPlayer({
       if (['TEXTAREA', 'INPUT', 'SELECT'].includes(target.tagName) || target.isContentEditable) return;
       if (event.key === 'ArrowRight' || event.key === 'PageDown') {
         event.preventDefault();
-        go(current + 1);
+        go((value) => value + 1);
       } else if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
         event.preventDefault();
-        go(current - 1);
+        go((value) => value - 1);
       } else if (event.key === ' ' && blockTimer) {
         event.preventDefault();
         setBlockTimer(toggleTimer(blockTimer));

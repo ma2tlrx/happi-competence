@@ -96,7 +96,6 @@ export default async function AutoEvaluationPage({ searchParams }: { searchParam
         questions={version.questionnaire_questions.filter((question) => question.is_active).sort((a, b) => a.position - b.position)}
         scale={[...version.questionnaire_scale_labels].sort((a, b) => a.value - b.value)}
         initialAnswers={Object.fromEntries(assessment.self_assessment_answers.map((answer) => [answer.question_id, answer.value]))}
-        next="/participant/dashboard?bienvenue=1"
       />
     </>
   );

@@ -1,9 +1,10 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
-import { actionError, actionSuccess, databaseErrorMessage, type ActionState } from '@/lib/action-state';
+import { actionError, databaseErrorMessage, type ActionState } from '@/lib/action-state';
 import { requireRole } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 
@@ -46,8 +47,20 @@ export async function completeSelfAssessment(_: ActionState, formData: FormData)
   if (!id.success) return actionError('Auto-évaluation introuvable.');
   const comment = String(formData.get('comment') ?? '').trim().slice(0, 2000);
   const supabase = await createClient();
+  // Les réponses sont renvoyées avec la validation : aucune ne peut manquer, même si une
+  // sauvegarde automatique était encore en cours au moment du clic.
+  const answers = z
+    .record(z.string().uuid(), z.number().int().min(0).max(10))
+    .safeParse(JSON.parse(String(formData.get('answers') ?? '{}') || '{}'));
+  if (answers.success && Object.keys(answers.data).length > 0) {
+    const { error: answersError } = await supabase.from('self_assessment_answers').upsert(
+      Object.entries(answers.data).map(([questionId, value]) => ({ self_assessment_id: id.data, question_id: questionId, value })),
+      { onConflict: 'self_assessment_id,question_id' },
+    );
+    if (answersError) return actionError(databaseErrorMessage(answersError));
+  }
   const { error } = await supabase.from('self_assessments').update({ status: 'completed', comment: comment || null }).eq('id', id.data);
   if (error) return actionError(databaseErrorMessage(error));
   revalidatePath('/participant', 'layout');
-  return actionSuccess('Votre auto-évaluation est enregistrée.');
+  redirect('/participant/dashboard?bienvenue=1');
 }
