@@ -5,7 +5,7 @@ import { login } from './helpers';
 test('l’équipe ouvre l’espace « Bilan HAPPI » depuis la fiche d’un participant', async ({ page }) => {
   await login(page, 'formateur@demo.happi.test');
   await page.goto('/formateur/groupes');
-  await page.locator('main a[href^="/formateur/groupes/"]').first().click();
+  await page.getByRole('link', { name: /Littoral/ }).first().click();
   await page.waitForURL(/\/formateur\/groupes\/[0-9a-f-]{36}/);
   await page.locator('a[href^="/formateur/participants/"]').first().click();
   await page.getByRole('link', { name: 'Bilan HAPPI' }).click();
