@@ -16,6 +16,41 @@ function shortLabel(name: string, compact: boolean) {
   return `${name.slice(0, 13).trimEnd()}…`;
 }
 
+/** Coupe un libellé long en deux lignes, à l'espace (ou au trait d'union) le plus proche du milieu. */
+function splitLabel(name: string): string[] {
+  if (name.length <= 14) return [name];
+  const middle = name.length / 2;
+  let cut = -1;
+  for (let index = 1; index < name.length - 1; index += 1) {
+    const breakable = name[index] === ' ' || name[index - 1] === '-';
+    if (breakable && (cut === -1 || Math.abs(index - middle) < Math.abs(cut - middle))) cut = index;
+  }
+  if (cut === -1) return [name];
+  return [name.slice(0, cut).trimEnd(), name.slice(cut).trimStart()];
+}
+
+type AngleTickProps = { x?: number | string; y?: number | string; cy?: number | string; textAnchor?: string; payload?: { value?: string } };
+
+/** Libellé d'axe sur une ou deux lignes : aucun nom de compétence n'est tronqué. */
+function WrappedTick({ x = 0, y = 0, cy, textAnchor, payload }: AngleTickProps) {
+  const lines = splitLabel(String(payload?.value ?? ''));
+  const px = Number(x);
+  const py = Number(y);
+  const above = cy !== undefined && py < Number(cy) - 40;
+  // Un libellé sur deux lignes s'écarte du graphique en haut, et se centre sur son axe ailleurs
+  // (il ne déborde ainsi ni sur le tracé ni sur le libellé voisin).
+  const first = lines.length > 1 ? (above ? -12 : -6) : 0;
+  return (
+    <text x={px} y={py} textAnchor={textAnchor as 'start' | 'middle' | 'end' | undefined} fill="#4b6166" fontSize={12} fontFamily="var(--font-dm-sans)">
+      {lines.map((line, index) => (
+        <tspan key={line} x={px} dy={index === 0 ? first : 12}>
+          {line}
+        </tspan>
+      ))}
+    </text>
+  );
+}
+
 /**
  * Radar des compétences : observations des formateurs (et auto-évaluation si comparable).
  * Les compétences non observées sont tracées à 0 et signalées comme telles ; un tableau
@@ -28,6 +63,7 @@ export function SkillRadar({
   showSelf,
   height = 360,
   compact = false,
+  wrapLabels = false,
   title,
 }: {
   data: RadarDatum[];
@@ -36,6 +72,8 @@ export function SkillRadar({
   showSelf: boolean;
   height?: number;
   compact?: boolean;
+  /** Écrit les libellés longs sur deux lignes au lieu de les tronquer (prévoir de la place autour du graphique). */
+  wrapLabels?: boolean;
   title: string;
 }) {
   const [table, setTable] = useState(false);
@@ -91,13 +129,17 @@ export function SkillRadar({
       ) : (
         <div className={cn('relative w-full', !hasObserved && 'opacity-90')} style={{ height }} role="img" aria-label={`${title}. Utilisez « Voir en tableau » pour lire les valeurs.`}>
           <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={chartData} outerRadius={compact ? '68%' : '72%'} margin={{ top: 8, right: 24, bottom: 8, left: 24 }}>
+            <RadarChart data={chartData} outerRadius={wrapLabels ? '62%' : compact ? '68%' : '72%'} margin={{ top: 8, right: 24, bottom: 8, left: 24 }}>
               <PolarGrid stroke="#e5e5e0" />
-              <PolarAngleAxis
-                dataKey="name"
-                tick={{ fill: '#4b6166', fontSize: compact ? 11 : 12, fontFamily: 'var(--font-dm-sans)' }}
-                tickFormatter={(value: string) => shortLabel(value, compact)}
-              />
+              {wrapLabels ? (
+                <PolarAngleAxis dataKey="name" tick={(props: AngleTickProps) => <WrappedTick {...props} />} />
+              ) : (
+                <PolarAngleAxis
+                  dataKey="name"
+                  tick={{ fill: '#4b6166', fontSize: compact ? 11 : 12, fontFamily: 'var(--font-dm-sans)' }}
+                  tickFormatter={(value: string) => shortLabel(value, compact)}
+                />
+              )}
               <PolarRadiusAxis domain={[0, max]} tickCount={max + 1} tick={false} axisLine={false} />
               {showSelf ? (
                 <Radar name="Mon auto-évaluation" dataKey="selfPlot" stroke={SELF} strokeWidth={2} fill={SELF} fillOpacity={0.08} dot={{ r: 3, fill: SELF, strokeWidth: 0 }} isAnimationActive animationDuration={900} />

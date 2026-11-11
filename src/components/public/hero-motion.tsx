@@ -4,9 +4,11 @@ import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } fro
 import Image from 'next/image';
 import { Fragment, useEffect, useRef, type ReactNode } from 'react';
 
+import { cn } from '@/lib/utils';
+
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-/** Titre dévoilé ligne par ligne au chargement (masque + glissement). */
+/** Titre dévoilé ligne par ligne au chargement (masque + glissement, en CSS : visible sans JavaScript). */
 export function SplitHeadline({ lines, className }: { lines: string[]; className?: string }) {
   return (
     <h1 className={className}>
@@ -14,18 +16,9 @@ export function SplitHeadline({ lines, className }: { lines: string[]; className
         <Fragment key={line}>
           {index > 0 ? ' ' : null}
           <span className="block overflow-hidden pb-[0.08em]">
-            <motion.span
-              className="block"
-              initial={{ y: '110%', rotate: 2 }}
-              animate={{ y: '0%', rotate: 0 }}
-              transition={{
-                duration: 0.9,
-                delay: 0.1 + index * 0.09,
-                ease: EASE,
-              }}
-            >
+            <span className="hero-line block" style={{ animationDelay: `${0.1 + index * 0.09}s` }}>
               {line}
-            </motion.span>
+            </span>
           </span>
         </Fragment>
       ))}
@@ -36,14 +29,9 @@ export function SplitHeadline({ lines, className }: { lines: string[]; className
 /** Apparition au chargement, synchronisée avec le titre. */
 export function Intro({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) {
   return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, delay, ease: EASE }}
-    >
+    <div className={cn('hero-intro', className)} style={{ animationDelay: `${delay}s` }}>
       {children}
-    </motion.div>
+    </div>
   );
 }
 

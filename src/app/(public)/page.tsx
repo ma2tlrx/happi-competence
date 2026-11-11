@@ -1,11 +1,15 @@
-import { ArrowRight, Eye, Gamepad2, MessagesSquare, Quote, Sparkles } from 'lucide-react';
+import { ArrowRight, Gamepad2, Quote } from 'lucide-react';
 import Link from 'next/link';
 
+import { CountUp } from '@/components/public/count-up';
+import { DeclaredObserved } from '@/components/public/declared-observed';
 import { HeroMascot, Intro, Magnetic, SplitHeadline } from '@/components/public/hero-motion';
-import { PassportPreview } from '@/components/public/passport-preview';
+import { MethodTimeline } from '@/components/public/method-timeline';
+import { PassportDemo } from '@/components/public/passport-demo';
+import { Reveal } from '@/components/public/reveal';
+import { ScaleSteps } from '@/components/public/scale-steps';
 import { SessionJourney } from '@/components/public/session-journey';
 import { SkillField } from '@/components/public/skill-field';
-import { Reveal } from '@/components/public/reveal';
 import { Faq, Section, SectionHeading, SpaceAccess } from '@/components/public/sections';
 import { Button } from '@/components/ui/button';
 import { siteConfig } from '@/config/site';
@@ -20,25 +24,57 @@ export default async function HomePage() {
   const totalHours = program ? formatDuration(program.sessions_count * program.session_duration_minutes) : '18 h';
   const transversal = frameworkByCode(catalog, 'transversal');
   const sociocognitive = frameworkByCode(catalog, 'sociocognitive');
-  const ctCount = transversal?.categories.reduce((n, c) => n + c.skills.length, 0) ?? 18;
-  const hbsCount = sociocognitive?.categories.reduce((n, c) => n + c.skills.length, 0) ?? 16;
-  const journeySkills = [
-    ...(transversal?.categories.flatMap((c) =>
-      c.skills.map((skill) => ({
+  const frameworks = [transversal, sociocognitive].filter((framework) => framework != null);
+  const journeySkills = frameworks.flatMap((framework) =>
+    framework.categories.flatMap((category) =>
+      category.skills.map((skill) => ({
         name: skill.name,
-        kind: 'ct' as const,
+        kind: framework.code === 'transversal' ? ('ct' as const) : ('hbs' as const),
+        group: category.name,
         sessions: skill.sessions ?? [],
       })),
-    ) ?? []),
-    ...(sociocognitive?.categories.flatMap((c) =>
-      c.skills.map((skill) => ({
-        name: skill.name,
-        kind: 'hbs' as const,
-        sessions: skill.sessions ?? [],
-      })),
-    ) ?? []),
-  ];
+    ),
+  );
   const fieldSkills = journeySkills.map(({ name, kind }) => ({ name, kind }));
+
+  // « Du déclaré à l'observé » : trois compétences du référentiel, avec un niveau d'illustration (exemple fictif).
+  const transversalSkills = transversal?.categories.flatMap((category) => category.skills) ?? [];
+  const compared = [
+    { code: 'relationnel', declared: 'Bon relationnel', value: 4 },
+    { code: 'esprit_d_equipe', declared: 'Esprit d’équipe', value: 3 },
+    { code: 'organisation', declared: 'Sens de l’organisation', value: 4 },
+  ].flatMap((item) => {
+    const skill = transversalSkills.find((candidate) => candidate.code === item.code);
+    if (!skill || !transversal) return [];
+    return [
+      {
+        declared: item.declared,
+        name: skill.name,
+        value: Math.min(item.value, transversal.scale_max),
+        max: transversal.scale_max,
+        level: transversal.levels.find((level) => level.value === item.value)?.label ?? null,
+        session: skill.sessions?.[0] ?? null,
+      },
+    ];
+  });
+
+  // Démonstration du passeport : structure réelle du référentiel, niveaux fictifs calculés dans le composant.
+  const demoFrameworks = frameworks.map((framework) => ({
+    code: framework.code,
+    name: framework.name,
+    shortName: framework.short_name,
+    min: framework.scale_min,
+    max: framework.scale_max,
+    levels: framework.levels,
+    skills: framework.categories.flatMap((category) =>
+      category.skills.map((skill) => ({ code: skill.code, name: skill.name, sessions: skill.sessions ?? [] })),
+    ),
+  }));
+  const demoSessions = (program?.sessions ?? []).map((session) => ({
+    number: session.number,
+    title: session.title,
+    provisional: session.is_provisional,
+  }));
 
   return (
     <>
@@ -103,60 +139,46 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Accès aux espaces ────────────────────────────────────────── */}
-      <section id="acces" className="scroll-mt-20 bg-paper py-16 sm:py-20">
-        <div className="container-site">
-          <SectionHeading
-            title="Accéder à mon espace"
-            intro="Choisissez votre profil pour vous connecter ou créer votre compte."
-            className="mb-8"
-          />
-          <SpaceAccess />
-        </div>
-      </section>
-
-      {/* ── Pourquoi HAPPI ───────────────────────────────────────────── */}
+      {/* ── Pourquoi HAPPI : du déclaré à l'observé ───────────────────── */}
       <Section tone="white">
-        <div className="grid gap-14 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
-          <div>
-            <SectionHeading
-              title="Des compétences essentielles, souvent invisibles"
-              intro="Coopérer, s’adapter, décider sous pression : ces compétences comptent dans tous les métiers, mais elles se voient rarement sur un CV et se racontent mal en entretien."
+        <SectionHeading
+          title="Des compétences essentielles, souvent invisibles"
+          intro="Coopérer, s’adapter, décider sous pression : ces compétences comptent dans tous les métiers, mais elles se voient rarement sur un CV et se racontent mal en entretien."
+        />
+        {compared.length ? (
+          <Reveal className="mt-12">
+            <DeclaredObserved
+              skills={compared}
+              comment="Répartit les rôles dès le début de la partie et vérifie que chacun a compris la consigne."
             />
-            <div className="mt-14 rounded-2xl bg-petrol-900 px-6 pt-10 pb-6 sm:px-10">
-              <PassportPreview />
-            </div>
-          </div>
-          <div className="space-y-10">
-            {[
-              {
-                icon: Eye,
-                title: 'Le jeu révèle ce que l’on fait vraiment',
-                text: 'Face à un défi de jeu vidéo, chacun agit spontanément : on organise, on rassure, on propose, on tranche. Le formateur observe ces comportements réels, pas des réponses préparées.',
-              },
-              {
-                icon: MessagesSquare,
-                title: 'Le débriefing donne des mots',
-                text: 'Après chaque activité, le groupe met en commun ce qui s’est passé. Le participant apprend à nommer ses compétences et à les relier à des situations professionnelles.',
-              },
-              {
-                icon: Sparkles,
-                title: 'Le passeport les rend valorisables',
-                text: 'Auto-évaluation, observations datées et commentaires des formateurs forment un passeport que le participant peut consulter et présenter.',
-              },
-            ].map((item, index) => (
-              <Reveal key={item.title} delay={index * 0.08} className="flex gap-5">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-petrol-50 text-petrol-700">
-                  <item.icon className="size-5" aria-hidden />
+          </Reveal>
+        ) : null}
+        <ol className="mt-16 grid gap-x-10 gap-y-10 md:grid-cols-3">
+          {[
+            {
+              title: 'Le jeu révèle ce que l’on fait vraiment',
+              text: 'Face à un défi de jeu vidéo, chacun agit spontanément : on organise, on rassure, on propose, on tranche. Le formateur observe ces comportements réels, pas des réponses préparées.',
+            },
+            {
+              title: 'Le débriefing donne des mots',
+              text: 'Après chaque activité, le groupe met en commun ce qui s’est passé. Le participant apprend à nommer ses compétences et à les relier à des situations professionnelles.',
+            },
+            {
+              title: 'Le passeport les rend valorisables',
+              text: 'Auto-évaluation, observations datées et commentaires des formateurs forment un passeport que le participant peut consulter et présenter.',
+            },
+          ].map((item, index) => (
+            <li key={item.title}>
+              <Reveal delay={index * 0.08} className="border-t border-line-strong pt-5">
+                <span className="font-mono text-sm text-orange-700" aria-hidden>
+                  {String(index + 1).padStart(2, '0')}
                 </span>
-                <div>
-                  <h3 className="text-title">{item.title}</h3>
-                  <p className="mt-2 text-ink-muted">{item.text}</p>
-                </div>
+                <h3 className="mt-3 text-title">{item.title}</h3>
+                <p className="mt-2 text-ink-muted">{item.text}</p>
               </Reveal>
-            ))}
-          </div>
-        </div>
+            </li>
+          ))}
+        </ol>
       </Section>
 
       {/* ── Le programme : six sessions racontées au défilement ─────────── */}
@@ -177,31 +199,69 @@ export default async function HomePage() {
         {program?.sessions.length ? <SessionJourney sessions={program.sessions} skills={journeySkills} /> : null}
       </section>
 
+      {/* ── Le passeport en démonstration, puis l'accès aux espaces ──── */}
+      <Section>
+        <SectionHeading
+          title="Un passeport qui se remplit session après session"
+          intro="Faites avancer un parcours d’exemple : l’auto-évaluation de départ reste visible, les observations des formateurs s’ajoutent au fil du programme."
+        />
+        {demoFrameworks.length && demoSessions.length ? (
+          <Reveal className="mt-12">
+            <PassportDemo frameworks={demoFrameworks} sessions={demoSessions} />
+            <p className="mt-3 text-sm text-ink-muted">
+              Niveaux et commentaires fictifs, affichés avec les composants de l’espace participant et la répartition réelle des
+              compétences par session.
+            </p>
+          </Reveal>
+        ) : null}
+
+        <div id="acces" className="mt-20 scroll-mt-24 sm:mt-24">
+          <SectionHeading
+            title="Accéder à mon espace"
+            intro="Choisissez votre profil pour vous connecter ou créer votre compte."
+            className="mb-8"
+          />
+          <SpaceAccess />
+        </div>
+      </Section>
+
       {/* ── Les compétences ──────────────────────────────────────────── */}
       <Section tone="white">
         <SectionHeading
-          title={`${ctCount} compétences transversales, ${hbsCount} habiletés socio-cognitives`}
-          intro="Deux référentiels complémentaires : ce que la personne sait mobiliser en situation de travail, et les aptitudes qui lui permettent d’apprendre, d’interagir et de s’adapter."
+          title="Deux référentiels pour nommer ce que l’on observe"
+          intro="Ce que la personne sait mobiliser en situation de travail, et les aptitudes qui lui permettent d’apprendre, d’interagir et de s’adapter. Chaque référentiel a sa propre échelle de niveaux."
         />
         <div className="mt-12 grid gap-5 lg:grid-cols-2">
-          {[transversal, sociocognitive].filter(Boolean).map((framework, index) => (
-            <Reveal key={framework!.code} delay={index * 0.08}>
-              <article className="h-full rounded-xl border border-line p-6 sm:p-8">
-                <p className="text-sm text-ink-subtle">
-                  Échelle de {framework!.scale_min} à {framework!.scale_max} · {framework!.levels.map((l) => l.label).join(', ')}
-                </p>
-                <h3 className="mt-2 text-display-md">{framework!.name}</h3>
-                <ul className="mt-6 space-y-3">
-                  {framework!.categories.map((category) => (
-                    <li key={category.code} className="flex flex-col gap-1 border-t border-line pt-3 sm:flex-row sm:gap-4">
-                      <span className="w-40 shrink-0 font-semibold text-ink">{category.name}</span>
-                      <span className="text-ink-muted">{category.skills.map((skill) => skill.name).join(', ')}</span>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            </Reveal>
-          ))}
+          {frameworks.map((framework, index) => {
+            const count = framework.categories.reduce((total, category) => total + category.skills.length, 0);
+            return (
+              <Reveal key={framework.code} delay={index * 0.08}>
+                <article className="flex h-full flex-col rounded-xl border border-line p-6 sm:p-8">
+                  <h3 className="flex items-end gap-4">
+                    <CountUp value={count} className="font-mono text-[clamp(3.5rem,3rem+3vw,5.5rem)] leading-[0.85] font-medium tracking-[-0.06em] text-petrol-900" />
+                    <span className="pb-1 text-display-md">{framework.name.replace(/^./, (letter) => letter.toLowerCase())}</span>
+                  </h3>
+                  <div className="mt-8">
+                    <p className="mb-3 text-sm text-ink-subtle">
+                      Échelle de {framework.scale_min} à {framework.scale_max}
+                    </p>
+                    <ScaleSteps
+                      levels={framework.levels}
+                      label={`Échelle des ${framework.name.toLowerCase()}, de ${framework.scale_min} à ${framework.scale_max}`}
+                    />
+                  </div>
+                  <ul className="mt-8 space-y-3">
+                    {framework.categories.map((category) => (
+                      <li key={category.code} className="flex flex-col gap-1 border-t border-line pt-3 sm:flex-row sm:gap-4">
+                        <span className="w-40 shrink-0 font-semibold text-ink">{category.name}</span>
+                        <span className="text-ink-muted">{category.skills.map((skill) => skill.name).join(', ')}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              </Reveal>
+            );
+          })}
         </div>
         <Reveal className="mt-8">
           <Link href="/competences" className="inline-flex items-center gap-2 font-semibold text-petrol-700 hover:text-petrol-950">
@@ -213,28 +273,14 @@ export default async function HomePage() {
 
       {/* ── Méthodologie ─────────────────────────────────────────────── */}
       <Section>
-        <div className="grid gap-14 lg:grid-cols-[1fr_1.4fr]">
-          <div>
+        <div className="grid gap-14 lg:grid-cols-[1fr_1.3fr] lg:gap-20">
+          <div className="lg:sticky lg:top-28 lg:self-start">
             <SectionHeading title="Notre méthodologie" intro={vision} />
             <Reveal delay={0.1}>
-              <p className="mt-6 border-l-2 border-orange-500 pl-4 text-ink-muted">{mission}</p>
+              <p className="mt-6 text-ink-muted">{mission}</p>
             </Reveal>
           </div>
-          <ol className="space-y-3">
-            {journey.map((step, index) => (
-              <Reveal key={step.title} delay={index * 0.05}>
-                <li className="flex gap-5 rounded-lg bg-white p-5">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-petrol-900 font-display text-sm font-semibold text-white">
-                    {index + 1}
-                  </span>
-                  <div>
-                    <h3 className="font-display text-base font-semibold">{step.title}</h3>
-                    <p className="mt-1 text-[0.9375rem] text-ink-muted">{step.text}</p>
-                  </div>
-                </li>
-              </Reveal>
-            ))}
-          </ol>
+          <MethodTimeline steps={journey} />
         </div>
       </Section>
 

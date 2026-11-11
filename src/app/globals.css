@@ -9,6 +9,7 @@
   /* Typographie */
   --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: var(--font-poppins), var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-dm-mono), ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   /* Couleurs : on repart d'une palette vide pour ne garder que l'identité HAPPI */
   --color-*: initial;
@@ -114,6 +115,13 @@
     to {
       background-position: -200% 0;
     }
+  }
+}
+
+/* Écran assez large et assez haut pour afficher le tableau complet des compétences (section des sessions). */
+@custom-variant board {
+  @media (min-width: 80rem) and (min-height: 43.75rem) {
+    @slot;
   }
 }
 
@@ -353,5 +361,40 @@
   }
   .no-print {
     display: none !important;
+  }
+}
+
+/*
+ * Entrée du hero : en CSS pour démarrer dès le premier rendu, sans attendre le JavaScript
+ * (le titre est l'élément principal de la page ; il ne doit jamais rester masqué).
+ */
+@keyframes hero-line {
+  from {
+    transform: translateY(110%) rotate(2deg);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes hero-intro {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.hero-line {
+  animation: hero-line 0.9s var(--ease-out-quint) both;
+}
+.hero-intro {
+  animation: hero-intro 0.7s var(--ease-out-quint) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-line,
+  .hero-intro {
+    animation: none;
   }
 }

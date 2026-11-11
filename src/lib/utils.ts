@@ -1,7 +1,13 @@
 import { clsx, type ClassValue } from 'clsx';
 import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { twMerge } from 'tailwind-merge';
+import { extendTailwindMerge } from 'tailwind-merge';
+
+// Les classes typographiques du design system sont des tailles de texte : sans cette déclaration,
+// la fusion les confondrait avec une couleur (`text-white`) et supprimerait l'une des deux.
+const twMerge = extendTailwindMerge({
+  extend: { classGroups: { 'font-size': [{ text: ['display-xl', 'display-lg', 'display-md', 'title', 'lead'] }] } },
+});
 
 /** Fusionne des classes Tailwind en résolvant les conflits. */
 export function cn(...inputs: ClassValue[]) {

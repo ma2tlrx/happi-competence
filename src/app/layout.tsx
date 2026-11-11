@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { DM_Sans, Poppins } from 'next/font/google';
+import { DM_Mono, DM_Sans, Poppins } from 'next/font/google';
 
 import { Providers } from '@/components/providers';
 import { Toaster } from '@/components/ui/toast';
@@ -10,6 +10,8 @@ import './globals.css';
 // Polices de l'identité HAPPI, auto-hébergées par Next.js (aucun appel à Google côté visiteur).
 const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans', display: 'swap' });
 const poppins = Poppins({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-poppins', display: 'swap' });
+// Chiffres et repères du site vitrine (compteurs, tableau des compétences) : registre « instrument de mesure ».
+const dmMono = DM_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-dm-mono', display: 'swap', preload: false });
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -37,7 +39,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${dmSans.variable} ${poppins.variable}`}>
+    <html lang="fr" className={`${dmSans.variable} ${poppins.variable} ${dmMono.variable}`}>
       <body className="min-h-dvh">
         <a
           href="#contenu"
