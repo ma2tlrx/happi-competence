@@ -16,6 +16,8 @@ export default async function ConnexionPage({ searchParams }: { searchParams: Pr
   const space = parseSpace(params.espace);
   const next = safeInternalPath(typeof params.suite === 'string' ? params.suite : '', '');
   const user = await getCurrentUser();
+  // Un administrateur qui demande un autre espace est orienté vers les comptes de démonstration.
+  if (user && !next && user.role === 'admin' && typeof params.espace === 'string' && params.espace !== 'formateur') redirect('/admin/demonstration');
   if (user) redirect(next || homePathFor(user));
   const config = SPACES[space];
   const tabs: Space[] = ['participant', 'organisme'];

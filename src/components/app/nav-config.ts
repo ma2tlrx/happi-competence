@@ -98,6 +98,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
       label: 'Plateforme',
       items: [
         { href: '/admin/parametres', label: 'Paramètres', icon: Settings },
+        { href: '/admin/demonstration', label: 'Démonstration', icon: Sparkles },
         { href: '/admin/journal-activite', label: 'Journal d’activité', icon: History },
       ],
     },

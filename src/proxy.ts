@@ -14,6 +14,12 @@ export async function proxy(request: NextRequest) {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) return NextResponse.next({ request });
 
+  const { pathname } = request.nextUrl;
+  const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  // Visiteur sans session sur une page publique : rien à vérifier ni à rafraîchir (aucun appel réseau).
+  const hasSession = request.cookies.getAll().some((cookie) => cookie.name.startsWith('sb-') && cookie.name.includes('-auth-token'));
+  if (!isProtected && !hasSession) return NextResponse.next({ request });
+
   let response = NextResponse.next({ request });
   const supabase = createServerClient(url, key, {
     cookies: {
@@ -33,8 +39,6 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
-  const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
   if (isProtected && !user) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Authentification requise.' }, { status: 401 });

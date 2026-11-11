@@ -86,6 +86,18 @@ minutes (`maxDuration = 300` sur la page des bilans).
 Les en-têtes de sécurité (CSP, HSTS, `X-Frame-Options`…) sont définis dans
 `next.config.ts`.
 
+Les fonctions serveur s’exécutent à Dublin (`regions: ["dub1"]` dans `vercel.json`),
+au plus près de la base Supabase (eu-west-1) : chaque page enchaîne plusieurs
+lectures, et une région éloignée (par défaut Washington) les ralentit nettement.
+
+### Démonstration
+
+L’espace administrateur propose **Démonstration** : création d’un jeu complet de
+comptes et de données fictifs (tous marqués « démo », adresses en
+`@demo.happi.test`), ouverture directe des espaces formateur, organisme et
+participant, puis suppression en un clic. Pour l’interdire sur un environnement,
+définissez `HAPPI_ALLOW_DEMO=false`.
+
 ## 5. Premier administrateur
 
 Aucun mot de passe ni code administrateur n’est inscrit dans l’application. Le
