@@ -1241,6 +1241,71 @@ export type Database = {
           },
         ]
       }
+      participant_reports: {
+        Row: {
+          content: Json | null
+          content_generated_at: string | null
+          content_model: string | null
+          content_source: string | null
+          created_at: string
+          created_by: string | null
+          data: Json
+          engine_version: string
+          finalized_at: string | null
+          finalized_by: string | null
+          id: string
+          options: Json
+          participant_id: string
+          status: string
+          updated_at: string
+          version: number
+        }
+        ComputedFields: never
+        Insert: {
+          content?: Json | null
+          content_generated_at?: string | null
+          content_model?: string | null
+          content_source?: string | null
+          created_at?: string
+          created_by?: string | null
+          data: Json
+          engine_version: string
+          finalized_at?: string | null
+          finalized_by?: string | null
+          id?: string
+          options?: Json
+          participant_id: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          content?: Json | null
+          content_generated_at?: string | null
+          content_model?: string | null
+          content_source?: string | null
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          engine_version?: string
+          finalized_at?: string | null
+          finalized_by?: string | null
+          id?: string
+          options?: Json
+          participant_id?: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participant_reports_participant_id_fkey"
+            columns: ["participant_id"]
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       participant_session_notes: {
         Row: {
           learned: string

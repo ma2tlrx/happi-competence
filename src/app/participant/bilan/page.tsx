@@ -2,8 +2,11 @@ import { FileDown } from 'lucide-react';
 import type { Metadata } from 'next';
 
 import { BilanView } from '@/components/passport/bilan-view';
+import { FinalReports } from '@/components/report/final-reports';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/ui/primitives';
+import { listReports } from '@/lib/report/load';
+import { createClient } from '@/lib/supabase/server';
 
 import { getMyPassport } from '../data';
 
@@ -11,6 +14,7 @@ export const metadata: Metadata = { title: 'Mon bilan' };
 
 export default async function BilanPage() {
   const { passport } = await getMyPassport();
+  const reports = await listReports(await createClient(), passport.participant.id);
   return (
     <>
       <PageHeader
@@ -25,6 +29,7 @@ export default async function BilanPage() {
           </Button>
         }
       />
+      <FinalReports reports={reports} title="Mes bilans HAPPI" />
       <BilanView passport={passport} />
     </>
   );

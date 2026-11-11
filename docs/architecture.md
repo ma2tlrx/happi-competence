@@ -111,6 +111,11 @@ Garanties :
 Valeurs livrées : notation `direct` et synthèse `latest` (dernière observation),
 qui n’introduisent aucune moyenne ni pondération pédagogique non validée.
 
+## Bilans
+
+Voir [bilans.md](bilans.md) : photographie des résultats (`src/lib/report`), rédaction par IA
+validée, PDF éditorial (`src/lib/pdf/report`), versions immuables (`participant_reports`).
+
 ## Journalisation
 
 `audit_logs` est alimenté par les déclencheurs et fonctions (validation et

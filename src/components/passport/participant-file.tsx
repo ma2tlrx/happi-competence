@@ -1,4 +1,4 @@
-import { FileDown } from 'lucide-react';
+import { FileDown, FileText } from 'lucide-react';
 
 import { BilanView } from '@/components/passport/bilan-view';
 import { FrameworkView } from '@/components/passport/framework-view';
@@ -14,7 +14,18 @@ import { formatDate, formatDateTime } from '@/lib/utils';
  * Fiche individuelle de compétences d'un participant, vue par un professionnel
  * (formateur, organisme, administrateur). Les données ont déjà été filtrées par RLS.
  */
-export function ParticipantFile({ passport, back, canDownload = true }: { passport: Passport; back?: React.ReactNode; canDownload?: boolean }) {
+export function ParticipantFile({
+  passport,
+  back,
+  canDownload = true,
+  reportHref,
+}: {
+  passport: Passport;
+  back?: React.ReactNode;
+  canDownload?: boolean;
+  /** Lien vers l'espace « Bilan HAPPI » (équipe pédagogique uniquement). */
+  reportHref?: string;
+}) {
   const { participant, group } = passport;
   const self = passport.selfAssessment;
   const total = group?.sessionsCount ?? 6;
@@ -35,6 +46,15 @@ export function ParticipantFile({ passport, back, canDownload = true }: { passpo
               </p>
             </div>
           </div>
+          <div className="flex flex-wrap gap-2">
+          {reportHref ? (
+            <Button asChild>
+              <a href={reportHref}>
+                <FileText aria-hidden />
+                Bilan HAPPI
+              </a>
+            </Button>
+          ) : null}
           {canDownload ? (
             <Button asChild variant="outline">
               <a href={`/api/exports/passeport/${participant.id}`} download>
@@ -43,6 +63,7 @@ export function ParticipantFile({ passport, back, canDownload = true }: { passpo
               </a>
             </Button>
           ) : null}
+          </div>
         </div>
       </header>
 

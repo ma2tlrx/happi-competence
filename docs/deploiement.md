@@ -72,6 +72,13 @@ en français.
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | clé publique | oui (protégée par RLS) |
 | `SUPABASE_SERVICE_ROLE_KEY` | clé secrète | **non** — serveur uniquement |
 | `NEXT_PUBLIC_DEMO_MODE` | `false` | oui |
+| `OPENROUTER_API_KEY` | clé OpenRouter (rédaction des bilans) | **non** — serveur uniquement, facultative |
+| `ANTHROPIC_API_KEY` | clé API Claude, si OpenRouter n’est pas utilisé | **non** — serveur uniquement, facultative |
+| `REPORT_AI_MODEL` | modèle de rédaction (défaut : `anthropic/claude-opus-5.5`) | non, facultative |
+
+Sans clé d’IA, les bilans fonctionnent : ils sont créés avec leurs résultats et se
+rédigent à la main. Les fonctions qui génèrent un bilan peuvent durer jusqu’à deux
+minutes (`maxDuration = 300` sur la page des bilans).
 
 3. Déployez, puis rattachez votre domaine (**Settings → Domains**) et mettez à jour
    `NEXT_PUBLIC_SITE_URL` et la configuration Auth de l’étape 3.

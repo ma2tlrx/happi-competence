@@ -24,6 +24,7 @@
     "admin:code": "node --env-file-if-exists=.env.local scripts/create-access-code.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
     "@react-pdf/renderer": "^4.9.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.119.0",

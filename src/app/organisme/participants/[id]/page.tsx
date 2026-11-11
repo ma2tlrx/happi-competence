@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { ParticipantFile } from '@/components/passport/participant-file';
+import { FinalReports } from '@/components/report/final-reports';
 import { Notice } from '@/components/ui/primitives';
 import { hasPermission, requireRole } from '@/lib/auth/session';
 import { getPassport } from '@/lib/passport';
+import { listReports } from '@/lib/report/load';
 import { createClient } from '@/lib/supabase/server';
 import { isUuid } from '@/lib/utils';
 
@@ -21,11 +23,13 @@ export default async function OrganizationParticipantPage({ params }: { params: 
   const passport = await getPassport(supabase, id);
   if (!passport) notFound();
   await supabase.rpc('log_event', { p_action: 'participant_file.viewed', p_entity_type: 'participant', p_entity_id: id });
+  const reports = await listReports(supabase, id);
   return (
     <>
       {!hasPermission(user, 'org.evaluations.read') ? (
         <Notice variant="warning" className="mb-4" title="Évaluations non partagées">Votre structure n’a pas accès aux évaluations détaillées.</Notice>
       ) : null}
+      <FinalReports reports={reports} canDownload={hasPermission(user, 'org.exports')} />
       <ParticipantFile
         passport={passport}
         canDownload={hasPermission(user, 'org.exports')}
