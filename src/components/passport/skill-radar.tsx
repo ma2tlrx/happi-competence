@@ -1,7 +1,7 @@
 'use client';
 
 import { Table2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Tooltip } from 'recharts';
 
 import { cn, formatScore } from '@/lib/utils';
@@ -32,7 +32,7 @@ function splitLabel(name: string): string[] {
 type AngleTickProps = { x?: number | string; y?: number | string; cy?: number | string; textAnchor?: string; payload?: { value?: string } };
 
 /** Libellé d'axe sur une ou deux lignes : aucun nom de compétence n'est tronqué. */
-function WrappedTick({ x = 0, y = 0, cy, textAnchor, payload }: AngleTickProps) {
+function WrappedTick({ x = 0, y = 0, cy, textAnchor, payload, fontSize = 12 }: AngleTickProps & { fontSize?: number }) {
   const lines = splitLabel(String(payload?.value ?? ''));
   const px = Number(x);
   const py = Number(y);
@@ -41,7 +41,7 @@ function WrappedTick({ x = 0, y = 0, cy, textAnchor, payload }: AngleTickProps) 
   // (il ne déborde ainsi ni sur le tracé ni sur le libellé voisin).
   const first = lines.length > 1 ? (above ? -12 : -6) : 0;
   return (
-    <text x={px} y={py} textAnchor={textAnchor as 'start' | 'middle' | 'end' | undefined} fill="#4b6166" fontSize={12} fontFamily="var(--font-dm-sans)">
+    <text x={px} y={py} textAnchor={textAnchor as 'start' | 'middle' | 'end' | undefined} fill="#4b6166" fontSize={fontSize} fontFamily="var(--font-dm-sans)">
       {lines.map((line, index) => (
         <tspan key={line} x={px} dy={index === 0 ? first : 12}>
           {line}
@@ -77,6 +77,18 @@ export function SkillRadar({
   title: string;
 }) {
   const [table, setTable] = useState(false);
+  // Sur un écran étroit, les libellés passent sur deux lignes et le tracé se resserre
+  // pour qu'aucun nom de compétence ne soit coupé par le bord.
+  const box = useRef<HTMLDivElement>(null);
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const node = box.current;
+    if (!node) return;
+    const observer = new ResizeObserver(([entry]) => setNarrow((entry?.contentRect.width ?? 999) < 480));
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [table]);
+  const wrap = wrapLabels || narrow;
   const chartData = data.map((datum) => ({ ...datum, observedPlot: datum.observed ?? 0, selfPlot: datum.self ?? 0 }));
   const hasObserved = data.some((datum) => datum.observed !== null);
 
@@ -127,12 +139,12 @@ export function SkillRadar({
           </tbody>
         </table>
       ) : (
-        <div className={cn('relative w-full', !hasObserved && 'opacity-90')} style={{ height }} role="img" aria-label={`${title}. Utilisez « Voir en tableau » pour lire les valeurs.`}>
+        <div ref={box} className={cn('relative w-full', !hasObserved && 'opacity-90')} style={{ height }} role="img" aria-label={`${title}. Utilisez « Voir en tableau » pour lire les valeurs.`}>
           <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={chartData} outerRadius={wrapLabels ? '62%' : compact ? '68%' : '72%'} margin={{ top: 8, right: 24, bottom: 8, left: 24 }}>
+            <RadarChart data={chartData} outerRadius={narrow ? '54%' : wrap ? '62%' : compact ? '68%' : '72%'} margin={{ top: 8, right: narrow ? 8 : 24, bottom: 8, left: narrow ? 8 : 24 }}>
               <PolarGrid stroke="#e5e5e0" />
-              {wrapLabels ? (
-                <PolarAngleAxis dataKey="name" tick={(props: AngleTickProps) => <WrappedTick {...props} />} />
+              {wrap ? (
+                <PolarAngleAxis dataKey="name" tick={(props: AngleTickProps) => <WrappedTick {...props} fontSize={narrow ? 10 : 12} />} />
               ) : (
                 <PolarAngleAxis
                   dataKey="name"

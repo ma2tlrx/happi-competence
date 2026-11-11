@@ -2,7 +2,7 @@
 
 import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 
 import { Checkbox, Field, FormMessage, Input, Select, SubmitButton } from '@/components/ui/form';
 import { ORGANIZATION_TYPES } from '@/lib/auth/roles';
@@ -55,11 +55,41 @@ function PasswordField({
   );
 }
 
-function TextField({ name, label, errors, type = 'text', autoComplete, optional, hint }: { name: string; label: string; errors: FieldErrors; type?: string; autoComplete?: string; optional?: boolean; hint?: string }) {
+function TextField({
+  name,
+  label,
+  errors,
+  type = 'text',
+  autoComplete,
+  optional,
+  hint,
+  defaultValue,
+  onChange,
+}: {
+  name: string;
+  label: string;
+  errors: FieldErrors;
+  type?: string;
+  autoComplete?: string;
+  optional?: boolean;
+  hint?: string;
+  defaultValue?: string;
+  onChange?: (value: string) => void;
+}) {
   return (
     <Field label={label} required={!optional} optional={optional} error={errors[name]} hint={hint}>
       {({ id, describedBy, invalid }) => (
-        <Input id={id} name={name} type={type} autoComplete={autoComplete} required={!optional} aria-describedby={describedBy} aria-invalid={invalid || undefined} />
+        <Input
+          id={id}
+          name={name}
+          type={type}
+          autoComplete={autoComplete}
+          required={!optional}
+          aria-describedby={describedBy}
+          aria-invalid={invalid || undefined}
+          defaultValue={defaultValue}
+          onChange={onChange ? (event) => onChange(event.target.value) : undefined}
+        />
       )}
     </Field>
   );
@@ -114,10 +144,19 @@ function SuccessPanel({ state }: { state: ActionState }) {
 export function SignInForm({ next }: { next?: string }) {
   const [state, action] = useActionState(signIn, null);
   const errors = state?.fieldErrors ?? {};
+  // L'adresse saisie est conservée après une erreur (le formulaire est réinitialisé par React),
+  // et le focus revient sur le premier champ à corriger, ou sur l'adresse.
+  const [email, setEmail] = useState('');
+  const form = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (!state || state.ok) return;
+    const target = form.current?.querySelector<HTMLInputElement>('[aria-invalid="true"]') ?? form.current?.querySelector<HTMLInputElement>('input[name="password"]');
+    target?.focus();
+  }, [state]);
   return (
-    <form action={action} className="space-y-5" noValidate>
+    <form ref={form} action={action} className="space-y-5" noValidate>
       <input type="hidden" name="suite" value={next ?? ''} />
-      <TextField name="email" label="Adresse e-mail" type="email" autoComplete="email" errors={errors} />
+      <TextField name="email" label="Adresse e-mail" type="email" autoComplete="email" errors={errors} defaultValue={email} onChange={setEmail} />
       <PasswordField name="password" label="Mot de passe" autoComplete="current-password" error={errors.password} />
       <div className="-mt-2 text-right">
         <Link href="/mot-de-passe-oublie" className="text-sm font-medium text-petrol-700 underline-offset-4 hover:underline">

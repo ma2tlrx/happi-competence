@@ -94,7 +94,7 @@ export default async function TrainerDashboard() {
         <StatTile label="Évaluations à compléter" value={pending.length} detail={pluralize(participants, 'participant suivi', 'participants suivis')} icon={ClipboardPen} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Prochaines sessions" action={<Link href="/formateur/sessions" className="text-sm font-semibold text-petrol-700">Toutes les sessions</Link>} />
           <CardBody className="pt-3">

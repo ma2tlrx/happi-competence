@@ -29,7 +29,7 @@ export default async function OrganizationDashboard() {
         <StatTile label="Taux de présence" value={formatPercent(overview.stats.attendanceRate)} detail="Retards et départs anticipés inclus" />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.6fr_1fr]">
         <Card>
           <CardHeader title="Avancement des programmes" action={<Link href="/organisme/programmes" className="text-sm font-semibold text-petrol-700">Détail</Link>} />
           <CardBody className="px-0 pt-3 pb-1 sm:px-0">

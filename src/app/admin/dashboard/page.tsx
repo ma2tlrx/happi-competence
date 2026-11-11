@@ -6,23 +6,11 @@ import { Card, CardBody, CardHeader, PageHeader, StatTile } from '@/components/u
 import { requireRole } from '@/lib/auth/session';
 import { attendanceRate } from '@/lib/evaluation-engine';
 import { createClient } from '@/lib/supabase/server';
+import { AUDIT_ACTION_LABELS as ACTION_LABELS } from '@/lib/audit-labels';
 import { formatPercent, formatRelative, isoDaysAgo } from '@/lib/utils';
 
 export const metadata: Metadata = { title: 'Administration' };
 
-const ACTION_LABELS: Record<string, string> = {
-  'organization.requested': 'Demande d’espace organisme',
-  'organization.status_changed': 'Statut d’organisme modifié',
-  'evaluation.validated': 'Évaluation validée',
-  'evaluation.amended': 'Évaluation modifiée',
-  'invitation_code.used': 'Code d’accès utilisé',
-  'invitation_code.created': 'Code d’accès créé',
-  'group.created': 'Groupe créé',
-  'user.role_changed': 'Rôle modifié',
-  'auth.signed_in': 'Connexion',
-  'export.passport_pdf': 'Passeport exporté',
-  'participant_file.viewed': 'Fiche participant consultée',
-};
 
 export default async function AdminDashboard() {
   await requireRole('admin');

@@ -1,3 +1,4 @@
+import { auditActionLabel, auditDetails } from '@/lib/audit-labels';
 import type { Metadata } from 'next';
 
 import { FilterSelect, Pagination } from '@/components/ui/navigation';
@@ -50,9 +51,12 @@ export default async function AuditLogPage({ searchParams }: { searchParams: Pro
                   <Tr key={log.id}>
                     <Td className="text-sm whitespace-nowrap">{formatDateTime(log.occurred_at)}</Td>
                     <Td className="text-sm">{log.actor_id ? who.get(log.actor_id) ?? 'Compte supprimé' : 'Système'}<span className="block text-xs text-ink-subtle">{ROLE_LABELS[log.actor_role as Role] ?? log.actor_role}</span></Td>
-                    <Td className="font-mono text-xs">{log.action}</Td>
+                    <Td className="text-sm">
+                      {auditActionLabel(log.action)}
+                      <span className="block font-mono text-xs text-ink-subtle">{log.action}</span>
+                    </Td>
                     <Td className="text-xs text-ink-muted">{log.entity_type ? `${log.entity_type} ${log.entity_id?.slice(0, 8) ?? ''}` : '—'}</Td>
-                    <Td className="max-w-xs truncate font-mono text-xs text-ink-muted" title={JSON.stringify(log.metadata)}>{Object.keys((log.metadata as object) ?? {}).length ? JSON.stringify(log.metadata) : ''}</Td>
+                    <Td className="max-w-xs text-xs break-words text-ink-muted">{auditDetails(log.metadata)}</Td>
                   </Tr>
                 ))}
               </tbody>

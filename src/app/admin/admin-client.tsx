@@ -216,7 +216,7 @@ export function TrainerAssignment({ groupId, assigned, trainers }: { groupId: st
         <span key={trainer.id} className="inline-flex items-center gap-1 rounded-full border border-line bg-paper py-0.5 pr-1 pl-2.5 text-sm">
           {trainer.name}
           {trainer.lead ? <span className="text-xs text-ink-subtle">(référent)</span> : null}
-          <button type="button" disabled={pending} onClick={() => run(() => unassignTrainer(groupId, trainer.id), 'Formateur retiré du groupe.', `Retirer ${trainer.name} de ce groupe ?`)} className="flex size-5 items-center justify-center rounded-full hover:bg-line" aria-label={`Retirer ${trainer.name}`}>
+          <button type="button" disabled={pending} onClick={() => run(() => unassignTrainer(groupId, trainer.id), 'Formateur retiré du groupe.', `Retirer ${trainer.name} de ce groupe ?`)} className="-my-1 flex size-8 items-center justify-center rounded-full hover:bg-line" aria-label={`Retirer ${trainer.name}`}>
             <X className="size-3" aria-hidden />
           </button>
         </span>

@@ -43,7 +43,7 @@ export function MethodTimeline({ steps }: { steps: { title: string; text: string
             >
               {String(index + 1).padStart(2, '0')}
             </span>
-            <div className={cn('pt-1.5 transition-opacity duration-500', on ? 'opacity-100' : 'opacity-55')}>
+            <div className="pt-1.5">
               <h3 className="font-display text-lg font-semibold">{step.title}</h3>
               <p className="mt-1 text-ink-muted">{step.text}</p>
             </div>

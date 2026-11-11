@@ -14,7 +14,7 @@ export async function SpaceShell({ space, user, banner, children }: { space: App
   const supabase = await createClient();
   const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null);
   const demoBanner = user.isDemo ? (
-    <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 bg-orange-100 px-4 py-2 text-center text-sm text-petrol-950">
+    <aside aria-label="Démonstration" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 bg-orange-100 px-4 py-2 text-center text-sm text-petrol-950">
       <span>
         <span className="font-semibold">Compte de démonstration</span> · toutes les données affichées sont fictives et marquées « démo ».
       </span>
@@ -23,7 +23,7 @@ export async function SpaceShell({ space, user, banner, children }: { space: App
           Quitter la démonstration
         </button>
       </form>
-    </div>
+    </aside>
   ) : null;
   return (
     <AppShell

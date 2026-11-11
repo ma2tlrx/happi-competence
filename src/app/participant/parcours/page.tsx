@@ -14,7 +14,7 @@ function SheetList({ title, items }: { title: string; items: string[] }) {
   if (items.length === 0) return null;
   return (
     <div>
-      <h4 className="text-sm font-semibold text-ink">{title}</h4>
+      <h3 className="text-sm font-semibold text-ink">{title}</h3>
       <ul className="mt-2 space-y-1.5 text-[0.9375rem] text-ink-muted">
         {items.map((item) => (
           <li key={item} className="flex gap-2.5">
@@ -134,7 +134,7 @@ export default async function ParcoursPage() {
                   ) : null}
                   {done || current ? (
                     <div className="mt-5">
-                      <h4 className="mb-2 text-sm font-semibold text-ink">Ce que j’ai appris</h4>
+                      <h3 className="mb-2 text-sm font-semibold text-ink">Ce que j’ai appris</h3>
                       <LearningNote sessionId={session.id} initialValue={notes.get(session.id) ?? ''} />
                     </div>
                   ) : null}

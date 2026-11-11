@@ -6,7 +6,7 @@ import { cn, initials } from '@/lib/utils';
 
 // ── Carte ────────────────────────────────────────────────────────────────────
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('rounded-lg border border-line bg-white', className)} {...props} />;
+  return <div className={cn('min-w-0 rounded-lg border border-line bg-white', className)} {...props} />;
 }
 
 export function CardHeader({
@@ -219,8 +219,17 @@ export function Avatar({
 }
 
 // ── Tableau ──────────────────────────────────────────────────────────────────
-export function TableWrap({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cn('overflow-x-auto', className)}>{children}</div>;
+/**
+ * Zone de défilement d'un tableau. `relative` contient les éléments en position absolue
+ * (textes réservés aux lecteurs d'écran) qui, sinon, élargissaient la page sur téléphone ;
+ * la zone est atteignable au clavier pour faire défiler un tableau large.
+ */
+export function TableWrap({ className, children, label = 'Tableau' }: { className?: string; children: ReactNode; label?: string }) {
+  return (
+    <div role="region" aria-label={label} tabIndex={0} className={cn('relative max-w-full overflow-x-auto focus-visible:outline-offset-[-2px]', className)}>
+      {children}
+    </div>
+  );
 }
 
 export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {

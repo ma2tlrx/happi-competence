@@ -169,7 +169,7 @@ export function DeclaredObserved({ skills, comment }: { skills: ComparedSkill[];
           style={{ left }}
         >
           <span className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-orange-500" aria-hidden />
-          <span className="relative flex size-11 items-center justify-center rounded-md bg-orange-500 text-petrol-950 shadow-md ring-white/90 transition-transform duration-150 group-hover:scale-105 group-focus-visible:ring-4 group-active:scale-95">
+          <span className="relative flex size-11 items-center justify-center rounded-md bg-orange-500 text-petrol-950 shadow-md ring-petrol-950 ring-offset-2 transition-transform duration-150 group-hover:scale-105 group-focus-visible:ring-2 group-active:scale-95">
             <ChevronsLeftRight className="size-5" aria-hidden />
           </span>
         </motion.div>

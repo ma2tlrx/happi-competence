@@ -26,7 +26,7 @@ function Sidebar({ space, onNavigate }: { space: AppSpace; onNavigate?: () => vo
     <nav aria-label={SPACE_LABELS[space]} className="flex flex-1 flex-col gap-6 overflow-y-auto px-3 py-5">
       {NAVIGATION[space].map((group, index) => (
         <div key={group.label ?? index}>
-          {group.label ? <p className="mb-1.5 px-3 text-xs font-semibold text-white/45">{group.label}</p> : null}
+          {group.label ? <p className="mb-1.5 px-3 text-xs font-semibold text-white/65">{group.label}</p> : null}
           <ul className="space-y-0.5">
             {group.items.map((item) => {
               const active = isActive(pathname, item);
@@ -167,7 +167,7 @@ export function AppShell({
               ) : null}
             </Link>
             <Menu>
-              <MenuTrigger className="flex items-center gap-2 rounded-md p-1 transition-colors hover:bg-petrol-50" aria-label="Menu du compte">
+              <MenuTrigger className="flex items-center gap-2 rounded-md p-1 transition-colors hover:bg-petrol-50" aria-label={`Menu du compte de ${user.firstName}`}>
                 <Avatar person={person} size="sm" />
                 <span className="hidden max-w-40 truncate pr-1 text-sm font-medium text-ink sm:block">{user.firstName}</span>
               </MenuTrigger>
