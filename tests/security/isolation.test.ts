@@ -153,6 +153,21 @@ describe('un formateur n’intervient que sur ses groupes', () => {
     expect(evaluation.data).toEqual({ revision: 1, status: 'validated' });
   });
 
+  it('ne peut pas s’ouvrir l’accès à un participant d’un autre groupe en donnant son e-mail', async () => {
+    const before = await f.clients.trainerB.from('participants').select('id').eq('id', f.participantA);
+    expect(before.data).toEqual([]);
+    const { error } = await f.clients.trainerB.rpc('add_participant_to_group', {
+      p_group_id: f.groupB,
+      p_email: f.accounts.participantA.email,
+      p_first_name: 'X',
+      p_last_name: 'Y',
+    });
+    expect(error?.code).toBe('42501');
+    expect((await f.clients.trainerB.from('participants').select('id').eq('id', f.participantA)).data).toEqual([]);
+    const { data: membership } = await service.from('group_members').select('id').eq('group_id', f.groupB).eq('participant_id', f.participantA);
+    expect(membership).toEqual([]);
+  });
+
   it('ne peut pas s’attribuer un groupe ni lire les codes d’accès', async () => {
     const trainerA = f.clients.trainerA;
     const assign = await trainerA.from('group_trainers').insert({ group_id: f.groupB, trainer_id: f.accounts.trainerA.id });

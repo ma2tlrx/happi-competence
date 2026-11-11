@@ -113,10 +113,23 @@ export function isUuid(value: unknown): value is string {
   return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
-/** N'accepte qu'un chemin interne comme cible de redirection (évite les redirections ouvertes). */
+/**
+ * N'accepte qu'un chemin interne comme cible de redirection (évite les redirections ouvertes).
+ * Le chemin est résolu comme le ferait le navigateur (qui ignore tabulations et retours à la
+ * ligne : « /\t/evil » deviendrait « //evil ») et doit rester sur la même origine.
+ */
 export function safeInternalPath(value: string | null | undefined, fallback = '/') {
   if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return fallback;
-  return value;
+  // Caractères de contrôle et espaces : jamais légitimes dans un chemin interne.
+  if (/[\u0000-\u0020\u007f]/.test(value)) return fallback;
+  const base = 'https://interne.invalid';
+  try {
+    const url = new URL(value, base);
+    if (url.origin !== base) return fallback;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return fallback;
+  }
 }
 
 /** Date ISO située `days` jours avant maintenant (utilisable dans les composants serveur). */

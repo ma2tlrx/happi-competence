@@ -50,7 +50,7 @@ export async function deleteDemoAction(): Promise<ActionState> {
 export async function openDemoSpaceAction(space: DemoSpace): Promise<ActionState> {
   const refusal = await guard();
   if (refusal) return actionError(refusal);
-  if (!(space in DEMO_SPACES)) return actionError('Espace inconnu.');
+  if (!Object.hasOwn(DEMO_SPACES, space)) return actionError('Espace inconnu.');
   const tokenHash = await demoLoginToken(space);
   if (!tokenHash) return actionError('Ce compte de démonstration n’existe pas : créez d’abord la démonstration.');
   const supabase = await createClient();

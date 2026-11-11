@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { actionError, actionSuccess, databaseErrorMessage, type ActionState } from '@/lib/action-state';
 import { requireRole } from '@/lib/auth/session';
 import type { Json } from '@/lib/supabase/database.types';
+import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { generateReportContent } from '@/lib/report/ai';
 import { checkContent, reportContentSchema, reportOptionsSchema, type ReportContent } from '@/lib/report/content';
@@ -18,8 +19,28 @@ function pathFor(participantId: string) {
   return `/formateur/participants/${participantId}/bilan`;
 }
 
+/** Nombre maximal de rédactions automatiques par compte et par heure (maîtrise des coûts). */
+const AI_HOURLY_QUOTA = 10;
+
+/** Rédactions automatiques déjà enregistrées par ce compte dans l'heure (journal d'activité). */
+async function aiUsageLastHour(userId: string) {
+  if (!isAdminClientConfigured()) return 0;
+  const { count } = await createAdminClient()
+    .from('audit_logs')
+    .select('id', { count: 'exact', head: true })
+    .eq('actor_id', userId)
+    .eq('action', 'report.content_updated')
+    .eq('metadata->>content_source', 'ai')
+    .gte('occurred_at', new Date(Date.now() - 3600_000).toISOString());
+  return count ?? 0;
+}
+
 /** Enregistre un texte produit par l'IA sur un brouillon. Les résultats ne sont pas touchés. */
 async function writeWithAi(reportId: string): Promise<{ ok: boolean; message: string }> {
+  const user = await requireRole('formateur', 'admin');
+  if ((await aiUsageLastHour(user.id)) >= AI_HOURLY_QUOTA) {
+    return { ok: false, message: `Limite atteinte : ${AI_HOURLY_QUOTA} rédactions automatiques par heure. Réessayez plus tard ou rédigez le texte à la main.` };
+  }
   const supabase = await createClient();
   const report = await getReport(supabase, reportId);
   if (!report) return { ok: false, message: 'Bilan introuvable.' };

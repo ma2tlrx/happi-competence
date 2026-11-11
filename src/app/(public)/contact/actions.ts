@@ -1,6 +1,6 @@
 'use server';
 
-import { createHash } from 'node:crypto';
+import { createHmac } from 'node:crypto';
 
 import { headers } from 'next/headers';
 import { z } from 'zod';
@@ -38,7 +38,10 @@ export async function sendContactMessage(_: ActionState, formData: FormData): Pr
   // Seule une empreinte de l'adresse IP est conservée, pour limiter les envois répétés.
   const requestHeaders = await headers();
   const ip = requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim() || requestHeaders.get('x-real-ip') || 'inconnue';
-  const originHash = createHash('sha256').update(`happi-contact:${ip}`).digest('hex');
+  // HMAC à clé secrète serveur : sans la clé, l'empreinte ne permet pas de retrouver l'adresse IP
+  // (un simple SHA-256 d'une IPv4 se retrouve par essai exhaustif).
+  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY ?? '';
+  const originHash = createHmac('sha256', `happi-contact:${secret}`).update(ip).digest('hex');
 
   const { error } = await createAdminClient().rpc('submit_contact_message', {
     p_name: parsed.data.name,

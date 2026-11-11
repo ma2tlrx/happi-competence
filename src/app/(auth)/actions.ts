@@ -21,7 +21,14 @@ const password = z
   .regex(/[0-9]/, 'Le mot de passe doit contenir au moins un chiffre.');
 const name = (label: string) => z.string().trim().min(1, `Indiquez votre ${label}.`).max(80, `Ce ${label} est trop long.`);
 
+/**
+ * Origine des liens envoyés par e-mail (confirmation, mot de passe oublié). L'adresse
+ * officielle du site prime : les en-têtes Host / X-Forwarded-Host sont fournis par le
+ * client et ne doivent pas décider de la destination d'un lien de connexion.
+ */
 async function siteOrigin() {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (configured) return configured.replace(/\/+$/, '');
   const requestHeaders = await headers();
   const host = requestHeaders.get('x-forwarded-host') ?? requestHeaders.get('host');
   const proto = requestHeaders.get('x-forwarded-proto') ?? 'http';
