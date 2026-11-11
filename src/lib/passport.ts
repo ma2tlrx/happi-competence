@@ -135,14 +135,13 @@ type VersionRow = {
 };
 
 export async function getPassport(supabase: ServerClient, participantId: string): Promise<Passport | null> {
-  const { data: participant } = await supabase
-    .from('participants')
-    .select('id, first_name, last_name, email, user_id, created_at, organization_id, organizations ( id, name )')
-    .eq('id', participantId)
-    .maybeSingle();
-  if (!participant) return null;
-
-  const [membershipsResult, attendanceResult, evaluationsResult, selfResult, staffResult] = await Promise.all([
+  // Toutes les lectures qui ne dépendent que de l'identifiant partent ensemble.
+  const [participantResult, membershipsResult, attendanceResult, evaluationsResult, selfResult, staffResult] = await Promise.all([
+    supabase
+      .from('participants')
+      .select('id, first_name, last_name, email, user_id, created_at, organization_id, organizations ( id, name )')
+      .eq('id', participantId)
+      .maybeSingle(),
     supabase
       .from('group_members')
       .select('status, joined_at, groups ( id, name, start_date, end_date, status, program_id, programs ( id, name, sessions_count ) )')
@@ -168,7 +167,8 @@ export async function getPassport(supabase: ServerClient, participantId: string)
       .maybeSingle(),
     supabase.from('staff_directory').select('id, first_name, last_name'),
   ]);
-
+  const participant = participantResult.data;
+  if (!participant) return null;
   const staffName = new Map((staffResult.data ?? []).map((person) => [person.id, `${person.first_name} ${person.last_name}`.trim()]));
 
   // Groupe de référence : le groupe actif le plus récent.
@@ -178,15 +178,18 @@ export async function getPassport(supabase: ServerClient, participantId: string)
 
   let sessions: PassportSession[] = [];
   let trainers: string[] = [];
+  let programVersionIds: string[] = [];
   if (groupRow) {
-    const [sessionsResult, trainersResult] = await Promise.all([
+    const [sessionsResult, trainersResult, programFrameworksResult] = await Promise.all([
       supabase
         .from('sessions')
         .select('id, number, scheduled_date, start_time, end_time, location, status, program_session_id, program_sessions ( title )')
         .eq('group_id', groupRow.id)
         .order('number'),
       supabase.from('group_trainers').select('trainer_id, is_lead').eq('group_id', groupRow.id),
+      supabase.from('program_frameworks').select('framework_version_id').eq('program_id', groupRow.program_id),
     ]);
+    programVersionIds = (programFrameworksResult.data ?? []).map((row) => row.framework_version_id);
     const attendanceBySession = new Map((attendanceResult.data ?? []).map((row) => [row.session_id, row.status]));
     const evaluatedSessions = new Set((evaluationsResult.data ?? []).map((row) => row.session_id));
     sessions = (sessionsResult.data ?? []).map((session) => ({
@@ -211,10 +214,7 @@ export async function getPassport(supabase: ServerClient, participantId: string)
   // Versions de référentiel : celles des évaluations, à défaut celles du programme.
   const versionIds = new Set<string>();
   for (const evaluation of evaluationsResult.data ?? []) for (const link of evaluation.evaluation_frameworks) versionIds.add(link.framework_version_id);
-  if (groupRow) {
-    const { data: programFrameworks } = await supabase.from('program_frameworks').select('framework_version_id').eq('program_id', groupRow.program_id);
-    for (const row of programFrameworks ?? []) versionIds.add(row.framework_version_id);
-  }
+  for (const id of programVersionIds) versionIds.add(id);
   if (versionIds.size === 0) {
     const { data: published } = await supabase.from('framework_versions').select('id, framework_id, version_number').eq('status', 'published').order('version_number', { ascending: false });
     const seen = new Set<string>();

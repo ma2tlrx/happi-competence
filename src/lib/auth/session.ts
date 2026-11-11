@@ -31,29 +31,26 @@ export type CurrentUser = {
  */
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  // getClaims vérifie la signature du jeton localement (clés asymétriques publiées par
+  // Supabase) et ne rappelle le serveur d'authentification que si nécessaire : le filtre
+  // d'entrée (src/proxy.ts) a déjà validé et rafraîchi la session auprès de ce serveur.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
+  if (!claims?.sub) return null;
+  const user = { id: claims.sub, user_metadata: (claims.user_metadata ?? {}) as Record<string, unknown> };
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
-  if (!profile || !isRole(profile.role)) return null;
-
-  const [participant, membership, permissions] = await Promise.all([
-    profile.role === 'participant'
-      ? supabase.from('participants').select('id').eq('user_id', user.id).maybeSingle()
-      : Promise.resolve({ data: null }),
-    profile.role === 'organisme'
-      ? supabase
-          .from('organization_members')
-          .select('member_role, organizations ( id, name, status )')
-          .eq('user_id', user.id)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    supabase.from('role_permissions').select('permission_code').eq('role_code', profile.role),
+  // Une seule vague de lectures : profil (avec les permissions de son rôle), fiche participant
+  // et rattachement à un organisme. Les deux dernières sont vides pour les autres rôles.
+  const [profileResult, participant, membership] = await Promise.all([
+    supabase.from('profiles').select('*, roles ( role_permissions ( permission_code ) )').eq('id', user.id).maybeSingle(),
+    supabase.from('participants').select('id').eq('user_id', user.id).maybeSingle(),
+    supabase.from('organization_members').select('member_role, organizations ( id, name, status )').eq('user_id', user.id).maybeSingle(),
   ]);
+  const profile = profileResult.data;
+  if (!profile || !isRole(profile.role)) return null;
+  const permissions = { data: profile.roles?.role_permissions ?? [] };
 
-  const organization = membership.data?.organizations
+  const organization = profile.role === 'organisme' && membership.data?.organizations
     ? {
         id: membership.data.organizations.id,
         name: membership.data.organizations.name,
@@ -71,7 +68,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     phone: profile.phone,
     status: profile.status as 'active' | 'disabled',
     isDemo: profile.is_demo,
-    participantId: participant.data?.id ?? null,
+    participantId: profile.role === 'participant' ? (participant.data?.id ?? null) : null,
     organization,
     permissions: (permissions.data ?? []).map((row) => row.permission_code as PermissionCode),
     awaitingAccessCode:
