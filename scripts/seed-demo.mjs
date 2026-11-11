@@ -54,6 +54,12 @@ async function purge() {
   // Les participants d'abord (leurs évaluations bloquent la suppression des sessions).
   must(await admin.from('participants').delete().eq('is_demo', true), 'Participants');
   must(await admin.from('groups').delete().eq('is_demo', true), 'Groupes');
+  // Fiche réelle rattachée par erreur à un organisme démo : détachée, jamais supprimée.
+  const demoOrgs = must(await admin.from('organizations').select('id').eq('is_demo', true), 'Organismes démo').map((row) => row.id);
+  if (demoOrgs.length) {
+    must(await admin.from('participants').update({ organization_id: null }).in('organization_id', demoOrgs), 'Détachement des fiches');
+    must(await admin.from('organization_members').delete().in('organization_id', demoOrgs), 'Membres des organismes démo');
+  }
   let page = 1;
   for (;;) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
@@ -180,6 +186,7 @@ async function seed() {
     participantAccounts.set(index, user);
   }
   must(await admin.from('participants').update({ is_demo: true }).in('email', [...participantAccounts.values()].map((user) => user.email)), 'Participants avec compte');
+  must(await admin.from('profiles').update({ is_demo: true }).in('id', [...participantAccounts.values()].map((user) => user.id)), 'Profils participants');
 
   // ── Le formateur crée et anime ses groupes ─────────────────────────────────
   const trainerClient = await signedIn(trainer.email, trainer.password);

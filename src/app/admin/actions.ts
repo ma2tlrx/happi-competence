@@ -254,15 +254,32 @@ export async function resolveDataRequest(id: string, decision: 'completed' | 're
   return done(error, ['/admin/parametres']);
 }
 
+const LEGAL_KEYS = ['legal.company_name', 'legal.legal_form', 'legal.siret', 'legal.address', 'legal.publication_director', 'legal.host', 'legal.dpo_contact'] as const;
+
 export async function saveSettings(_: ActionState, formData: FormData): Promise<ActionState> {
   const { supabase } = await admin();
   const data = entries(formData);
-  const keys = ['contact.email', 'legal.company_name', 'legal.legal_form', 'legal.siret', 'legal.address', 'legal.publication_director', 'legal.host', 'legal.dpo_contact'];
-  const rows: { key: string; value: NonNullable<Json>; is_public: boolean }[] = keys.map((key) => ({ key, value: (data[key] ?? '').trim().slice(0, 300), is_public: true }));
-  rows.push({ key: 'contact.phones', value: (data['contact.phones'] ?? '').split(',').map((v) => v.trim()).filter(Boolean), is_public: true });
+  // Validation explicite : une valeur refusée est signalée, jamais tronquée ni remplacée en silence.
+  const errors: Record<string, string> = {};
+  const contactEmail = (data['contact.email'] ?? '').trim();
+  if (contactEmail && !z.string().email().safeParse(contactEmail).success) errors['contact.email'] = 'Adresse e-mail invalide.';
+  for (const key of LEGAL_KEYS) if ((data[key] ?? '').trim().length > 300) errors[key] = 'Ce champ est trop long (300 caractères au plus).';
+  const siret = (data['legal.siret'] ?? '').replace(/\s+/g, '');
+  if (siret && !/^\d{14}$/.test(siret)) errors['legal.siret'] = 'Un SIRET compte 14 chiffres.';
+  const phones = (data['contact.phones'] ?? '').split(',').map((v) => v.trim()).filter(Boolean);
+  if (phones.some((phone) => !/^[+\d][\d\s.()-]{5,24}$/.test(phone))) errors['contact.phones'] = 'Numéros invalides : séparez-les par des virgules (ex. 04 67 00 00 00).';
+  const retentionRaw = (data['platform.data_retention_months'] ?? '').trim();
+  const retention = Number(retentionRaw);
+  if (!/^\d+$/.test(retentionRaw) || retention < 1 || retention > 120) errors['platform.data_retention_months'] = 'Indiquez un nombre entier de mois entre 1 et 120.';
+  if (Object.keys(errors).length) return actionError('Certains paramètres sont à corriger.', errors);
+
+  const rows: { key: string; value: NonNullable<Json>; is_public: boolean }[] = [
+    { key: 'contact.email', value: contactEmail, is_public: true },
+    ...LEGAL_KEYS.map((key) => ({ key, value: key === 'legal.siret' ? siret : (data[key] ?? '').trim(), is_public: true })),
+  ];
+  rows.push({ key: 'contact.phones', value: phones, is_public: true });
   rows.push({ key: 'platform.organization_signup_enabled', value: data['platform.organization_signup_enabled'] === 'on', is_public: true });
-  const retention = Number(data['platform.data_retention_months']);
-  rows.push({ key: 'platform.data_retention_months', value: Number.isFinite(retention) && retention > 0 ? Math.min(120, Math.round(retention)) : 36, is_public: false });
+  rows.push({ key: 'platform.data_retention_months', value: retention, is_public: false });
   const { error } = await supabase.from('app_settings').upsert(rows);
   if (error) return actionError(databaseErrorMessage(error));
   revalidatePath('/', 'layout');

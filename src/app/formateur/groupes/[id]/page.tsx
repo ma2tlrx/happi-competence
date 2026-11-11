@@ -47,8 +47,8 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   ]);
   const sessionIds = (sessions.data ?? []).map((session) => session.id);
   const { data: attendance } = sessionIds.length
-    ? await supabase.from('attendance').select('participant_id, status').in('session_id', sessionIds)
-    : { data: [] as { participant_id: string; status: string }[] };
+    ? await supabase.from('attendance').select('participant_id, session_id, status').in('session_id', sessionIds)
+    : { data: [] as { participant_id: string; session_id: string; status: string }[] };
 
   const activeMembers = (members.data ?? []).filter((member) => member.status === 'active' && member.participants);
   const removedMembers = (members.data ?? []).filter((member) => member.status !== 'active' && member.participants);
@@ -61,8 +61,12 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const canManage = hasPermission(user, 'groups.manage');
   const canLink = hasPermission(user, 'participants.link_organization');
   const status = GROUP_STATUS[group.status] ?? GROUP_STATUS.active!;
+  // Présences comptées sur les seules sessions terminées, comme le dénominateur (et comme l'espace organisme).
+  const completedIds = new Set((sessions.data ?? []).filter((session) => session.status === 'completed').map((session) => session.id));
   const attended = (participantId: string) =>
-    (attendance ?? []).filter((row) => row.participant_id === participantId && ['present', 'late', 'left_early'].includes(row.status)).length;
+    (attendance ?? []).filter(
+      (row) => row.participant_id === participantId && completedIds.has(row.session_id) && ['present', 'late', 'left_early'].includes(row.status),
+    ).length;
 
   return (
     <>
@@ -180,7 +184,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                               name={name}
                             />
                           </Td>
-                          <Td className="text-right tabular-nums">{attended(person!.id)}/{(sessions.data ?? []).filter((s) => s.status === 'completed').length}</Td>
+                          <Td className="text-right tabular-nums">{attended(person!.id)}/{completedIds.size}</Td>
                           <Td className="text-right">{canManage ? <MemberActions groupId={group.id} participantId={person!.id} name={name} removed={false} /> : null}</Td>
                         </Tr>
                       );

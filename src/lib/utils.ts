@@ -138,3 +138,12 @@ export function isoDaysAgo(days: number) {
   date.setDate(date.getDate() - days);
   return date.toISOString();
 }
+
+/**
+ * Relation embarquée PostgREST : un objet quand la clé étrangère est unique, une liste sinon.
+ * Les types générés ne font pas toujours la différence ; ce helper accepte les deux formes.
+ */
+export function firstOf<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}

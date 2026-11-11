@@ -44,7 +44,7 @@ export default async function DemonstrationPage() {
           </Card>
           <Notice variant="info">
             Ouvrir un espace de démonstration vous connecte avec le compte démo correspondant : votre session administrateur se ferme. Pour revenir, utilisez « Quitter la
-            démonstration » dans le bandeau, puis reconnectez-vous avec votre compte. Les comptes démo n’ont pas de mot de passe connu et utilisent un domaine qui ne
+            démonstration » dans le bandeau, puis reconnectez-vous avec votre compte. Les comptes créés depuis cette page ont un mot de passe aléatoire jamais conservé, et utilisent un domaine qui ne
             reçoit aucun e-mail.
           </Notice>
         </div>

@@ -229,7 +229,7 @@ export async function signUpWithAccessCode(_: ActionState, formData: FormData): 
 /** Activation d'un code par un compte déjà connecté (inscription interrompue). */
 export async function redeemAccessCode(_: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = codeSchema.safeParse(formData.get('code'));
-  if (!parsed.success) return actionError(parsed.error.issues[0]!.message, { code: parsed.error.issues[0]!.message });
+  if (!parsed.success) return { ok: false, fieldErrors: { code: parsed.error.issues[0]!.message } };
   const user = await getCurrentUser();
   if (!user) redirect('/connexion');
   if (!isAdminClientConfigured()) return actionError('L’activation des codes est momentanément indisponible.');
@@ -246,7 +246,7 @@ export async function redeemAccessCode(_: ActionState, formData: FormData): Prom
 // ── Mot de passe ─────────────────────────────────────────────────────────────
 export async function requestPasswordReset(_: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = email.safeParse(formData.get('email'));
-  if (!parsed.success) return actionError(parsed.error.issues[0]!.message, { email: parsed.error.issues[0]!.message });
+  if (!parsed.success) return { ok: false, fieldErrors: { email: parsed.error.issues[0]!.message } };
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
     redirectTo: `${await siteOrigin()}/auth/confirmation?suite=/nouveau-mot-de-passe`,

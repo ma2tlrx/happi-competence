@@ -307,7 +307,7 @@ export function SessionPlayer({
         </nav>
 
         {/* Contenu de la séquence */}
-        <main id="lecteur-contenu" className="min-w-0 flex-1 overflow-y-auto">
+        <div id="lecteur-contenu" role="region" aria-label="Contenu de la séquence" className="min-w-0 flex-1 overflow-y-auto">
           <AnimatePresence mode="wait" custom={direction} initial={false}>
             <motion.div
               key={current}
@@ -393,7 +393,7 @@ export function SessionPlayer({
               )}
             </motion.div>
           </AnimatePresence>
-        </main>
+        </div>
 
         {/* Notes privées */}
         <AnimatePresence>

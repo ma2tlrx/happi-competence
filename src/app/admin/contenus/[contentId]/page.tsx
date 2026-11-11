@@ -8,7 +8,7 @@ import { Badge, Card, CardBody, CardHeader, PageHeader, ProvisionalBadge } from 
 import { requireRole } from '@/lib/auth/session';
 import { parseSessionScript, SEQUENCE_TYPE_LABELS } from '@/lib/pedagogy/parse';
 import { createClient } from '@/lib/supabase/server';
-import { formatDateTime, isUuid } from '@/lib/utils';
+import { formatDateTime, isUuid, firstOf } from '@/lib/utils';
 
 import { ImportForm, PublishVersionButton } from '../content-client';
 
@@ -27,7 +27,7 @@ export default async function ContentPage({ params, searchParams }: { params: Pr
     .eq('id', contentId)
     .maybeSingle();
   if (!sheet) notFound();
-  const content = sheet.pedagogical_contents[0];
+  const content = firstOf(sheet.pedagogical_contents);
   const versions = [...(content?.pedagogical_content_versions ?? [])].sort((a, b) => b.version_number - a.version_number);
   const shown = versions.find((v) => v.id === requested) ?? versions.find((v) => v.id === content?.current_version_id) ?? versions[0];
   const script = shown ? parseSessionScript(shown.markdown) : null;

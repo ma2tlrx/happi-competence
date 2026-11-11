@@ -145,9 +145,9 @@ export function PlanSessionsForm({ groupId, missing, defaultStart }: { groupId: 
         ))}
       </ul>
       <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Début">{({ id }) => <Input id={id} name="startTime" type="time" defaultValue="09:00" />}</Field>
-        <Field label="Fin">{({ id }) => <Input id={id} name="endTime" type="time" defaultValue="12:00" />}</Field>
-        <Field label="Lieu" optional>{({ id }) => <Input id={id} name="location" />}</Field>
+        <Field label="Début" error={state?.fieldErrors?.startTime}>{({ id, describedBy, invalid }) => <Input id={id} name="startTime" type="time" defaultValue="09:00" aria-describedby={describedBy} aria-invalid={invalid || undefined} />}</Field>
+        <Field label="Fin" error={state?.fieldErrors?.endTime}>{({ id, describedBy, invalid }) => <Input id={id} name="endTime" type="time" defaultValue="12:00" aria-describedby={describedBy} aria-invalid={invalid || undefined} />}</Field>
+        <Field label="Lieu" optional error={state?.fieldErrors?.location}>{({ id, describedBy, invalid }) => <Input id={id} name="location" maxLength={200} aria-describedby={describedBy} aria-invalid={invalid || undefined} />}</Field>
       </div>
       <FormMessage state={state} />
       <SubmitButton>Créer les sessions</SubmitButton>

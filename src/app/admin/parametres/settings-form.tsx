@@ -18,24 +18,25 @@ const LEGAL_FIELDS: [string, string][] = [
 
 export function SettingsForm({ values }: { values: Record<string, unknown> }) {
   const [state, action] = useActionState(saveSettings, null);
+  const errors = state?.fieldErrors ?? {};
   const text = (key: string) => (typeof values[key] === 'string' ? (values[key] as string) : '');
   return (
     <form action={action} className="space-y-6">
       <fieldset className="grid gap-4 sm:grid-cols-2">
         <legend className="mb-2 text-sm font-semibold text-ink-muted">Coordonnées affichées sur le site</legend>
-        <Field label="E-mail de contact">{({ id }) => <Input id={id} name="contact.email" type="email" defaultValue={text('contact.email')} />}</Field>
-        <Field label="Téléphones" hint="Séparés par des virgules.">{({ id, describedBy }) => <Input id={id} name="contact.phones" aria-describedby={describedBy} defaultValue={Array.isArray(values['contact.phones']) ? (values['contact.phones'] as string[]).join(', ') : ''} />}</Field>
+        <Field label="E-mail de contact" error={errors['contact.email']}>{({ id, describedBy, invalid }) => <Input id={id} name="contact.email" type="email" aria-describedby={describedBy} aria-invalid={invalid || undefined} defaultValue={text('contact.email')} />}</Field>
+        <Field label="Téléphones" hint="Séparés par des virgules." error={errors['contact.phones']}>{({ id, describedBy, invalid }) => <Input id={id} name="contact.phones" aria-describedby={describedBy} aria-invalid={invalid || undefined} defaultValue={Array.isArray(values['contact.phones']) ? (values['contact.phones'] as string[]).join(', ') : ''} />}</Field>
       </fieldset>
       <fieldset className="grid gap-4 sm:grid-cols-2">
         <legend className="mb-2 text-sm font-semibold text-ink-muted">Mentions légales</legend>
         {LEGAL_FIELDS.map(([key, label]) => (
-          <Field key={key} label={label} optional>{({ id }) => <Input id={id} name={key} defaultValue={text(key)} />}</Field>
+          <Field key={key} label={label} optional error={errors[key]}>{({ id, describedBy, invalid }) => <Input id={id} name={key} maxLength={300} aria-describedby={describedBy} aria-invalid={invalid || undefined} defaultValue={text(key)} />}</Field>
         ))}
       </fieldset>
       <fieldset className="grid gap-4 sm:grid-cols-2">
         <legend className="mb-2 text-sm font-semibold text-ink-muted">Plateforme</legend>
         <Checkbox name="platform.organization_signup_enabled" defaultChecked={values['platform.organization_signup_enabled'] !== false} label="Autoriser les demandes d’espace organisme depuis le site" />
-        <Field label="Durée de conservation des données (mois)">{({ id }) => <Input id={id} name="platform.data_retention_months" type="number" min={1} max={120} defaultValue={Number(values['platform.data_retention_months'] ?? 36)} />}</Field>
+        <Field label="Durée de conservation des données (mois)" error={errors['platform.data_retention_months']}>{({ id, describedBy, invalid }) => <Input id={id} name="platform.data_retention_months" type="number" min={1} max={120} aria-describedby={describedBy} aria-invalid={invalid || undefined} defaultValue={Number(values['platform.data_retention_months'] ?? 36)} />}</Field>
       </fieldset>
       <FormMessage state={state} />
       <SubmitButton>Enregistrer les paramètres</SubmitButton>

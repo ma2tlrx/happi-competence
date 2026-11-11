@@ -6,7 +6,7 @@ import { Card, CardBody, CardHeader, EmptyState, Notice, PageHeader, Provisional
 import { requireRole } from '@/lib/auth/session';
 import { parseSessionScript } from '@/lib/pedagogy/parse';
 import { createClient } from '@/lib/supabase/server';
-import { formatDate, formatDuration } from '@/lib/utils';
+import { formatDate, formatDuration, firstOf } from '@/lib/utils';
 
 export const metadata: Metadata = { title: 'Supports pédagogiques' };
 
@@ -30,7 +30,7 @@ export default async function ContentsPage() {
             {program.program_sessions.length === 0 ? <EmptyState icon={FileText} title="Aucune session dans la trame" /> : (
               <ul className="divide-y divide-line">
                 {[...program.program_sessions].sort((a, b) => a.number - b.number).map((sheet) => {
-                  const content = sheet.pedagogical_contents[0];
+                  const content = firstOf(sheet.pedagogical_contents);
                   const current = content?.pedagogical_content_versions.find((v) => v.id === content.current_version_id);
                   const script = current ? parseSessionScript(current.markdown) : null;
                   return (

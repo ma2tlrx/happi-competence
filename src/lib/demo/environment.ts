@@ -72,11 +72,21 @@ export async function demoStatus(): Promise<DemoStatus> {
   return { profiles, organizations, participants, groups, reports };
 }
 
-/** Supprime tout ce qui est marqué « démo » (et seulement cela). */
+/**
+ * Supprime tout ce qui est marqué « démo » (et seulement cela). Idempotente : relancée après
+ * un échec, elle reprend là où elle s'est arrêtée.
+ */
 export async function purgeDemo(admin: Admin = createAdminClient()) {
   // Les participants d'abord : leurs évaluations bloquent la suppression des sessions.
   must(await admin.from('participants').delete().eq('is_demo', true), 'Participants');
   must(await admin.from('groups').delete().eq('is_demo', true), 'Groupes');
+  // Une fiche réelle rattachée par erreur à un organisme de démonstration en est détachée
+  // (jamais supprimée) avant la suppression des organismes.
+  const demoOrgs = must(await admin.from('organizations').select('id').eq('is_demo', true), 'Organismes démo').map((row) => row.id);
+  if (demoOrgs.length) {
+    must(await admin.from('participants').update({ organization_id: null }).in('organization_id', demoOrgs), 'Détachement des fiches');
+    must(await admin.from('organization_members').delete().in('organization_id', demoOrgs), 'Membres des organismes démo');
+  }
   for (let page = 1; ; page += 1) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
     if (error) throw new Error(`Comptes : ${error.message}`);
@@ -114,10 +124,22 @@ function seededRandom(seed: number) {
   return () => (value = (value * 16807) % 2147483647) / 2147483647;
 }
 
-/** (Re)crée l'environnement de démonstration complet. Durée : quelques dizaines de secondes. */
+/**
+ * (Re)crée l'environnement de démonstration complet. Durée : quelques dizaines de secondes.
+ * En cas d'échec, les données partielles sont supprimées : on ne laisse pas une démo à moitié créée.
+ */
 export async function createDemo() {
   const admin = createAdminClient();
   await purgeDemo(admin);
+  try {
+    return await seedDemo(admin);
+  } catch (error) {
+    await purgeDemo(admin).catch(() => undefined);
+    throw error;
+  }
+}
+
+async function seedDemo(admin: Admin) {
 
   async function createUser(email: string, firstName: string, lastName: string, accountType: 'pro' | 'participant' | 'organisme') {
     const password = `Demo-${randomBytes(12).toString('base64url')}7`;

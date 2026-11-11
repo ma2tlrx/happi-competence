@@ -155,7 +155,16 @@ export async function planSessions(groupId: string, _: ActionState, formData: Fo
   const planned = new Set((existing ?? []).map((row) => row.program_session_id));
   const startTime = optionalTime.safeParse(formData.get('startTime') ?? '');
   const endTime = optionalTime.safeParse(formData.get('endTime') ?? '');
-  const location = String(formData.get('location') ?? '').trim().slice(0, 200) || null;
+  const rawLocation = String(formData.get('location') ?? '').trim();
+  const errors: Record<string, string> = {};
+  if (!startTime.success) errors.startTime = 'Horaire invalide.';
+  if (!endTime.success) errors.endTime = 'Horaire invalide.';
+  if (startTime.success && endTime.success && startTime.data && endTime.data && endTime.data <= startTime.data) {
+    errors.endTime = 'L’heure de fin doit suivre l’heure de début.';
+  }
+  if (rawLocation.length > 200) errors.location = 'Le lieu est trop long (200 caractères au plus).';
+  if (Object.keys(errors).length) return actionError('Certains champs sont à corriger.', errors);
+  const location = rawLocation || null;
   const rows = (outline ?? [])
     .filter((item) => !planned.has(item.id))
     .map((item) => {

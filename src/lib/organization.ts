@@ -50,7 +50,8 @@ export async function getOrganizationOverview(supabase: ServerClient) {
   const groupById = new Map(groups.map((group) => [group.id, group]));
 
   const participants: OrgParticipantRow[] = (participantsResult.data ?? []).map((participant) => {
-    const membership = (membersResult.data ?? []).filter((m) => m.participant_id === participant.id).sort((a, b) => (a.status === 'active' ? -1 : 1) - (b.status === 'active' ? -1 : 1))[0];
+    // Seul un rattachement actif compte : un participant retiré n'apparaît plus dans ce groupe.
+    const membership = (membersResult.data ?? []).find((m) => m.participant_id === participant.id && m.status === 'active');
     const group = membership ? groupById.get(membership.group_id) : undefined;
     const groupSessions = group ? sessions.filter((session) => session.group_id === group.id) : [];
     const completed = groupSessions.filter((session) => session.status === 'completed');

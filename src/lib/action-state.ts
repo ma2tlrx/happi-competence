@@ -1,4 +1,5 @@
 import type { ZodError } from 'zod';
+import './zod-fr';
 
 /** Résultat standard d'une action serveur, consommé par useActionState. */
 export type ActionState<TData = undefined> = {
