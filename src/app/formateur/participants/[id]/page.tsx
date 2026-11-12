@@ -23,6 +23,7 @@ export default async function TrainerParticipantPage({ params }: { params: Promi
     <ParticipantFile
       passport={passport}
       reportHref={`/formateur/participants/${id}/bilan`}
+      canCertify
       back={
         <Link href={passport.group ? `/formateur/groupes/${passport.group.id}` : '/formateur/groupes'} className="inline-flex items-center gap-1.5 text-ink-muted hover:text-ink">
           <ArrowLeft className="size-4" aria-hidden />

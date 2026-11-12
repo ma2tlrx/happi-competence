@@ -4,7 +4,9 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 import { databaseErrorMessage } from '@/lib/action-state';
-import { requireRole } from '@/lib/auth/session';
+import { insertCountersignature, insertSignature, signatureInputSchema, type SignResult } from '@/lib/attendance/sign';
+import { MAX_SIGNATURE_PATH_LENGTH } from '@/lib/attendance/signature';
+import { hasPermission, requireRole } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 
 const STATUSES = ['present', 'absent', 'late', 'left_early', 'excused'] as const;
@@ -45,4 +47,32 @@ export async function saveAttendanceComment(sessionId: string, participantId: st
   if (error) return { ok: false, message: databaseErrorMessage(error) };
   if (!data?.length) return { ok: false, message: 'Indiquez d’abord le statut de présence.' };
   return { ok: true };
+}
+
+/** Émargement sur la tablette du formateur : signature tracée ou mention « signature impossible » (motif). */
+export async function signOnTrainerDevice(input: z.input<typeof signatureInputSchema>): Promise<SignResult> {
+  const user = await requireRole('formateur', 'admin');
+  if (!hasPermission(user, 'attendance.write')) return { ok: false, message: 'Vous n’êtes pas autorisé à recueillir les signatures.' };
+  const parsed = signatureInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'Saisie invalide.' };
+  const result = await insertSignature(await createClient(), parsed.data);
+  if (result.ok) revalidatePath(`/formateur/sessions/${parsed.data.sessionId}`, 'layout');
+  return result;
+}
+
+const countersignSchema = z.object({
+  sessionId: z.uuid(),
+  path: z.string().max(MAX_SIGNATURE_PATH_LENGTH),
+  attest: z.literal(true, { message: 'Cochez l’attestation avant de contre-signer.' }),
+});
+
+/** Contre-signature du formateur : la feuille est ensuite figée. */
+export async function countersignAttendance(input: z.input<typeof countersignSchema>): Promise<SignResult> {
+  const user = await requireRole('formateur', 'admin');
+  if (!hasPermission(user, 'attendance.write')) return { ok: false, message: 'Vous n’êtes pas autorisé à contre-signer.' };
+  const parsed = countersignSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'Saisie invalide.' };
+  const result = await insertCountersignature(await createClient(), parsed.data.sessionId, parsed.data.path);
+  if (result.ok) revalidatePath(`/formateur/sessions/${parsed.data.sessionId}`, 'layout');
+  return result;
 }

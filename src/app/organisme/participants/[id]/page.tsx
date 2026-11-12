@@ -33,6 +33,7 @@ export default async function OrganizationParticipantPage({ params }: { params: 
       <ParticipantFile
         passport={passport}
         canDownload={hasPermission(user, 'org.exports')}
+        canCertify={hasPermission(user, 'org.exports') && hasPermission(user, 'org.attendance.read')}
         back={
           <Link href="/organisme/participants" className="inline-flex items-center gap-1.5 text-ink-muted hover:text-ink">
             <ArrowLeft className="size-4" aria-hidden />

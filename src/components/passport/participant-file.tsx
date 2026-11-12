@@ -1,4 +1,4 @@
-import { FileDown, FileText } from 'lucide-react';
+import { Award, FileDown, FileText } from 'lucide-react';
 
 import { BilanView } from '@/components/passport/bilan-view';
 import { FrameworkView } from '@/components/passport/framework-view';
@@ -19,12 +19,15 @@ export function ParticipantFile({
   back,
   canDownload = true,
   reportHref,
+  canCertify = false,
 }: {
   passport: Passport;
   back?: React.ReactNode;
   canDownload?: boolean;
   /** Lien vers l'espace « Bilan HAPPI » (équipe pédagogique uniquement). */
   reportHref?: string;
+  /** Certificat de réalisation du groupe de référence (équipe pédagogique, organisme autorisé). */
+  canCertify?: boolean;
 }) {
   const { participant, group } = passport;
   const self = passport.selfAssessment;
@@ -52,6 +55,14 @@ export function ParticipantFile({
               <a href={reportHref}>
                 <FileText aria-hidden />
                 Bilan HAPPI
+              </a>
+            </Button>
+          ) : null}
+          {canCertify && group ? (
+            <Button asChild variant="outline">
+              <a href={`/api/exports/certificat/${participant.id}?groupe=${group.id}`} download>
+                <Award aria-hidden />
+                Certificat de réalisation
               </a>
             </Button>
           ) : null}

@@ -106,6 +106,59 @@ export type Database = {
           },
         ]
       }
+      attendance_countersignatures: {
+        Row: {
+          attested: Json
+          content_sha256: string
+          ip_hmac: string | null
+          session_id: string
+          signature_svg: string
+          signatures_sha256: string
+          signed_at: string
+          trainer_id: string | null
+          trainer_name: string
+          user_agent: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          attested?: Json
+          content_sha256?: string
+          ip_hmac?: string | null
+          session_id: string
+          signature_svg: string
+          signatures_sha256?: string
+          signed_at?: string
+          trainer_id?: string | null
+          trainer_name?: string
+          user_agent?: string | null
+        }
+        Update: {
+          attested?: Json
+          content_sha256?: string
+          ip_hmac?: string | null
+          session_id?: string
+          signature_svg?: string
+          signatures_sha256?: string
+          signed_at?: string
+          trainer_id?: string | null
+          trainer_name?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_countersignatures_session_id_fkey"
+            columns: ["session_id"]
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_countersignatures_trainer_id_fkey"
+            columns: ["trainer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance_history: {
         Row: {
           attendance_id: string | null
@@ -145,6 +198,74 @@ export type Database = {
           session_id?: string
         }
         Relationships: []
+      }
+      attendance_signatures: {
+        Row: {
+          attendance_status: string
+          collected_by: string | null
+          content_sha256: string
+          id: string
+          ip_hmac: string | null
+          kind: string
+          method: string
+          participant_id: string
+          session_id: string
+          signature_svg: string | null
+          signed_at: string
+          unable_reason: string | null
+          user_agent: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          attendance_status?: string
+          collected_by?: string | null
+          content_sha256?: string
+          id?: string
+          ip_hmac?: string | null
+          kind: string
+          method?: string
+          participant_id: string
+          session_id: string
+          signature_svg?: string | null
+          signed_at?: string
+          unable_reason?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          attendance_status?: string
+          collected_by?: string | null
+          content_sha256?: string
+          id?: string
+          ip_hmac?: string | null
+          kind?: string
+          method?: string
+          participant_id?: string
+          session_id?: string
+          signature_svg?: string | null
+          signed_at?: string
+          unable_reason?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_signatures_collected_by_fkey"
+            columns: ["collected_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_signatures_participant_id_fkey"
+            columns: ["participant_id"]
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_signatures_session_id_fkey"
+            columns: ["session_id"]
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audit_logs: {
         Row: {
@@ -2566,6 +2687,10 @@ export type Database = {
           id: string
         }[]
       }
+      correct_attendance: {
+        Args: { p_participant_id: string; p_reason: string; p_session_id: string; p_status: string }
+        Returns: undefined
+      }
       get_public_catalog: { Args: Record<PropertyKey, never>; Returns: Json }
       import_pedagogical_version: {
         Args: {
@@ -2586,6 +2711,23 @@ export type Database = {
           p_metadata?: Json
         }
         Returns: undefined
+      }
+      my_attendance_signing: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          attendance_status: string | null
+          can_sign: boolean
+          end_time: string | null
+          frozen: boolean
+          group_name: string
+          scheduled_date: string | null
+          session_id: string
+          session_number: number
+          session_status: string
+          signed_at: string | null
+          start_time: string | null
+          title: string
+        }[]
       }
       process_deletion_request: {
         Args: { p_note?: string; p_request_id: string }

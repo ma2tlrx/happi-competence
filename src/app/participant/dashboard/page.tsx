@@ -5,15 +5,17 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { LevelMeter, SessionSteps } from '@/components/ui/level-meter';
 import { Card, CardBody, CardHeader, EmptyState, Notice } from '@/components/ui/primitives';
+import { createClient } from '@/lib/supabase/server';
 import { formatDate, formatScore, formatShortDate, formatTimeRange, pluralize } from '@/lib/utils';
 
 import { getMyPassport } from '../data';
+import { SignToday, type SignableSession } from '../emargement/sign-today';
 
 export const metadata: Metadata = { title: 'Mon passeport' };
 
 export default async function ParticipantDashboard({ searchParams }: { searchParams: Promise<{ bienvenue?: string }> }) {
   const { bienvenue } = await searchParams;
-  const { passport } = await getMyPassport();
+  const [{ passport }, signable] = await Promise.all([getMyPassport(), loadSignableSessions()]);
   const { participant, group } = passport;
   const total = group?.sessionsCount ?? 6;
   const observed = passport.frameworks.reduce((sum, framework) => sum + framework.observedCount, 0);
@@ -62,6 +64,8 @@ export default async function ParticipantDashboard({ searchParams }: { searchPar
           </div>
         </div>
       </section>
+
+      {signable.length > 0 ? <SignToday sessions={signable} /> : null}
 
       {!selfDone ? (
         <Notice
@@ -215,4 +219,23 @@ export default async function ParticipantDashboard({ searchParams }: { searchPar
       )}
     </div>
   );
+}
+
+/** Séances du jour à émarger (fonction de la base : ne renvoie que les séances du participant connecté). */
+async function loadSignableSessions(): Promise<SignableSession[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc('my_attendance_signing');
+  return (data ?? []).map((row) => ({
+    sessionId: row.session_id,
+    number: row.session_number,
+    title: row.title,
+    groupName: row.group_name,
+    date: row.scheduled_date,
+    startTime: row.start_time,
+    endTime: row.end_time,
+    attendanceStatus: row.attendance_status,
+    signedAt: row.signed_at,
+    frozen: row.frozen,
+    canSign: row.can_sign,
+  }));
 }
