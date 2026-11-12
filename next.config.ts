@@ -27,8 +27,8 @@ const reportPreviewHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
-  // Le moteur PDF s'exécute côté serveur uniquement et ne doit pas être empaqueté.
-  serverExternalPackages: ['@react-pdf/renderer'],
+  // Le moteur PDF et le client SMTP s'exécutent côté serveur uniquement et ne doivent pas être empaquetés.
+  serverExternalPackages: ['@react-pdf/renderer', 'nodemailer'],
   // Polices et logos lus sur le disque par les routes qui produisent des PDF.
   outputFileTracingIncludes: {
     '/api/exports/**': ['./public/fonts/report/**/*', './public/brand/**/*'],

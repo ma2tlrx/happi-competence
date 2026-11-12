@@ -6,7 +6,7 @@ import { Checkbox, Field, FormMessage, Input, SubmitButton, Textarea } from '@/c
 
 import { NewPasswordForm } from '@/app/(auth)/auth-forms';
 
-import { requestDeletion, updateProfile } from './actions';
+import { requestDeletion, updateEmailPreferences, updateProfile } from './actions';
 
 export function ProfileForm({ firstName, lastName, phone, email }: { firstName: string; lastName: string; phone: string; email: string }) {
   const [state, action] = useActionState(updateProfile, null);
@@ -31,6 +31,22 @@ export function ProfileForm({ firstName, lastName, phone, email }: { firstName: 
       </div>
       <FormMessage state={state} />
       <SubmitButton>Enregistrer</SubmitButton>
+    </form>
+  );
+}
+
+export function EmailPreferencesForm({ reminders }: { reminders: boolean }) {
+  const [state, action] = useActionState(updateEmailPreferences, null);
+  return (
+    <form action={action} className="space-y-4">
+      <Checkbox
+        name="reminders"
+        defaultChecked={reminders}
+        label="Recevoir un e-mail de rappel la veille de chaque séance"
+        description="Les convocations, ainsi que les e-mails annonçant une séance modifiée ou annulée, restent envoyés : ils contiennent des informations indispensables."
+      />
+      <FormMessage state={state} />
+      <SubmitButton variant="outline">Enregistrer mes préférences</SubmitButton>
     </form>
   );
 }

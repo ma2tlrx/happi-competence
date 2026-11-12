@@ -23,6 +23,8 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   'demo.created': 'Démonstration créée',
   'demo.deleted': 'Démonstration supprimée',
   'demo.space_opened': 'Espace de démonstration ouvert',
+  'email.sent': 'E-mail envoyé',
+  'email.failed': 'E-mail abandonné après plusieurs échecs',
 };
 
 export function auditActionLabel(action: string) {

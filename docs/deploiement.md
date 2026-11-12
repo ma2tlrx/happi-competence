@@ -75,6 +75,10 @@ en français.
 | `OPENROUTER_API_KEY` | clé OpenRouter (rédaction des bilans) | **non** — serveur uniquement, facultative |
 | `ANTHROPIC_API_KEY` | clé API Claude, si OpenRouter n’est pas utilisé | **non** — serveur uniquement, facultative |
 | `REPORT_AI_MODEL` | modèle de rédaction (défaut : `anthropic/claude-opus-5.5`) | non, facultative |
+| `EMAIL_PROVIDER` | `brevo`, `smtp` ou `resend` (vide : aucun envoi) | non |
+| `EMAIL_FROM` | `HAPPI Compétence <no-reply@votre-domaine.fr>` | non |
+| `BREVO_API_KEY` / `SMTP_URL` / `RESEND_API_KEY` | selon le fournisseur choisi | **non** — serveur uniquement |
+| `CRON_SECRET` | chaîne aléatoire d’au moins 32 caractères | **non** — serveur uniquement |
 
 Sans clé d’IA, les bilans fonctionnent : ils sont créés avec leurs résultats et se
 rédigent à la main. Les fonctions qui génèrent un bilan peuvent durer jusqu’à deux
@@ -89,6 +93,53 @@ Les en-têtes de sécurité (CSP, HSTS, `X-Frame-Options`…) sont définis dans
 Les fonctions serveur s’exécutent à Dublin (`regions: ["dub1"]` dans `vercel.json`),
 au plus près de la base Supabase (eu-west-1) : chaque page enchaîne plusieurs
 lectures, et une région éloignée (par défaut Washington) les ralentit nettement.
+
+### E-mails transactionnels et rappels J-1
+
+L’application envoie elle-même ses e-mails métier : **convocation** (séance datée
+planifiée, ou arrivée d’un membre dans un groupe déjà planifié), **séance modifiée**
+(date, horaire, lieu, rétablissement), **séance annulée** (aux personnes convoquées),
+**rappel J-1**, **bilan validé disponible**, et **invitation** d’une personne ajoutée
+à un groupe sans compte (elle crée ensuite son compte par le parcours d’inscription
+habituel : la confirmation d’adresse reste envoyée par Supabase, sans doublon).
+Chaque e-mail crée aussi la notification in-app correspondante.
+
+1. Choisissez un fournisseur et renseignez les variables du tableau ci-dessus :
+   - **Brevo** (recommandé, hébergement UE) : `EMAIL_PROVIDER=brevo`, `BREVO_API_KEY`
+     (Brevo → SMTP & API → Clés API), `EMAIL_FROM` sur un domaine authentifié (SPF, DKIM) ;
+   - **SMTP** générique : `EMAIL_PROVIDER=smtp`, `SMTP_URL=smtp://utilisateur:motdepasse@hote:587` ;
+   - **Resend** : `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`.
+
+   Sans fournisseur, l’application fonctionne en **mode journal** : rien n’est envoyé,
+   chaque message est tracé « non envoyé ».
+2. Définissez `CRON_SECRET`. `vercel.json` planifie `/api/cron/rappels` chaque jour à
+   16 h UTC (17 h ou 18 h à Paris) : la tâche met en file les rappels des séances du
+   lendemain (date de Paris) puis vide la file, avec reprise des échecs (5 tentatives
+   au plus, délai croissant). Sans le bon en-tête `Authorization: Bearer`, la route
+   répond 401.
+3. **Administration → E-mails** : état de la configuration (sans aucun secret),
+   derniers envois (destinataire masqué) et bouton « Envoyer un e-mail de test à
+   moi-même ».
+4. **Supabase envoie à part les e-mails d’authentification** (confirmation d’inscription,
+   mot de passe oublié) : configurez aussi son SMTP (étape 3, Authentication → SMTP
+   Settings), par exemple avec Brevo (`smtp-relay.brevo.com`, port 587).
+
+Règles d’envoi :
+
+- une clé d’idempotence unique par message (`reminder:<séance>:<participant>:<date>`,
+  `convocation:<séance>:<participant>`…) : un message n’est jamais envoyé deux fois ;
+- données de démonstration, personnes sans adresse ou compte désactivé : jamais
+  d’envoi réel ;
+- le participant peut désactiver les **rappels J-1** dans « Mon compte » (activés par
+  défaut). Les convocations, modifications et annulations restent envoyées : elles
+  portent une information indispensable à sa présence. Une personne sans compte
+  reçoit les rappels (aucune préférence enregistrable) ;
+- aucune adresse n’apparaît dans les journaux applicatifs ni dans le journal
+  d’activité (`email.sent`, `email.failed` : identifiants et modèle seulement).
+
+En local, la pile expose le SMTP de Mailpit : `EMAIL_PROVIDER=smtp` et
+`SMTP_URL=smtp://localhost:54325` dans `.env.local`, puis consultez les messages sur
+http://localhost:54324 (redémarrez la pile une fois pour publier le port 54325).
 
 ### Démonstration
 

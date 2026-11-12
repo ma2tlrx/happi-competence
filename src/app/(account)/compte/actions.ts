@@ -31,6 +31,21 @@ export async function updateProfile(_: ActionState, formData: FormData): Promise
   return actionSuccess('Vos informations ont été enregistrées.');
 }
 
+/**
+ * Préférences d'e-mail. Seuls les rappels J-1 sont facultatifs : convocations, modifications et
+ * annulations de séance restent envoyées, car elles portent une information indispensable.
+ */
+export async function updateEmailPreferences(_: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await requireUser();
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('email_preferences')
+    .upsert({ user_id: user.id, reminders: formData.get('reminders') === 'on' }, { onConflict: 'user_id' });
+  if (error) return actionError(databaseErrorMessage(error));
+  revalidatePath('/compte');
+  return actionSuccess('Vos préférences d’e-mail ont été enregistrées.');
+}
+
 export async function requestDeletion(_: ActionState, formData: FormData): Promise<ActionState> {
   const user = await requireUser();
   if (formData.get('confirm') !== 'on') return actionError('Cochez la case pour confirmer votre demande.');

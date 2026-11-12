@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Layers,
   ListChecks,
+  Mail,
   Radar,
   Route,
   Settings,
@@ -98,6 +99,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
       label: 'Plateforme',
       items: [
         { href: '/admin/parametres', label: 'Paramètres', icon: Settings },
+        { href: '/admin/emails', label: 'E-mails', icon: Mail },
         { href: '/admin/demonstration', label: 'Démonstration', icon: Sparkles },
         { href: '/admin/journal-activite', label: 'Journal d’activité', icon: History },
       ],

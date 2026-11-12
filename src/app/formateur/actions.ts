@@ -6,6 +6,8 @@ import { z } from 'zod';
 
 import { actionError, actionSuccess, databaseErrorMessage, validationError, type ActionState } from '@/lib/action-state';
 import { hasPermission, requireRole } from '@/lib/auth/session';
+import { notifyParticipantInvited, notifySessionChanged, notifySessionsPlanned } from '@/lib/email/events';
+import type { SessionSnapshot } from '@/lib/email/schedule';
 import { createClient } from '@/lib/supabase/server';
 
 const uuid = z.string().uuid();
@@ -85,7 +87,7 @@ export async function updateGroup(groupId: string, _: ActionState, formData: For
 
 // ── Membres ──────────────────────────────────────────────────────────────────
 export async function addMember(groupId: string, _: ActionState, formData: FormData): Promise<ActionState> {
-  await requireRole('formateur', 'admin');
+  const user = await requireRole('formateur', 'admin');
   const supabase = await createClient();
   const existing = formData.get('participantId');
   let args: { p_group_id: string; p_participant_id?: string; p_first_name?: string; p_last_name?: string; p_email?: string };
@@ -106,7 +108,10 @@ export async function addMember(groupId: string, _: ActionState, formData: FormD
   const { data, error } = await supabase.rpc('add_participant_to_group', args);
   if (error) return actionError(databaseErrorMessage(error));
   revalidatePath(`/formateur/groupes/${groupId}`);
-  const result = data as { created: boolean; has_account: boolean; other_organization: boolean };
+  const result = data as { participant_id: string; created: boolean; has_account: boolean; other_organization: boolean };
+  // Sans compte : invitation à le créer (une seule fois par personne). Puis convocation aux séances déjà planifiées.
+  if (!result.has_account) await notifyParticipantInvited(result.participant_id, groupId, user.id);
+  await notifySessionsPlanned({ groupId }, user.id);
   const notes = [
     result.created ? 'Fiche créée : la personne pourra créer son compte avec cette adresse e-mail.' : null,
     result.other_organization ? 'Attention : ce participant est rattaché à un autre organisme que celui du groupe.' : null,
@@ -123,9 +128,10 @@ export async function removeMember(groupId: string, participantId: string) {
 }
 
 export async function restoreMember(groupId: string, participantId: string) {
-  await requireRole('formateur', 'admin');
+  const user = await requireRole('formateur', 'admin');
   const supabase = await createClient();
   const { error } = await supabase.from('group_members').update({ status: 'active' }).eq('group_id', groupId).eq('participant_id', participantId);
+  if (!error) await notifySessionsPlanned({ groupId }, user.id);
   revalidatePath(`/formateur/groupes/${groupId}`);
   return error ? { ok: false, message: databaseErrorMessage(error) } : { ok: true };
 }
@@ -181,8 +187,10 @@ export async function planSessions(groupId: string, _: ActionState, formData: Fo
       };
     });
   if (rows.length === 0) return actionError('Toutes les sessions du programme sont déjà créées.');
-  const { error } = await supabase.from('sessions').insert(rows);
+  const { data: created, error } = await supabase.from('sessions').insert(rows).select('id');
   if (error) return actionError(databaseErrorMessage(error));
+  // Convocations des membres pour les séances datées (envoyées après la réponse).
+  await notifySessionsPlanned({ sessionIds: (created ?? []).map((row) => row.id) }, user.id);
   revalidatePath('/formateur/sessions');
   redirect(`/formateur/groupes/${groupId}?planifie=${rows.length}`);
 }
@@ -200,11 +208,22 @@ const sessionSchema = z
     path: ['endTime'],
   });
 
+const SNAPSHOT_COLUMNS = 'scheduled_date, start_time, end_time, location, status';
+
+/** État d'une séance avant modification (lu sous RLS), pour annoncer ce qui change. */
+async function sessionSnapshot(supabase: Awaited<ReturnType<typeof createClient>>, sessionId: string): Promise<SessionSnapshot | null> {
+  if (!uuid.safeParse(sessionId).success) return null;
+  const { data } = await supabase.from('sessions').select(SNAPSHOT_COLUMNS).eq('id', sessionId).maybeSingle();
+  return data;
+}
+
 export async function updateSession(sessionId: string, _: ActionState, formData: FormData): Promise<ActionState> {
-  await requireRole('formateur', 'admin');
+  const user = await requireRole('formateur', 'admin');
   const parsed = sessionSchema.safeParse(entries(formData));
   if (!parsed.success) return validationError(parsed.error);
   const supabase = await createClient();
+  const before = await sessionSnapshot(supabase, sessionId);
+  if (!before) return actionError('Session introuvable.');
   const { error } = await supabase
     .from('sessions')
     .update({
@@ -216,14 +235,18 @@ export async function updateSession(sessionId: string, _: ActionState, formData:
     })
     .eq('id', sessionId);
   if (error) return actionError(databaseErrorMessage(error));
+  // Participants prévenus d'un changement de date, d'horaire, de lieu, d'une annulation ou d'un rétablissement.
+  await notifySessionChanged(sessionId, before, user.id);
   revalidatePath(`/formateur/sessions/${sessionId}`);
   return actionSuccess('La session a été mise à jour.');
 }
 
 export async function setSessionStatus(sessionId: string, status: 'planned' | 'in_progress' | 'completed' | 'cancelled') {
-  await requireRole('formateur', 'admin');
+  const user = await requireRole('formateur', 'admin');
   const supabase = await createClient();
+  const before = await sessionSnapshot(supabase, sessionId);
   const { error } = await supabase.from('sessions').update({ status }).eq('id', sessionId);
+  if (!error && before) await notifySessionChanged(sessionId, before, user.id);
   revalidatePath(`/formateur/sessions/${sessionId}`, 'layout');
   return error ? { ok: false, message: databaseErrorMessage(error) } : { ok: true };
 }

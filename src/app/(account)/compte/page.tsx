@@ -8,7 +8,7 @@ import { requireUser } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 import { formatDate } from '@/lib/utils';
 
-import { DeletionForm, PasswordForm, ProfileForm } from './account-forms';
+import { DeletionForm, EmailPreferencesForm, PasswordForm, ProfileForm } from './account-forms';
 import { cancelDeletion } from './actions';
 
 export const metadata: Metadata = { title: 'Mon compte' };
@@ -16,9 +16,10 @@ export const metadata: Metadata = { title: 'Mon compte' };
 export default async function ComptePage() {
   const user = await requireUser();
   const supabase = await createClient();
-  const [{ data: profile }, { data: requests }] = await Promise.all([
+  const [{ data: profile }, { data: requests }, { data: emailPreferences }] = await Promise.all([
     supabase.from('profiles').select('terms_accepted_at, privacy_consent_at, created_at').eq('id', user.id).single(),
     supabase.from('data_requests').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
+    supabase.from('email_preferences').select('reminders').eq('user_id', user.id).maybeSingle(),
   ]);
   const pendingDeletion = requests?.find((request) => request.type === 'deletion' && request.status === 'pending');
 
@@ -33,6 +34,14 @@ export default async function ComptePage() {
               <ProfileForm firstName={user.firstName} lastName={user.lastName} phone={user.phone ?? ''} email={user.email} />
             </CardBody>
           </Card>
+          {user.role === 'participant' ? (
+            <Card>
+              <CardHeader title="E-mails" description="Choisissez les messages que vous recevez à votre adresse e-mail." />
+              <CardBody>
+                <EmailPreferencesForm reminders={emailPreferences?.reminders ?? true} />
+              </CardBody>
+            </Card>
+          ) : null}
           <Card>
             <CardHeader title="Mot de passe" description="Au moins 10 caractères, dont une lettre et un chiffre." />
             <CardBody>

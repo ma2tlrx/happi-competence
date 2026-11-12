@@ -307,6 +307,157 @@ export type Database = {
           },
         ]
       }
+      email_outbox: {
+        Row: {
+          attempts: number
+          created_at: string
+          created_by: string | null
+          data: Json
+          id: string
+          idempotency_key: string
+          is_demo: boolean
+          last_error: string | null
+          locked_until: string | null
+          next_attempt_at: string
+          participant_id: string | null
+          provider: string | null
+          provider_message_id: string | null
+          recipient_email: string | null
+          recipient_user_id: string | null
+          report_id: string | null
+          sent_at: string | null
+          session_id: string | null
+          status: string
+          subject: string
+          template: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          attempts?: number
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          idempotency_key: string
+          is_demo?: boolean
+          last_error?: string | null
+          locked_until?: string | null
+          next_attempt_at?: string
+          participant_id?: string | null
+          provider?: string | null
+          provider_message_id?: string | null
+          recipient_email?: string | null
+          recipient_user_id?: string | null
+          report_id?: string | null
+          sent_at?: string | null
+          session_id?: string | null
+          status?: string
+          subject: string
+          template: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          idempotency_key?: string
+          is_demo?: boolean
+          last_error?: string | null
+          locked_until?: string | null
+          next_attempt_at?: string
+          participant_id?: string | null
+          provider?: string | null
+          provider_message_id?: string | null
+          recipient_email?: string | null
+          recipient_user_id?: string | null
+          report_id?: string | null
+          sent_at?: string | null
+          session_id?: string | null
+          status?: string
+          subject?: string
+          template?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_outbox_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_outbox_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "staff_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_outbox_participant_id_fkey"
+            columns: ["participant_id"]
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_outbox_recipient_user_id_fkey"
+            columns: ["recipient_user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_outbox_recipient_user_id_fkey"
+            columns: ["recipient_user_id"]
+            referencedRelation: "staff_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_outbox_report_id_fkey"
+            columns: ["report_id"]
+            referencedRelation: "participant_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_outbox_session_id_fkey"
+            columns: ["session_id"]
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_preferences: {
+        Row: {
+          reminders: boolean
+          updated_at: string
+          user_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          reminders?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          reminders?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_preferences_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_preferences_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "staff_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       evaluation_comments: {
         Row: {
           author_id: string | null
@@ -2546,6 +2697,10 @@ export type Database = {
         Returns: number
       }
       check_invitation_code: { Args: { p_code: string }; Returns: Json }
+      claim_email_outbox: {
+        Args: { p_limit?: number; p_max_attempts?: number }
+        Returns: Database["public"]["Tables"]["email_outbox"]["Row"][]
+      }
       clone_framework_version: {
         Args: { p_label?: string; p_source_version_id: string }
         Returns: string

@@ -107,6 +107,8 @@ services:
     restart: unless-stopped
     ports:
       - "${MAIL_PORT:-54324}:8025"
+      # SMTP de test pour l'application (EMAIL_PROVIDER=smtp, SMTP_URL=smtp://localhost:54325).
+      - "${MAIL_SMTP_PORT:-54325}:1025"
 
 volumes:
   db-data:

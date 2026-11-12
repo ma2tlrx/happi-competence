@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 import { actionError, actionSuccess, databaseErrorMessage, type ActionState } from '@/lib/action-state';
 import { requireRole } from '@/lib/auth/session';
+import { notifyReportFinalized } from '@/lib/email/events';
 import type { Json } from '@/lib/supabase/database.types';
 import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
@@ -139,7 +140,7 @@ export async function saveReport(input: { reportId: string; content: ReportConte
 
 /** Valide le bilan : il devient visible du participant et de son organisme, et n'est plus modifiable. */
 export async function finalizeReport(reportId: string): Promise<ActionState> {
-  await requireRole('formateur', 'admin');
+  const user = await requireRole('formateur', 'admin');
   if (!uuid.safeParse(reportId).success) return actionError('Bilan introuvable.');
   const supabase = await createClient();
   const report = await getReport(supabase, reportId);
@@ -155,6 +156,8 @@ export async function finalizeReport(reportId: string): Promise<ActionState> {
   if (issues.length) return actionError(`Le texte comporte ${issues.length} point(s) à corriger avant validation.`);
   const { error } = await supabase.from('participant_reports').update({ status: 'final' }).eq('id', reportId);
   if (error) return actionError(databaseErrorMessage(error));
+  // E-mail et notification au participant (« votre bilan est disponible »).
+  await notifyReportFinalized(reportId, user.id);
   revalidatePath(pathFor(report.participantId));
   return actionSuccess('Bilan validé. Le participant et son organisme peuvent désormais le télécharger.');
 }

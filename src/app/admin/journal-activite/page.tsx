@@ -23,6 +23,7 @@ const FAMILIES = [
   { value: 'content', label: 'Supports pédagogiques' },
   { value: 'export', label: 'Exports' },
   { value: 'data_request', label: 'Demandes RGPD' },
+  { value: 'email', label: 'E-mails' },
 ];
 
 export default async function AuditLogPage({ searchParams }: { searchParams: Promise<{ type?: string; page?: string }> }) {
