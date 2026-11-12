@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
       ];
     }),
   ];
+  await supabase.rpc('log_event', { p_action: 'export.satisfaction_csv', p_entity_type: 'satisfaction', p_metadata: { rows: rows.length } });
   return new NextResponse(toCsv(lines), {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',

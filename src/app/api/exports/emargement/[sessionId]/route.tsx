@@ -28,9 +28,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ sessionId:
   if (!sheet) return NextResponse.json({ error: 'Séance introuvable.' }, { status: 404 });
 
   const buffer = await renderToBuffer(<SignatureSheetDocument sheet={sheet} generatedAt={new Date()} partial={user.role === 'organisme'} />);
-  // Action journalisable existante ; une action dédiée « export.signature_sheet_pdf » est proposée.
   await supabase.rpc('log_event', {
-    p_action: 'export.attendance_pdf',
+    p_action: 'export.signature_sheet_pdf',
     p_entity_type: 'session',
     p_entity_id: sessionId,
     p_metadata: { document: 'emargement', sha256: sheet.fingerprint, countersigned: Boolean(sheet.countersignature) },

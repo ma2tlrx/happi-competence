@@ -52,7 +52,7 @@ function FilterForm({ access, action, showOrganization }: { access: ImpactAccess
           </select>
         </label>
       ) : null}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button type="submit">Appliquer</Button>
         <Button asChild variant="ghost">
           <a href={action}>Réinitialiser</a>

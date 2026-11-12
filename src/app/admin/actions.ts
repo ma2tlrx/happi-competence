@@ -52,7 +52,7 @@ export async function setUserStatus(userId: string, status: 'active' | 'disabled
  * La suppression est journalisée par la base (auth.mfa_disabled).
  */
 export async function resetUserMfa(userId: string): Promise<Simple> {
-  const { user } = await admin();
+  const { user, supabase } = await admin();
   if (!uuid.safeParse(userId).success) return { ok: false, message: 'Compte invalide.' };
   if (userId === user.id) return { ok: false, message: 'Gérez votre propre double authentification depuis « Mon compte › Sécurité ».' };
   if (!isAdminClientConfigured()) return { ok: false, message: 'Action momentanément indisponible.' };
@@ -64,6 +64,7 @@ export async function resetUserMfa(userId: string): Promise<Simple> {
     const { error: deleteError } = await service.auth.admin.mfa.deleteFactor({ userId, id: factor.id });
     if (deleteError) return { ok: false, message: 'La double authentification n’a pas pu être réinitialisée entièrement.' };
   }
+  await supabase.rpc('log_event', { p_action: 'auth.mfa_reset', p_entity_type: 'user', p_entity_id: userId });
   return done(null, ['/admin/utilisateurs']);
 }
 

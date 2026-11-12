@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getCurrentUser } from '@/lib/auth/session';
 import { indicatorsCsv, participantsCsv } from '@/lib/outcomes/csv';
 import { canReadImpact, loadImpactFor, parseImpactFilters } from '@/lib/outcomes/report';
+import { createClient } from '@/lib/supabase/server';
 
 /**
  * Export CSV du tableau de bord d'impact : indicateurs (?type=indicateurs) ou détail par parcours
@@ -18,6 +19,8 @@ export async function GET(request: NextRequest) {
   const access = await loadImpactFor(user, parseImpactFilters(params));
   if (!access) return NextResponse.json({ error: 'Accès refusé.' }, { status: 403 });
   const body = type === 'participants' ? participantsCsv(access.report) : indicatorsCsv(access.report);
+  const supabase = await createClient();
+  await supabase.rpc('log_event', { p_action: 'export.impact_csv', p_entity_type: 'impact', p_metadata: { type } });
   return new NextResponse(body, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',

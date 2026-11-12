@@ -35,9 +35,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!certificate) return NextResponse.json({ error: 'Certificat introuvable.' }, { status: 404 });
 
   const buffer = await renderToBuffer(<CertificateDocument certificate={certificate} generatedAt={new Date()} />);
-  // Action journalisable existante ; une action dédiée « export.certificate_pdf » est proposée.
   await supabase.rpc('log_event', {
-    p_action: 'export.attendance_pdf',
+    p_action: 'export.certificate_pdf',
     p_entity_type: 'participant',
     p_entity_id: participantId,
     p_metadata: { document: 'certificat_realisation', group_id: groupId, sha256: certificate.fingerprint },
