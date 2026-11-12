@@ -81,6 +81,8 @@ export default async function OrganizationParticipantsPage({ searchParams }: { s
                     <Td>
                       {!participant.groupId ? (
                         <Badge variant="outline">Non inscrit</Badge>
+                      ) : participant.dropped ? (
+                        <Badge variant="warning">Abandon</Badge>
                       ) : participant.completedSessions >= participant.totalSessions ? (
                         <Badge variant="success">Parcours terminé</Badge>
                       ) : (

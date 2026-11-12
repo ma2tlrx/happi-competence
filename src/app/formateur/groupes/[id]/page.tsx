@@ -1,4 +1,4 @@
-import { ArrowLeft, CalendarDays, Pencil } from 'lucide-react';
+import { ArrowLeft, BellRing, CalendarDays, Pencil } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -9,12 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/overlays';
 import { Avatar, Badge, Card, CardBody, CardHeader, EmptyState, Notice, PageHeader, Table, TableWrap, Td, Th, Tr } from '@/components/ui/primitives';
 import { hasPermission, requireRole } from '@/lib/auth/session';
+import { DROPOUT_REASON_LABELS, dropoutAlerts } from '@/lib/outcomes/dropout';
+import { dropReasonLabel } from '@/lib/outcomes/labels';
 import { createClient } from '@/lib/supabase/server';
 import { formatDate, formatTimeRange, isUuid } from '@/lib/utils';
 
 import { updateGroup } from '../../actions';
 import { GroupForm } from '../group-form';
-import { AddMemberDialog, MemberActions, OrganizationSelect, PlanSessionsForm } from './group-client';
+import { AddMemberDialog, DropoutDialog, MemberActions, OrganizationSelect, PlanSessionsForm } from './group-client';
 
 export const metadata: Metadata = { title: 'Groupe' };
 
@@ -34,7 +36,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const [members, sessions, outline, trainers, programs, organizations, staff, candidates] = await Promise.all([
     supabase
       .from('group_members')
-      .select('status, joined_at, participants ( id, first_name, last_name, email, user_id, organization_id )')
+      .select('status, joined_at, drop_reason, drop_details, dropped_at, participants ( id, first_name, last_name, email, user_id, organization_id )')
       .eq('group_id', id)
       .order('joined_at'),
     supabase.from('sessions').select('id, number, scheduled_date, start_time, end_time, status, program_session_id').eq('group_id', id).order('number'),
@@ -51,7 +53,9 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
     : { data: [] as { participant_id: string; session_id: string; status: string }[] };
 
   const activeMembers = (members.data ?? []).filter((member) => member.status === 'active' && member.participants);
-  const removedMembers = (members.data ?? []).filter((member) => member.status !== 'active' && member.participants);
+  // Abandon : départ en cours de parcours (conservé dans les statistiques) ; retrait : erreur d'inscription.
+  const droppedMembers = (members.data ?? []).filter((member) => member.status === 'dropped' && member.participants);
+  const removedMembers = (members.data ?? []).filter((member) => member.status === 'removed' && member.participants);
   const memberIds = new Set((members.data ?? []).map((member) => member.participants?.id));
   const max = group.programs?.max_group_size ?? 8;
   const min = group.programs?.min_group_size ?? 4;
@@ -67,6 +71,13 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
     (attendance ?? []).filter(
       (row) => row.participant_id === participantId && completedIds.has(row.session_id) && ['present', 'late', 'left_early'].includes(row.status),
     ).length;
+
+  const alerts = dropoutAlerts(
+    activeMembers.map((member) => member.participants!.id),
+    (sessions.data ?? []).map((session) => ({ id: session.id, status: session.status, date: session.scheduled_date, number: session.number })),
+    (attendance ?? []).map((row) => ({ sessionId: row.session_id, participantId: row.participant_id, status: row.status })),
+  );
+  const memberName = new Map(activeMembers.map((member) => [member.participants!.id, `${member.participants!.first_name} ${member.participants!.last_name}`]));
 
   return (
     <>
@@ -120,6 +131,22 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
       ) : null}
 
       <div className="space-y-6">
+        {alerts.length > 0 ? (
+          <Notice variant="warning" title={`À relancer (${alerts.length})`}>
+            <p>Participants absents à plusieurs séances terminées consécutives, ou absents sans motif à la dernière séance. Prenez de leurs nouvelles.</p>
+            <ul className="mt-2 space-y-1">
+              {alerts.map((alert) => (
+                <li key={alert.participantId} className="flex flex-wrap items-center gap-x-2">
+                  <BellRing className="size-4 text-warning" aria-hidden />
+                  <Link href={`/formateur/participants/${alert.participantId}`} className="font-semibold text-ink hover:underline">
+                    {memberName.get(alert.participantId)}
+                  </Link>
+                  <span>· {alert.reasons.map((reason) => DROPOUT_REASON_LABELS[reason]).join(', ')}{alert.trailingAbsences >= 2 ? ` (${alert.trailingAbsences} séances)` : ''}</span>
+                </li>
+              ))}
+            </ul>
+          </Notice>
+        ) : null}
         <Card>
           <CardHeader
             title={`Participants (${activeMembers.length}/${max})`}
@@ -185,7 +212,14 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                             />
                           </Td>
                           <Td className="text-right tabular-nums">{attended(person!.id)}/{completedIds.size}</Td>
-                          <Td className="text-right">{canManage ? <MemberActions groupId={group.id} participantId={person!.id} name={name} removed={false} /> : null}</Td>
+                          <Td className="text-right">
+                            {canManage ? (
+                              <div className="flex justify-end gap-1">
+                                <DropoutDialog groupId={group.id} participantId={person!.id} name={name} />
+                                <MemberActions groupId={group.id} participantId={person!.id} name={name} removed={false} />
+                              </div>
+                            ) : null}
+                          </Td>
                         </Tr>
                       );
                     })}
@@ -195,9 +229,37 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             ) : (
               <EmptyState title="Aucun participant" description="Ajoutez les personnes qui suivront ce groupe." />
             )}
+            {droppedMembers.length > 0 ? (
+              <details className="border-t border-line px-5 py-3 sm:px-6" open>
+                <summary className="cursor-pointer text-sm font-semibold text-ink-muted">{droppedMembers.length} abandon(s) en cours de parcours</summary>
+                <ul className="mt-2 space-y-2">
+                  {droppedMembers.map((member) => {
+                    const person = member.participants!;
+                    const name = `${person.first_name} ${person.last_name}`;
+                    return (
+                      <li key={person.id} className="flex flex-wrap items-center justify-between gap-3 text-[0.9375rem]">
+                        <span className="min-w-0">
+                          <Link href={`/formateur/participants/${person.id}`} className="font-medium text-ink hover:underline">{name}</Link>
+                          <span className="block text-sm text-ink-muted">
+                            {dropReasonLabel(member.drop_reason)} · {formatDate(member.dropped_at)}
+                            {member.drop_details ? ` · ${member.drop_details}` : ''}
+                          </span>
+                        </span>
+                        {canManage ? (
+                          <span className="flex gap-1">
+                            <DropoutDialog groupId={group.id} participantId={person.id} name={name} existing={{ reason: member.drop_reason, details: member.drop_details, droppedAt: member.dropped_at }} />
+                            <MemberActions groupId={group.id} participantId={person.id} name={name} removed />
+                          </span>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </details>
+            ) : null}
             {removedMembers.length > 0 ? (
               <details className="border-t border-line px-5 py-3 sm:px-6">
-                <summary className="cursor-pointer text-sm font-semibold text-ink-muted">{removedMembers.length} participant(s) retiré(s)</summary>
+                <summary className="cursor-pointer text-sm font-semibold text-ink-muted">{removedMembers.length} participant(s) retiré(s) (erreur d’inscription)</summary>
                 <ul className="mt-2 space-y-2">
                   {removedMembers.map(({ participants: person }) => (
                     <li key={person!.id} className="flex items-center justify-between gap-3 text-[0.9375rem]">

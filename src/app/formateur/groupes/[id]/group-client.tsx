@@ -1,14 +1,15 @@
 'use client';
 
-import { RotateCcw, UserMinus, UserPlus } from 'lucide-react';
+import { DoorOpen, Pencil, RotateCcw, UserMinus, UserPlus } from 'lucide-react';
 import { useActionState, useState, useTransition } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Field, FormMessage, Input, Select, SubmitButton } from '@/components/ui/form';
+import { Field, FormMessage, Input, Select, SubmitButton, Textarea } from '@/components/ui/form';
 import { Dialog, DialogContent, DialogTrigger, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/overlays';
 import { toast } from '@/components/ui/toast';
+import { DROP_DETAILS_MAX, DROP_REASON_CODES, DROP_REASONS } from '@/lib/outcomes/labels';
 
-import { addMember, linkParticipantOrganization, planSessions, removeMember, restoreMember } from '../../actions';
+import { addMember, declareDropout, linkParticipantOrganization, planSessions, removeMember, restoreMember } from '../../actions';
 
 type Option = { id: string; name: string };
 
@@ -78,16 +79,83 @@ export function MemberActions({ groupId, participantId, name, removed }: { group
   const [pending, start] = useTransition();
   const run = () =>
     start(async () => {
-      if (!removed && !window.confirm(`Retirer ${name} du groupe ? Ses présences et évaluations sont conservées.`)) return;
+      if (!removed && !window.confirm(`Retirer ${name} du groupe ? À réserver à une erreur d’inscription : pour un départ en cours de parcours, déclarez plutôt un abandon. Ses présences et évaluations sont conservées.`)) return;
       const result = removed ? await restoreMember(groupId, participantId) : await removeMember(groupId, participantId);
       if (result.ok) toast.success(removed ? `${name} a réintégré le groupe.` : `${name} a été retiré du groupe.`);
       else toast.error(result.message ?? 'Action impossible.');
     });
   return (
-    <Button size="sm" variant={removed ? 'outline' : 'ghost'} onClick={run} loading={pending} aria-label={removed ? `Réintégrer ${name}` : `Retirer ${name} du groupe`}>
+    <Button size="sm" variant={removed ? 'outline' : 'ghost'} onClick={run} loading={pending} aria-label={removed ? `Réintégrer ${name}` : `Retirer ${name} du groupe (erreur d’inscription)`}>
       {removed ? <RotateCcw aria-hidden /> : <UserMinus aria-hidden />}
       <span className="hidden md:inline">{removed ? 'Réintégrer' : 'Retirer'}</span>
     </Button>
+  );
+}
+
+export function DropoutDialog({
+  groupId,
+  participantId,
+  name,
+  existing,
+}: {
+  groupId: string;
+  participantId: string;
+  name: string;
+  existing?: { reason: string | null; details: string | null; droppedAt: string | null };
+}) {
+  const [open, setOpen] = useState(false);
+  const today = new Date().toISOString().slice(0, 10);
+  const [state, action] = useActionState(async (previous: Awaited<ReturnType<typeof declareDropout>>, formData: FormData) => {
+    const result = await declareDropout(groupId, participantId, previous, formData);
+    if (result?.ok) {
+      toast.success(existing ? `Abandon de ${name} mis à jour.` : `Abandon de ${name} enregistré.`);
+      setOpen(false);
+    }
+    return result;
+  }, null);
+  const errors = state?.fieldErrors ?? {};
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="ghost" aria-label={existing ? `Modifier l’abandon de ${name}` : `Déclarer l’abandon de ${name}`}>
+          {existing ? <Pencil aria-hidden /> : <DoorOpen aria-hidden />}
+          <span className="hidden md:inline">{existing ? 'Modifier' : 'Abandon'}</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent
+        title={existing ? `Abandon de ${name}` : `Déclarer l’abandon de ${name}`}
+        description="La personne quitte le parcours : elle n’apparaît plus sur les feuilles de présence mais reste dans l’historique, les statistiques et l’échéancier des suivis. Pour une erreur d’inscription, utilisez plutôt « Retirer »."
+      >
+        <form action={action} className="space-y-4" noValidate>
+          <Field label="Motif" required error={errors.reason} hint="Liste provisoire, à valider.">
+            {({ id, describedBy, invalid }) => (
+              <Select id={id} name="reason" required defaultValue={existing?.reason ?? ''} aria-describedby={describedBy} aria-invalid={invalid || undefined}>
+                <option value="" disabled>
+                  Sélectionner
+                </option>
+                {DROP_REASON_CODES.map((code) => (
+                  <option key={code} value={code}>
+                    {DROP_REASONS[code]}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
+          <Field label="Précisions" optional error={errors.details} hint={`Obligatoire pour « Autre motif ». ${DROP_DETAILS_MAX} caractères au plus.`}>
+            {({ id, describedBy, invalid }) => (
+              <Textarea id={id} name="details" rows={3} maxLength={DROP_DETAILS_MAX} defaultValue={existing?.details ?? ''} aria-describedby={describedBy} aria-invalid={invalid || undefined} />
+            )}
+          </Field>
+          <Field label="Date de l’abandon" required error={errors.droppedAt} hint="Point de départ des suivis à 3 et 6 mois.">
+            {({ id, describedBy, invalid }) => (
+              <Input id={id} name="droppedAt" type="date" max={today} required defaultValue={existing?.droppedAt ?? today} aria-describedby={describedBy} aria-invalid={invalid || undefined} />
+            )}
+          </Field>
+          {state && !state.ok ? <FormMessage state={state} /> : null}
+          <SubmitButton>{existing ? 'Enregistrer' : 'Déclarer l’abandon'}</SubmitButton>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

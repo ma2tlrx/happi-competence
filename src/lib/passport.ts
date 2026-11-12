@@ -105,7 +105,7 @@ export type Passport = {
     createdAt: string;
     organization: { id: string; name: string } | null;
   };
-  group: { id: string; name: string; startDate: string | null; endDate: string | null; programName: string; sessionsCount: number; trainers: string[] } | null;
+  group: { id: string; name: string; startDate: string | null; endDate: string | null; programName: string; sessionsCount: number; trainers: string[]; /** Parcours interrompu (abandon). */ dropped?: boolean } | null;
   otherGroups: { id: string; name: string; status: string }[];
   sessions: PassportSession[];
   completedSessions: number;
@@ -171,9 +171,11 @@ export async function getPassport(supabase: ServerClient, participantId: string)
   if (!participant) return null;
   const staffName = new Map((staffResult.data ?? []).map((person) => [person.id, `${person.first_name} ${person.last_name}`.trim()]));
 
-  // Groupe de référence : le groupe actif le plus récent.
+  // Groupe de référence : le groupe actif le plus récent ; à défaut, le dernier groupe quitté par
+  // abandon (le parcours suivi jusque-là reste consultable). Un retrait (erreur d'inscription) ne compte pas.
   const memberships = (membershipsResult.data ?? []).filter((membership) => membership.groups);
-  const active = memberships.find((membership) => membership.status === 'active') ?? null;
+  const active =
+    memberships.find((membership) => membership.status === 'active') ?? memberships.find((membership) => membership.status === 'dropped') ?? null;
   const groupRow = active?.groups ?? null;
 
   let sessions: PassportSession[] = [];
@@ -410,6 +412,7 @@ export async function getPassport(supabase: ServerClient, participantId: string)
           programName: groupRow.programs?.name ?? 'Programme HAPPI',
           sessionsCount: groupRow.programs?.sessions_count ?? sessions.length,
           trainers,
+          dropped: active?.status === 'dropped',
         }
       : null,
     otherGroups: memberships.filter((membership) => membership !== active).map((membership) => ({ id: membership.groups!.id, name: membership.groups!.name, status: membership.status })),

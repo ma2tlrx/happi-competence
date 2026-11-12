@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays, ClipboardCheck, ClipboardPen, MonitorPlay, Plus, Users } from 'lucide-react';
+import { ArrowRight, BellRing, CalendarDays, ClipboardCheck, ClipboardPen, MonitorPlay, Plus, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
@@ -6,6 +6,8 @@ import { SessionStatusBadge } from '@/components/passport/session-status';
 import { Button } from '@/components/ui/button';
 import { Card, CardBody, CardHeader, EmptyState, PageHeader, StatTile } from '@/components/ui/primitives';
 import { requireRole } from '@/lib/auth/session';
+import { DROPOUT_REASON_LABELS } from '@/lib/outcomes/dropout';
+import { loadDropoutAlerts } from '@/lib/outcomes/load';
 import { createClient } from '@/lib/supabase/server';
 import { listSessions, myGroupIds, pendingEvaluations, todayIso } from '@/lib/trainer';
 import { formatShortDate, formatTimeRange, pluralize } from '@/lib/utils';
@@ -16,10 +18,11 @@ export default async function TrainerDashboard() {
   const user = await requireRole('formateur', 'admin');
   const supabase = await createClient();
   const groupIds = await myGroupIds(supabase, user.id);
-  const [sessions, groupsResult, membersResult] = await Promise.all([
+  const [sessions, groupsResult, membersResult, alerts] = await Promise.all([
     listSessions(supabase, { groupIds }),
     supabase.from('groups').select('id, name, status, start_date, end_date, programs ( name ), organizations ( name )').in('id', groupIds).order('start_date', { ascending: false }),
     supabase.from('group_members').select('participant_id').in('group_id', groupIds).eq('status', 'active'),
+    loadDropoutAlerts(supabase, groupIds),
   ]);
   const today = todayIso();
   const active = sessions.filter((session) => session.status === 'planned' || session.status === 'in_progress');
@@ -147,6 +150,40 @@ export default async function TrainerDashboard() {
           </CardBody>
         </Card>
       </div>
+
+      <Card className="mt-6">
+        <CardHeader
+          title={`À relancer${alerts.length ? ` (${alerts.length})` : ''}`}
+          description="Participants absents à deux séances terminées consécutives, ou absents sans motif à la dernière séance."
+          action={<Link href="/formateur/suivis" className="text-sm font-semibold text-petrol-700">Suivis à faire</Link>}
+        />
+        <CardBody className="pt-3">
+          {alerts.length > 0 ? (
+            <ul className="divide-y divide-line">
+              {alerts.map((alert) => (
+                <li key={`${alert.groupId}:${alert.participantId}`} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                  <span className="flex min-w-0 items-start gap-3">
+                    <BellRing className="mt-0.5 size-[1.125rem] shrink-0 text-warning" aria-hidden />
+                    <span className="min-w-0">
+                      <Link href={`/formateur/participants/${alert.participantId}`} className="block truncate font-medium text-ink hover:underline">
+                        {alert.participantName}
+                      </Link>
+                      <span className="block text-sm text-ink-muted">
+                        {alert.groupName} · {alert.reasons.map((reason) => DROPOUT_REASON_LABELS[reason]).join(', ')}
+                      </span>
+                    </span>
+                  </span>
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`/formateur/groupes/${alert.groupId}`}>Voir le groupe</Link>
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState icon={BellRing} title="Personne à relancer" description="Aucune absence répétée sur les séances terminées de vos groupes." />
+          )}
+        </CardBody>
+      </Card>
 
       <Card className="mt-6">
         <CardHeader title="Mes groupes" action={<Link href="/formateur/groupes" className="text-sm font-semibold text-petrol-700">Gérer</Link>} />

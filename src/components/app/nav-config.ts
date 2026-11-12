@@ -1,6 +1,7 @@
 import {
   BookOpen,
   Building2,
+  CalendarClock,
   CalendarDays,
   ClipboardCheck,
   FileText,
@@ -14,6 +15,7 @@ import {
   Route,
   Settings,
   Sparkles,
+  TrendingUp,
   User,
   Users,
   type LucideIcon,
@@ -57,6 +59,8 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/organisme/participants', label: 'Participants', icon: Users, mobile: true },
         { href: '/organisme/sessions', label: 'Sessions', icon: CalendarDays, mobile: true },
         { href: '/organisme/presences', label: 'Présences', icon: ClipboardCheck },
+        { href: '/organisme/suivis', label: 'Suivis', icon: CalendarClock },
+        { href: '/organisme/impact', label: 'Impact', icon: TrendingUp },
       ],
     },
   ],
@@ -67,6 +71,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/formateur/sessions', label: 'Sessions', icon: CalendarDays, mobile: true },
         { href: '/formateur/groupes', label: 'Groupes', icon: Users, mobile: true },
         { href: '/formateur/programmes', label: 'Programmes', icon: BookOpen, mobile: true },
+        { href: '/formateur/suivis', label: 'Suivis', icon: CalendarClock },
       ],
     },
   ],
@@ -92,6 +97,13 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/admin/sessions', label: 'Sessions', icon: CalendarDays, mobile: true },
         { href: '/admin/referentiels', label: 'Référentiels', icon: Radar },
         { href: '/admin/contenus', label: 'Supports pédagogiques', icon: FileText },
+      ],
+    },
+    {
+      label: 'Pilotage',
+      items: [
+        { href: '/admin/impact', label: 'Impact', icon: TrendingUp },
+        { href: '/admin/suivis', label: 'Suivis', icon: CalendarClock },
       ],
     },
     {
