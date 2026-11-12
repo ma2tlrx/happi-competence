@@ -31,7 +31,10 @@ export type PermissionCode =
   | 'content.read'
   | 'org.evaluations.read'
   | 'org.attendance.read'
-  | 'org.exports';
+  | 'org.exports'
+  | 'outcomes.write'
+  | 'org.outcomes.write'
+  | 'org.impact.read';
 
 export const ORGANIZATION_TYPES = {
   mission_locale: 'Mission Locale',

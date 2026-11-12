@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { ParticipantFile } from '@/components/passport/participant-file';
+import { OutcomesCard } from '@/components/outcomes/outcomes-card';
 import { FinalReports } from '@/components/report/final-reports';
 import { Notice } from '@/components/ui/primitives';
 import { hasPermission, requireRole } from '@/lib/auth/session';
+import { loadParticipantOutcomes, participantGroups } from '@/lib/outcomes/load';
 import { getPassport } from '@/lib/passport';
 import { listReports } from '@/lib/report/load';
 import { createClient } from '@/lib/supabase/server';
@@ -23,7 +25,9 @@ export default async function OrganizationParticipantPage({ params }: { params: 
   const passport = await getPassport(supabase, id);
   if (!passport) notFound();
   await supabase.rpc('log_event', { p_action: 'participant_file.viewed', p_entity_type: 'participant', p_entity_id: id });
-  const reports = await listReports(supabase, id);
+  const canWriteOutcomes = hasPermission(user, 'org.outcomes.write');
+  const canReadOutcomes = canWriteOutcomes || hasPermission(user, 'org.impact.read');
+  const [reports, outcomes] = await Promise.all([listReports(supabase, id), canReadOutcomes ? loadParticipantOutcomes(supabase, id) : Promise.resolve([])]);
   return (
     <>
       {!hasPermission(user, 'org.evaluations.read') ? (
@@ -41,6 +45,15 @@ export default async function OrganizationParticipantPage({ params }: { params: 
           </Link>
         }
       />
+      {canReadOutcomes ? (
+        <OutcomesCard
+          participantId={id}
+          participantName={`${passport.participant.firstName} ${passport.participant.lastName}`}
+          groups={participantGroups(passport)}
+          records={outcomes}
+          canEdit={canWriteOutcomes}
+        />
+      ) : null}
     </>
   );
 }

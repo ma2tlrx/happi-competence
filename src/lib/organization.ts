@@ -11,6 +11,8 @@ export type OrgParticipantRow = {
   hasAccount: boolean;
   groupId: string | null;
   groupName: string | null;
+  /** Abandon : le participant a quitté son dernier groupe en cours de parcours. */
+  dropped: boolean;
   programName: string | null;
   joinedAt: string | null;
   completedSessions: number;
@@ -50,8 +52,10 @@ export async function getOrganizationOverview(supabase: ServerClient) {
   const groupById = new Map(groups.map((group) => [group.id, group]));
 
   const participants: OrgParticipantRow[] = (participantsResult.data ?? []).map((participant) => {
-    // Seul un rattachement actif compte : un participant retiré n'apparaît plus dans ce groupe.
-    const membership = (membersResult.data ?? []).find((m) => m.participant_id === participant.id && m.status === 'active');
+    // Rattachement actif d'abord ; à défaut, un abandon (le parcours reste dans l'historique).
+    // Un participant retiré (erreur d'inscription) n'apparaît plus dans ce groupe.
+    const own = (membersResult.data ?? []).filter((m) => m.participant_id === participant.id);
+    const membership = own.find((m) => m.status === 'active') ?? own.find((m) => m.status === 'dropped');
     const group = membership ? groupById.get(membership.group_id) : undefined;
     const groupSessions = group ? sessions.filter((session) => session.group_id === group.id) : [];
     const completed = groupSessions.filter((session) => session.status === 'completed');
@@ -64,6 +68,7 @@ export async function getOrganizationOverview(supabase: ServerClient) {
       hasAccount: Boolean(participant.user_id),
       groupId: group?.id ?? null,
       groupName: group?.name ?? null,
+      dropped: membership?.status === 'dropped',
       programName: group?.programs?.name ?? null,
       joinedAt: membership?.joined_at ?? participant.created_at,
       completedSessions: completed.length,
@@ -92,7 +97,7 @@ export async function getOrganizationOverview(supabase: ServerClient) {
         organizationName: group.organizations?.name ?? null,
         totalSessions: group.programs?.sessions_count ?? groupSessions.length,
         completedSessions: groupSessions.filter((session) => session.status === 'completed').length,
-        participants: participants.filter((participant) => participant.groupId === group.id).length,
+        participants: participants.filter((participant) => participant.groupId === group.id && !participant.dropped).length,
       };
     }),
     sessions: sessions.map((session) => ({

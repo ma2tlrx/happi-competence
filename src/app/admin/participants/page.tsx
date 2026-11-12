@@ -47,7 +47,8 @@ export default async function AdminParticipantsPage({ searchParams }: { searchPa
               <tbody>
                 {participants!.map((participant) => {
                   const name = `${participant.first_name} ${participant.last_name}`;
-                  const group = participant.group_members.find((m) => m.status === 'active')?.groups?.name;
+                  const dropped = participant.group_members.find((m) => m.status === 'dropped')?.groups?.name;
+                  const group = participant.group_members.find((m) => m.status === 'active')?.groups?.name ?? (dropped ? `${dropped} (abandon)` : undefined);
                   return (
                     <Tr key={participant.id}>
                       <Td>

@@ -8,6 +8,7 @@ import { actionError, actionSuccess, databaseErrorMessage, validationError, type
 import { hasPermission, requireRole } from '@/lib/auth/session';
 import { notifyParticipantInvited, notifySessionChanged, notifySessionsPlanned } from '@/lib/email/events';
 import type { SessionSnapshot } from '@/lib/email/schedule';
+import { DROP_DETAILS_MAX, DROP_REASON_CODES } from '@/lib/outcomes/labels';
 import { createClient } from '@/lib/supabase/server';
 
 const uuid = z.string().uuid();
@@ -134,6 +135,43 @@ export async function restoreMember(groupId: string, participantId: string) {
   if (!error) await notifySessionsPlanned({ groupId }, user.id);
   revalidatePath(`/formateur/groupes/${groupId}`);
   return error ? { ok: false, message: databaseErrorMessage(error) } : { ok: true };
+}
+
+const dropoutSchema = z
+  .object({
+    reason: z.enum(DROP_REASON_CODES, 'Choisissez un motif.'),
+    details: z.string().trim().max(DROP_DETAILS_MAX, `${DROP_DETAILS_MAX} caractères au plus.`),
+    droppedAt: z
+      .string()
+      .trim()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide.')
+      .refine((value) => value <= new Date().toISOString().slice(0, 10), 'La date ne peut pas être dans le futur.'),
+  })
+  .refine((value) => value.reason !== 'autre' || value.details.length > 0, { message: 'Précisez le motif.', path: ['details'] });
+
+/**
+ * Déclare (ou corrige) l'abandon d'un participant : il n'est plus actif dans le groupe mais reste
+ * dans l'historique et les statistiques, à la différence d'un retrait (erreur d'inscription).
+ */
+export async function declareDropout(groupId: string, participantId: string, _: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await requireRole('formateur', 'admin');
+  if (!hasPermission(user, 'groups.manage')) return actionError('Vous n’êtes pas autorisé à modifier ce groupe.');
+  if (!uuid.safeParse(groupId).success || !uuid.safeParse(participantId).success) return actionError('Participant invalide.');
+  const parsed = dropoutSchema.safeParse(entries(formData));
+  if (!parsed.success) return validationError(parsed.error);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('group_members')
+    .update({ status: 'dropped', drop_reason: parsed.data.reason, drop_details: parsed.data.details || null, dropped_at: parsed.data.droppedAt })
+    .eq('group_id', groupId)
+    .eq('participant_id', participantId)
+    .neq('status', 'removed')
+    .select('id');
+  if (error) return actionError(databaseErrorMessage(error));
+  if (!data?.length) return actionError('Vous n’êtes pas autorisé à modifier ce groupe.');
+  revalidatePath(`/formateur/groupes/${groupId}`);
+  revalidatePath('/formateur/dashboard');
+  return actionSuccess('L’abandon est enregistré.');
 }
 
 /** Rattachement d'un participant à un organisme (enregistré et historisé en base). */

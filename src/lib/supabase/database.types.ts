@@ -1011,6 +1011,9 @@ export type Database = {
       group_members: {
         Row: {
           added_by: string | null
+          drop_details: string | null
+          drop_reason: string | null
+          dropped_at: string | null
           group_id: string
           id: string
           joined_at: string
@@ -1021,6 +1024,9 @@ export type Database = {
         ComputedFields: never
         Insert: {
           added_by?: string | null
+          drop_details?: string | null
+          drop_reason?: string | null
+          dropped_at?: string | null
           group_id: string
           id?: string
           joined_at?: string
@@ -1030,6 +1036,9 @@ export type Database = {
         }
         Update: {
           added_by?: string | null
+          drop_details?: string | null
+          drop_reason?: string | null
+          dropped_at?: string | null
           group_id?: string
           id?: string
           joined_at?: string
@@ -1509,6 +1518,62 @@ export type Database = {
             foreignKeyName: "participant_organization_history_previous_organization_id_fkey"
             columns: ["previous_organization_id"]
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      participant_outcomes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          details: string | null
+          group_id: string | null
+          id: string
+          kind: string
+          observed_on: string
+          participant_id: string
+          recorded_by: string | null
+          situation: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          group_id?: string | null
+          id?: string
+          kind: string
+          observed_on?: string
+          participant_id: string
+          recorded_by?: string | null
+          situation: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          group_id?: string | null
+          id?: string
+          kind?: string
+          observed_on?: string
+          participant_id?: string
+          recorded_by?: string | null
+          situation?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participant_outcomes_group_id_fkey"
+            columns: ["group_id"]
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participant_outcomes_participant_id_fkey"
+            columns: ["participant_id"]
+            referencedRelation: "participants"
             referencedColumns: ["id"]
           },
         ]
