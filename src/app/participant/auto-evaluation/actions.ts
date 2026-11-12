@@ -26,6 +26,37 @@ export async function startSelfAssessment(): Promise<{ id: string } | { error: s
   return { id: data.id };
 }
 
+/**
+ * Ouvre (ou reprend) l'auto-évaluation finale : même version de questionnaire que l'initiale,
+ * une seule fois. L'ouverture (fin de parcours) est vérifiée par la base.
+ */
+export async function startFinalSelfAssessment(): Promise<{ id: string } | { error: string }> {
+  const user = await requireRole('participant');
+  if (!user.participantId) return { error: 'Votre fiche participant n’est pas encore disponible.' };
+  const supabase = await createClient();
+  const { data: existing } = await supabase.from('self_assessments').select('id').eq('participant_id', user.participantId).eq('kind', 'final').maybeSingle();
+  if (existing) return { id: existing.id };
+  const { data: initial } = await supabase
+    .from('self_assessments')
+    .select('questionnaire_version_id')
+    .eq('participant_id', user.participantId)
+    .eq('kind', 'initial')
+    .eq('status', 'completed')
+    .order('completed_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!initial) return { error: 'L’auto-évaluation de fin de parcours s’ouvre après l’auto-évaluation de départ.' };
+  const { data: open } = await supabase.rpc('my_final_self_assessment_open');
+  if (!open) return { error: 'L’auto-évaluation de fin de parcours s’ouvrira à la fin de votre parcours.' };
+  const { data, error } = await supabase
+    .from('self_assessments')
+    .insert({ participant_id: user.participantId, questionnaire_version_id: initial.questionnaire_version_id, kind: 'final' })
+    .select('id')
+    .single();
+  if (error) return { error: databaseErrorMessage(error) };
+  return { id: data.id };
+}
+
 const answerSchema = z.object({ assessmentId: z.string().uuid(), questionId: z.string().uuid(), value: z.number().int().min(0).max(10) });
 
 /** Enregistre une réponse dès qu'elle est choisie (sauvegarde automatique). */
@@ -59,8 +90,14 @@ export async function completeSelfAssessment(_: ActionState, formData: FormData)
     );
     if (answersError) return actionError(databaseErrorMessage(answersError));
   }
-  const { error } = await supabase.from('self_assessments').update({ status: 'completed', comment: comment || null }).eq('id', id.data);
+  const { data: completed, error } = await supabase
+    .from('self_assessments')
+    .update({ status: 'completed', comment: comment || null })
+    .eq('id', id.data)
+    .select('kind')
+    .maybeSingle();
   if (error) return actionError(databaseErrorMessage(error));
+  if (!completed) return actionError('Auto-évaluation introuvable.');
   revalidatePath('/participant', 'layout');
-  redirect('/participant/dashboard?bienvenue=1');
+  redirect(completed.kind === 'final' ? '/participant/evolution?terminee=1' : '/participant/dashboard?bienvenue=1');
 }

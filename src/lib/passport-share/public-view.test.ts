@@ -17,7 +17,7 @@ const passport = () => {
   value.participant.email = 'camille.exemple@exemple.fr';
   value.selfAssessment = {
     id: 'sa1', status: 'completed', completedAt: '2026-01-05', startedAt: '2026-01-04', comment: 'Auto-évaluation privée', scaleMin: 1, scaleMax: 5,
-    scaleLabels: [], versionLabel: '1', answers: [{ questionId: 'q', position: 1, text: 'Question privée', skillCode: 'relationnel', value: 5, comment: 'Réponse privée' }],
+    scaleLabels: [], versionLabel: '1', versionId: 'v', answers: [{ questionId: 'q', position: 1, text: 'Question privée', frameworkCode: 'ct', skillCode: 'relationnel', value: 5, comment: 'Réponse privée' }],
   };
   return value;
 };

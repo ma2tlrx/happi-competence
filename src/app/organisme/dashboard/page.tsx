@@ -2,10 +2,12 @@ import { CalendarDays, ClipboardCheck, Layers, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { PendingSurveysCard } from '@/components/satisfaction/pending-card';
 import { GROUP_STATUS } from '@/components/trainer/labels';
 import { Badge, Card, CardBody, CardHeader, EmptyState, PageHeader, StatTile, Table, TableWrap, Td, Th, Tr } from '@/components/ui/primitives';
 import { requireRole } from '@/lib/auth/session';
 import { getOrganizationOverview } from '@/lib/organization';
+import { loadMySurveys } from '@/lib/satisfaction/load';
 import { createClient } from '@/lib/supabase/server';
 import { formatDate, formatPercent, formatShortDate, formatTimeRange } from '@/lib/utils';
 
@@ -14,13 +16,18 @@ export const metadata: Metadata = { title: 'Espace organisme' };
 export default async function OrganizationDashboard() {
   const user = await requireRole('organisme');
   const supabase = await createClient();
-  const overview = await getOrganizationOverview(supabase);
+  const [overview, surveys] = await Promise.all([getOrganizationOverview(supabase), loadMySurveys(supabase)]);
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = overview.sessions.filter((session) => (session.status === 'planned' || session.status === 'in_progress') && (!session.date || session.date >= today)).slice(0, 5);
 
   return (
     <>
       <PageHeader title={user.organization!.name} description="Suivi des participants rattachés à votre structure. Les données sont consultables, non modifiables." />
+      {surveys.some((survey) => !survey.answered) ? (
+        <div className="mb-6">
+          <PendingSurveysCard surveys={surveys} basePath="/organisme/satisfaction" />
+        </div>
+      ) : null}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
         <StatTile label="Programmes" value={overview.stats.programs} icon={Layers} />
         <StatTile label="Participants" value={overview.stats.participants} icon={Users} />

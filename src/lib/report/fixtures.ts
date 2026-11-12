@@ -113,7 +113,7 @@ export function fixturePassport({
     : [];
   return {
     participant: { id: 'p1', firstName: 'Camille', lastName: 'Exemple', email: null, hasAccount: true, createdAt: '2026-01-01', organization: { id: 'o1', name: 'Mission Locale d’exemple' } },
-    group: withGroup ? { id: 'g1', name: 'Groupe test', startDate: '2026-01-10', endDate: '2026-06-10', programName: 'Programme HAPPI', sessionsCount: 6, trainers: ['Formateur Test'] } : null,
+    group: withGroup ? { id: 'g1', name: 'Groupe test', status: 'active', startDate: '2026-01-10', endDate: '2026-06-10', programName: 'Programme HAPPI', sessionsCount: 6, trainers: ['Formateur Test'] } : null,
     otherGroups: [],
     sessions,
     completedSessions: evaluated.length,
@@ -135,6 +135,7 @@ export function fixturePassport({
     })),
     frameworks: [framework('transversal', ct), framework('sociocognitive', hbs)],
     selfAssessment: null,
+    finalSelfAssessment: null,
     lastEvaluationAt: null,
   };
 }

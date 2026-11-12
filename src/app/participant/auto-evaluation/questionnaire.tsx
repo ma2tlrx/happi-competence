@@ -16,12 +16,15 @@ export function Questionnaire({
   questions,
   scale,
   initialAnswers,
+  final = false,
 }: {
   assessmentId: string;
   intro: string | null;
   questions: Question[];
   scale: { value: number; label: string }[];
   initialAnswers: Record<string, number>;
+  /** Auto-évaluation de fin de parcours (mêmes affirmations qu'au départ). */
+  final?: boolean;
 }) {
   const [answers, setAnswers] = useState<Record<string, number>>(initialAnswers);
   const [saving, startSaving] = useTransition();
@@ -116,11 +119,15 @@ export function Questionnaire({
         <FormMessage state={state} />
         <div className="flex flex-wrap items-center gap-3">
           <SubmitButton size="lg" disabled={!complete}>
-            Valider mon auto-évaluation
+            {final ? 'Valider mon auto-évaluation de fin de parcours' : 'Valider mon auto-évaluation'}
           </SubmitButton>
           {!complete ? <span className="text-sm text-ink-muted">Répondez à toutes les affirmations pour valider.</span> : null}
         </div>
-        <p className="text-sm text-ink-subtle">Une fois validée, votre auto-évaluation ne peut plus être modifiée : elle sert de point de départ.</p>
+        <p className="text-sm text-ink-subtle">
+          {final
+            ? 'Une fois validée, votre auto-évaluation de fin de parcours ne peut plus être modifiée.'
+            : 'Une fois validée, votre auto-évaluation ne peut plus être modifiée : elle sert de point de départ.'}
+        </p>
       </form>
     </div>
   );

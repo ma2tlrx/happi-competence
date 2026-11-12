@@ -61,6 +61,7 @@ tests/e2e/               scénarios Playwright
 | Sessions | `sessions`, `attendance`, `attendance_history` |
 | Référentiels | `frameworks`, `framework_versions`, `scale_levels`, `skill_categories`, `skills`, `skill_level_descriptors`, `skill_criteria`, `session_skill_map` |
 | Auto-évaluation | `questionnaires`, `questionnaire_versions`, `questionnaire_scale_labels`, `questionnaire_questions`, `self_assessments`, `self_assessment_answers` |
+| Satisfaction | `satisfaction_surveys`, `satisfaction_survey_versions`, `satisfaction_questions`, `satisfaction_responses`, `satisfaction_answers` |
 | Évaluations | `evaluations`, `evaluation_frameworks`, `evaluation_scores`, `evaluation_criterion_scores`, `evaluation_comments`, `evaluation_history` |
 | Contenus | `pedagogical_contents`, `pedagogical_content_versions`, `session_player_states`, `trainer_notes`, `participant_session_notes` |
 | Plateforme | `invitation_codes`, `audit_logs`, `notifications`, `contact_messages`, `data_requests`, `app_settings` |
@@ -115,6 +116,35 @@ qui n’introduisent aucune moyenne ni pondération pédagogique non validée.
 
 Voir [bilans.md](bilans.md) : photographie des résultats (`src/lib/report`), rédaction par IA
 validée, PDF éditorial (`src/lib/pdf/report`), versions immuables (`participant_reports`).
+
+## Satisfaction et évolution
+
+Migration `20261113110000_satisfaction_and_final_self_assessment.sql`.
+
+- **Enquêtes** : une par destinataire (participants, prescripteurs = membres de l'organisme
+  du groupe) et par moment. Versions brouillon / publiée / archivée, comme les questionnaires ;
+  questions de quatre types (note 1–5, choix unique, texte libre ≤ 1 000 caractères,
+  recommandation 0–10). Contenu livré : version « Provisoire — à valider », modifiable dans
+  **Administration → Satisfaction**.
+- **Ouverture** (`private.group_programme_end`, `private.satisfaction_is_open`, reproduites dans
+  `src/lib/satisfaction/window.ts`) : à chaud dès que la dernière séance (hors annulées) est
+  terminée ou que le groupe est terminé, jusqu'à fin + 90 jours ; à froid à partir de fin + 90 jours.
+- **Réponses** : uniquement par `submit_satisfaction_response` (rôle, appartenance au groupe,
+  ouverture, validation des réponses, une réponse par répondant, groupe et moment). Aucune
+  écriture directe ; réponses figées.
+- **Résultats** : `satisfaction_results` et `satisfaction_overview` ne renvoient que les groupes
+  visibles (administrateur, formateurs du groupe, organisme du groupe). Auteur, date et
+  identifiant de réponse réservés à l'administrateur ; verbatims masqués sous 3 réponses par
+  groupe, destinataire et moment. Agrégats (moyenne avec n, taux = réponses / invités,
+  répartition) : `src/lib/satisfaction/aggregate.ts`. Export CSV administrateur protégé contre
+  l'injection de formules (`src/lib/csv.ts`).
+- **Auto-évaluation finale** : `self_assessments.kind = 'final'`, même version de questionnaire
+  que l'initiale (même si elle a été archivée depuis), une seule fois, figée une fois terminée ;
+  ouverte quand le groupe est terminé, que la dernière séance est terminée, ou dès la séance 6.
+- **Évolution** (`src/lib/evolution.ts`) : déclaré au départ / observé / déclaré à la fin, côte à
+  côte, sans additionner ni comparer des échelles différentes. Affichée dans « Mon évolution »
+  (participant), l'onglet « Évolution » de la fiche participant et la page Bilan HAPPI. Elle
+  n'entre pas dans la photographie des bilans (`REPORT_ENGINE_VERSION` inchangé).
 
 ## Journalisation
 

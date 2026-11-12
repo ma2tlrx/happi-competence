@@ -2415,6 +2415,225 @@ export type Database = {
         }
         Relationships: []
       }
+      satisfaction_answers: {
+        Row: {
+          choice: string | null
+          id: string
+          question_id: string
+          response_id: string
+          text_value: string | null
+          value: number | null
+        }
+        ComputedFields: never
+        Insert: {
+          choice?: string | null
+          id?: string
+          question_id: string
+          response_id: string
+          text_value?: string | null
+          value?: number | null
+        }
+        Update: {
+          choice?: string | null
+          id?: string
+          question_id?: string
+          response_id?: string
+          text_value?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "satisfaction_answers_question_id_fkey"
+            columns: ["question_id"]
+            referencedRelation: "satisfaction_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "satisfaction_answers_response_id_fkey"
+            columns: ["response_id"]
+            referencedRelation: "satisfaction_responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      satisfaction_questions: {
+        Row: {
+          help: string | null
+          id: string
+          is_active: boolean
+          is_required: boolean
+          kind: string
+          options: string[]
+          position: number
+          text: string
+          version_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          help?: string | null
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          kind: string
+          options?: string[]
+          position?: number
+          text: string
+          version_id: string
+        }
+        Update: {
+          help?: string | null
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          kind?: string
+          options?: string[]
+          position?: number
+          text?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "satisfaction_questions_version_id_fkey"
+            columns: ["version_id"]
+            referencedRelation: "satisfaction_survey_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      satisfaction_responses: {
+        Row: {
+          audience: string
+          group_id: string
+          id: string
+          moment: string
+          organization_id: string | null
+          participant_id: string | null
+          respondent_id: string | null
+          submitted_at: string
+          survey_version_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          audience: string
+          group_id: string
+          id?: string
+          moment: string
+          organization_id?: string | null
+          participant_id?: string | null
+          respondent_id?: string | null
+          submitted_at?: string
+          survey_version_id: string
+        }
+        Update: {
+          audience?: string
+          group_id?: string
+          id?: string
+          moment?: string
+          organization_id?: string | null
+          participant_id?: string | null
+          respondent_id?: string | null
+          submitted_at?: string
+          survey_version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "satisfaction_responses_group_id_fkey"
+            columns: ["group_id"]
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "satisfaction_responses_survey_version_id_fkey"
+            columns: ["survey_version_id"]
+            referencedRelation: "satisfaction_survey_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      satisfaction_survey_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          intro: string | null
+          is_provisional: boolean
+          label: string
+          published_at: string | null
+          rating_labels: string[]
+          status: string
+          survey_id: string
+          updated_at: string
+          version_number: number
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          intro?: string | null
+          is_provisional?: boolean
+          label: string
+          published_at?: string | null
+          rating_labels?: string[]
+          status?: string
+          survey_id: string
+          updated_at?: string
+          version_number: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          intro?: string | null
+          is_provisional?: boolean
+          label?: string
+          published_at?: string | null
+          rating_labels?: string[]
+          status?: string
+          survey_id?: string
+          updated_at?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "satisfaction_survey_versions_survey_id_fkey"
+            columns: ["survey_id"]
+            referencedRelation: "satisfaction_surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      satisfaction_surveys: {
+        Row: {
+          audience: string
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          moment: string
+          name: string
+        }
+        ComputedFields: never
+        Insert: {
+          audience: string
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          moment: string
+          name: string
+        }
+        Update: {
+          audience?: string
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          moment?: string
+          name?: string
+        }
+        Relationships: []
+      }
       scale_levels: {
         Row: {
           description: string | null
@@ -3004,6 +3223,10 @@ export type Database = {
         }
         Returns: string
       }
+      clone_satisfaction_version: {
+        Args: { p_label?: string; p_source_version_id: string }
+        Returns: string
+      }
       create_invitation_code: {
         Args: {
           p_expires_at?: string
@@ -3040,6 +3263,54 @@ export type Database = {
           p_metadata?: Json
         }
         Returns: undefined
+      }
+      my_final_self_assessment_open: { Args: Record<PropertyKey, never>; Returns: boolean }
+      my_satisfaction_surveys: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          answered: boolean
+          audience: string
+          end_date: string | null
+          group_id: string
+          group_name: string
+          moment: string
+          program_name: string
+          survey_name: string
+          survey_version_id: string
+        }[]
+      }
+      satisfaction_overview: {
+        Args: { p_group_ids: string[] }
+        Returns: {
+          audience: string
+          end_date: string | null
+          group_id: string
+          invited: number
+          is_open: boolean
+          moment: string
+          responses: number
+        }[]
+      }
+      satisfaction_results: {
+        Args: { p_group_ids: string[] }
+        Returns: {
+          audience: string
+          choice: string | null
+          group_id: string
+          moment: string
+          question_id: string
+          respondent: string | null
+          response_id: string | null
+          submitted_at: string | null
+          survey_version_id: string
+          text_hidden: boolean
+          text_value: string | null
+          value: number | null
+        }[]
+      }
+      submit_satisfaction_response: {
+        Args: { p_answers: Json; p_group_id: string; p_moment: string }
+        Returns: string
       }
       my_mfa_status: { Args: Record<PropertyKey, never>; Returns: Json }
       my_passport_share_secret: { Args: { p_share_id: string }; Returns: string }

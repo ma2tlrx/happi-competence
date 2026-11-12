@@ -2,10 +2,13 @@ import { ArrowRight, CalendarDays, ClipboardCheck, FileText, ListChecks, MapPin,
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { PendingSurveysCard } from '@/components/satisfaction/pending-card';
 import { Button } from '@/components/ui/button';
 import { LevelMeter, SessionSteps } from '@/components/ui/level-meter';
 import { Card, CardBody, CardHeader, EmptyState, Notice } from '@/components/ui/primitives';
 import { createClient } from '@/lib/supabase/server';
+import { finalStatusOf } from '@/lib/evolution';
+import { loadMySurveys } from '@/lib/satisfaction/load';
 import { formatDate, formatScore, formatShortDate, formatTimeRange, pluralize } from '@/lib/utils';
 
 import { getMyPassport } from '../data';
@@ -15,7 +18,9 @@ export const metadata: Metadata = { title: 'Mon passeport' };
 
 export default async function ParticipantDashboard({ searchParams }: { searchParams: Promise<{ bienvenue?: string }> }) {
   const { bienvenue } = await searchParams;
-  const [{ passport }, signable] = await Promise.all([getMyPassport(), loadSignableSessions()]);
+  const [{ passport, supabase }, signable] = await Promise.all([getMyPassport(), loadSignableSessions()]);
+  const surveys = await loadMySurveys(supabase);
+  const finalStatus = finalStatusOf(passport);
   const { participant, group } = passport;
   const total = group?.sessionsCount ?? 6;
   const observed = passport.frameworks.reduce((sum, framework) => sum + framework.observedCount, 0);
@@ -80,6 +85,22 @@ export default async function ParticipantDashboard({ searchParams }: { searchPar
           Quinze affirmations, environ cinq minutes. Vos réponses servent de point de départ et restent visibles dans votre passeport.
         </Notice>
       ) : null}
+
+      {finalStatus === 'open' || finalStatus === 'in_progress' ? (
+        <Notice
+          variant="info"
+          title="Votre auto-évaluation de fin de parcours est ouverte"
+          action={
+            <Button asChild size="sm">
+              <Link href="/participant/auto-evaluation/finale">{finalStatus === 'open' ? 'Répondre' : 'Reprendre'}</Link>
+            </Button>
+          }
+        >
+          Les mêmes affirmations qu’au départ. Vous retrouverez ensuite vos réponses dans « Mon évolution ».
+        </Notice>
+      ) : null}
+
+      <PendingSurveysCard surveys={surveys} basePath="/participant/satisfaction" />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Card className="px-5 py-4">

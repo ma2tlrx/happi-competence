@@ -94,7 +94,9 @@ export type SelfAssessment = {
   scaleMax: number;
   scaleLabels: { value: number; label: string }[];
   versionLabel: string;
-  answers: { questionId: string; position: number; text: string; skillCode: string | null; value: number; comment: string | null }[];
+  /** Version du questionnaire : l'auto-évaluation finale reprend celle de l'initiale. */
+  versionId: string;
+  answers: { questionId: string; position: number; text: string; frameworkCode: string | null; skillCode: string | null; value: number; comment: string | null }[];
 };
 
 export type Passport = {
@@ -107,7 +109,7 @@ export type Passport = {
     createdAt: string;
     organization: { id: string; name: string } | null;
   };
-  group: { id: string; name: string; startDate: string | null; endDate: string | null; programName: string; sessionsCount: number; trainers: string[]; /** Parcours interrompu (abandon). */ dropped?: boolean } | null;
+  group: { id: string; name: string; status: string; startDate: string | null; endDate: string | null; programName: string; sessionsCount: number; trainers: string[]; /** Parcours interrompu (abandon). */ dropped?: boolean } | null;
   otherGroups: { id: string; name: string; status: string }[];
   sessions: PassportSession[];
   completedSessions: number;
@@ -116,7 +118,10 @@ export type Passport = {
   currentSession: PassportSession | null;
   evaluations: PassportEvaluation[];
   frameworks: PassportFramework[];
+  /** Auto-évaluation initiale (point de départ). */
   selfAssessment: SelfAssessment | null;
+  /** Auto-évaluation finale : même questionnaire que l'initiale, en fin de parcours. */
+  finalSelfAssessment: SelfAssessment | null;
   lastEvaluationAt: string | null;
 };
 
@@ -136,13 +141,62 @@ type VersionRow = {
   frameworks: { id: string; code: string; name: string; short_name: string; description: string | null; position: number } | null;
 };
 
+type SelfAssessmentRow = {
+  id: string;
+  status: string;
+  comment: string | null;
+  started_at: string;
+  completed_at: string | null;
+  questionnaire_versions: {
+    id: string;
+    label: string;
+    scale_min: number;
+    scale_max: number;
+    questionnaire_scale_labels: { value: number; label: string }[];
+    questionnaire_questions: { id: string; position: number; text: string; framework_code: string | null; skill_code: string | null }[];
+  } | null;
+  self_assessment_answers: { question_id: string; value: number; comment: string | null }[];
+};
+
+function toSelfAssessment(row: SelfAssessmentRow | null | undefined): SelfAssessment | null {
+  if (!row?.questionnaire_versions) return null;
+  const version = row.questionnaire_versions;
+  const questions = new Map(version.questionnaire_questions.map((question) => [question.id, question]));
+  return {
+    id: row.id,
+    status: row.status as SelfAssessment['status'],
+    completedAt: row.completed_at,
+    startedAt: row.started_at,
+    comment: row.comment,
+    scaleMin: version.scale_min,
+    scaleMax: version.scale_max,
+    scaleLabels: [...version.questionnaire_scale_labels].sort((a, b) => a.value - b.value),
+    versionLabel: version.label,
+    versionId: version.id,
+    answers: row.self_assessment_answers
+      .map((answer) => {
+        const question = questions.get(answer.question_id);
+        return {
+          questionId: answer.question_id,
+          position: question?.position ?? 0,
+          text: question?.text ?? '',
+          frameworkCode: question?.framework_code ?? null,
+          skillCode: question?.skill_code ?? null,
+          value: answer.value,
+          comment: answer.comment,
+        };
+      })
+      .sort((a, b) => a.position - b.position),
+  };
+}
+
 /**
  * Le client est celui de l'appelant (RLS) ; seule la page publique de vérification
  * passe le client de service, après validation du lien par la base (src/lib/passport-share/server.ts).
  */
 export async function getPassport(supabase: SupabaseClient<Database>, participantId: string): Promise<Passport | null> {
   // Toutes les lectures qui ne dépendent que de l'identifiant partent ensemble.
-  const [participantResult, membershipsResult, attendanceResult, evaluationsResult, selfResult, staffResult] = await Promise.all([
+  const [participantResult, membershipsResult, attendanceResult, evaluationsResult, selfResult, staffResult, finalResult] = await Promise.all([
     supabase
       .from('participants')
       .select('id, first_name, last_name, email, user_id, created_at, organization_id, organizations ( id, name )')
@@ -164,7 +218,7 @@ export async function getPassport(supabase: SupabaseClient<Database>, participan
     supabase
       .from('self_assessments')
       .select(
-        'id, status, comment, started_at, completed_at, questionnaire_versions ( id, label, scale_min, scale_max, questionnaire_scale_labels ( value, label ), questionnaire_questions ( id, position, text, skill_code ) ), self_assessment_answers ( question_id, value, comment )',
+        'id, status, comment, started_at, completed_at, questionnaire_versions ( id, label, scale_min, scale_max, questionnaire_scale_labels ( value, label ), questionnaire_questions ( id, position, text, framework_code, skill_code ) ), self_assessment_answers ( question_id, value, comment )',
       )
       .eq('participant_id', participantId)
       .eq('kind', 'initial')
@@ -172,6 +226,16 @@ export async function getPassport(supabase: SupabaseClient<Database>, participan
       .limit(1)
       .maybeSingle(),
     supabase.from('staff_directory').select('id, first_name, last_name'),
+    supabase
+      .from('self_assessments')
+      .select(
+        'id, status, comment, started_at, completed_at, questionnaire_versions ( id, label, scale_min, scale_max, questionnaire_scale_labels ( value, label ), questionnaire_questions ( id, position, text, framework_code, skill_code ) ), self_assessment_answers ( question_id, value, comment )',
+      )
+      .eq('participant_id', participantId)
+      .eq('kind', 'final')
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
   const participant = participantResult.data;
   if (!participant) return null;
@@ -276,36 +340,9 @@ export async function getPassport(supabase: SupabaseClient<Database>, participan
     }
   }
 
-  // Auto-évaluation
-  let selfAssessment: SelfAssessment | null = null;
-  const selfRow = selfResult.data;
-  if (selfRow?.questionnaire_versions) {
-    const questions = new Map(selfRow.questionnaire_versions.questionnaire_questions.map((question) => [question.id, question]));
-    selfAssessment = {
-      id: selfRow.id,
-      status: selfRow.status as SelfAssessment['status'],
-      completedAt: selfRow.completed_at,
-      startedAt: selfRow.started_at,
-      comment: selfRow.comment,
-      scaleMin: selfRow.questionnaire_versions.scale_min,
-      scaleMax: selfRow.questionnaire_versions.scale_max,
-      scaleLabels: [...selfRow.questionnaire_versions.questionnaire_scale_labels].sort((a, b) => a.value - b.value),
-      versionLabel: selfRow.questionnaire_versions.label,
-      answers: selfRow.self_assessment_answers
-        .map((answer) => {
-          const question = questions.get(answer.question_id);
-          return {
-            questionId: answer.question_id,
-            position: question?.position ?? 0,
-            text: question?.text ?? '',
-            skillCode: question?.skill_code ?? null,
-            value: answer.value,
-            comment: answer.comment,
-          };
-        })
-        .sort((a, b) => a.position - b.position),
-    };
-  }
+  // Auto-évaluations initiale et finale
+  const selfAssessment = toSelfAssessment(selfResult.data);
+  const finalSelfAssessment = toSelfAssessment(finalResult.data);
   const selfBySkill = new Map<string, { value: number; text: string }>();
   if (selfAssessment?.status === 'completed') {
     for (const answer of selfAssessment.answers) if (answer.skillCode) selfBySkill.set(answer.skillCode, { value: answer.value, text: answer.text });
@@ -413,6 +450,7 @@ export async function getPassport(supabase: SupabaseClient<Database>, participan
       ? {
           id: groupRow.id,
           name: groupRow.name,
+          status: groupRow.status,
           startDate: groupRow.start_date,
           endDate: groupRow.end_date,
           programName: groupRow.programs?.name ?? 'Programme HAPPI',
@@ -430,6 +468,7 @@ export async function getPassport(supabase: SupabaseClient<Database>, participan
     evaluations,
     frameworks,
     selfAssessment,
+    finalSelfAssessment,
     lastEvaluationAt: evaluations.reduce<string | null>((latest, evaluation) => (!latest || (evaluation.validatedAt ?? '') > latest ? evaluation.validatedAt : latest), null),
   };
 }

@@ -1,12 +1,14 @@
 import { Award, FileDown, FileText } from 'lucide-react';
 
 import { BilanView } from '@/components/passport/bilan-view';
+import { EvolutionView } from '@/components/passport/evolution-view';
 import { FrameworkView } from '@/components/passport/framework-view';
 import { AttendanceBadge, SessionStatusBadge } from '@/components/passport/session-status';
 import { Button } from '@/components/ui/button';
 import { LevelMeter, SessionSteps } from '@/components/ui/level-meter';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/overlays';
 import { Avatar, Badge, Card, CardBody, CardHeader, EmptyState, StatTile } from '@/components/ui/primitives';
+import { buildEvolution } from '@/lib/evolution';
 import type { Passport } from '@/lib/passport';
 import { formatDate, formatDateTime } from '@/lib/utils';
 
@@ -82,6 +84,7 @@ export function ParticipantFile({
         <TabsList aria-label="Rubriques de la fiche">
           <TabsTrigger value="synthese">Synthèse</TabsTrigger>
           <TabsTrigger value="auto">Auto-évaluation</TabsTrigger>
+          <TabsTrigger value="evolution">Évolution</TabsTrigger>
           {passport.frameworks.map((framework) => (
             <TabsTrigger key={framework.code} value={framework.code}>
               {framework.name}
@@ -149,6 +152,10 @@ export function ParticipantFile({
               <EmptyState title="Auto-évaluation non réalisée" description={participant.hasAccount ? 'Le participant n’a pas encore répondu au questionnaire.' : 'Le participant répondra au questionnaire en créant son compte.'} />
             )}
           </Card>
+        </TabsContent>
+
+        <TabsContent value="evolution">
+          <EvolutionView evolution={buildEvolution(passport)} audience="pro" />
         </TabsContent>
 
         {passport.frameworks.map((framework) => (
