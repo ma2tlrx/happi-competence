@@ -3,9 +3,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { EvolutionView } from '@/components/passport/evolution-view';
 import { ReportWorkspace } from '@/components/report/report-workspace';
 import { PageHeader } from '@/components/ui/primitives';
 import { requireRole } from '@/lib/auth/session';
+import { buildEvolution } from '@/lib/evolution';
+import { getPassport } from '@/lib/passport';
 import { isAiConfigured } from '@/lib/report/ai';
 import { listReports } from '@/lib/report/load';
 import { createClient } from '@/lib/supabase/server';
@@ -23,7 +26,7 @@ export default async function ParticipantReportPage({ params, searchParams }: { 
   const supabase = await createClient();
   const { data: participant } = await supabase.from('participants').select('id, first_name, last_name').eq('id', id).maybeSingle();
   if (!participant) notFound();
-  const reports = await listReports(supabase, id);
+  const [reports, passport] = await Promise.all([listReports(supabase, id), getPassport(supabase, id)]);
   const selected = reports.find((report) => report.id === version) ?? reports[0] ?? null;
   const name = `${participant.first_name} ${participant.last_name}`;
   return (
@@ -51,6 +54,19 @@ export default async function ParticipantReportPage({ params, searchParams }: { 
         selected={selected}
         aiReady={isAiConfigured()}
       />
+      {passport ? (
+        <details className="mt-8 rounded-lg border border-line bg-white">
+          <summary className="flex min-h-11 cursor-pointer items-center px-5 py-3 font-semibold sm:px-6">
+            Évolution : déclaré au départ, observé, déclaré à la fin
+          </summary>
+          <div className="border-t border-line p-4 sm:p-6">
+            <p className="mb-4 text-sm text-ink-muted">
+              Données en direct du passeport, présentées pour préparer le bilan. Elles ne font pas partie de la photographie figée du bilan.
+            </p>
+            <EvolutionView evolution={buildEvolution(passport)} audience="pro" />
+          </div>
+        </details>
+      ) : null}
     </>
   );
 }

@@ -4,11 +4,14 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { SessionStatusBadge } from '@/components/passport/session-status';
+import { SatisfactionResults } from '@/components/satisfaction/results-view';
 import { GROUP_STATUS } from '@/components/trainer/labels';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/overlays';
 import { Avatar, Badge, Card, CardBody, CardHeader, EmptyState, Notice, PageHeader, Table, TableWrap, Td, Th, Tr } from '@/components/ui/primitives';
 import { hasPermission, requireRole } from '@/lib/auth/session';
+import { loadSatisfactionResults } from '@/lib/satisfaction/load';
+import { satisfactionWindow } from '@/lib/satisfaction/window';
 import { createClient } from '@/lib/supabase/server';
 import { formatDate, formatTimeRange, isUuid } from '@/lib/utils';
 
@@ -31,7 +34,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
     .maybeSingle();
   if (!group) notFound();
 
-  const [members, sessions, outline, trainers, programs, organizations, staff, candidates] = await Promise.all([
+  const [members, sessions, outline, trainers, programs, organizations, staff, candidates, satisfaction] = await Promise.all([
     supabase
       .from('group_members')
       .select('status, joined_at, participants ( id, first_name, last_name, email, user_id, organization_id )')
@@ -44,6 +47,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
     supabase.from('organizations').select('id, name').eq('status', 'active').order('name'),
     supabase.from('staff_directory').select('id, first_name, last_name'),
     supabase.from('participants').select('id, first_name, last_name, email').eq('status', 'active').order('last_name').limit(200),
+    loadSatisfactionResults(supabase, [id]),
   ]);
   const sessionIds = (sessions.data ?? []).map((session) => session.id);
   const { data: attendance } = sessionIds.length
@@ -63,6 +67,11 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const status = GROUP_STATUS[group.status] ?? GROUP_STATUS.active!;
   // Présences comptées sur les seules sessions terminées, comme le dénominateur (et comme l'espace organisme).
   const completedIds = new Set((sessions.data ?? []).filter((session) => session.status === 'completed').map((session) => session.id));
+  const surveyDates = satisfactionWindow({
+    status: group.status,
+    endDate: group.end_date,
+    sessions: (sessions.data ?? []).map((session) => ({ number: session.number, status: session.status, date: session.scheduled_date })),
+  });
   const attended = (participantId: string) =>
     (attendance ?? []).filter(
       (row) => row.participant_id === participantId && completedIds.has(row.session_id) && ['present', 'late', 'left_early'].includes(row.status),
@@ -258,6 +267,19 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             </CardBody>
           </Card>
         </div>
+
+        <section aria-labelledby="satisfaction-titre">
+          <h2 id="satisfaction-titre" className="text-[1.25rem] font-semibold tracking-[-0.01em]">
+            Satisfaction
+          </h2>
+          <p className="mb-4 text-sm text-ink-muted">
+            {surveyDates.endDate
+              ? `Programme terminé le ${formatDate(surveyDates.endDate)} · enquête à froid ${surveyDates.coldOpen ? 'ouverte' : `à partir du ${formatDate(surveyDates.coldOpensOn)}`}.`
+              : 'L’enquête à chaud s’ouvrira à la fin de la dernière séance, l’enquête à froid 90 jours plus tard.'}{' '}
+            Résultats regroupés et anonymes ; les commentaires libres n’apparaissent qu’à partir de 3 réponses.
+          </p>
+          <SatisfactionResults summaries={satisfaction.summaries} />
+        </section>
       </div>
     </>
   );

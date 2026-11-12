@@ -8,6 +8,8 @@ import {
   History,
   KeyRound,
   LayoutDashboard,
+  MessageSquareHeart,
+  TrendingUp,
   Layers,
   ListChecks,
   Radar,
@@ -45,6 +47,8 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
       label: 'Moi',
       items: [
         { href: '/participant/auto-evaluation', label: 'Mon auto-évaluation', icon: ListChecks },
+        { href: '/participant/evolution', label: 'Mon évolution', icon: TrendingUp },
+        { href: '/participant/satisfaction', label: 'Donnez votre avis', icon: MessageSquareHeart },
         { href: '/participant/profil', label: 'Mon profil', icon: User },
       ],
     },
@@ -57,6 +61,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/organisme/participants', label: 'Participants', icon: Users, mobile: true },
         { href: '/organisme/sessions', label: 'Sessions', icon: CalendarDays, mobile: true },
         { href: '/organisme/presences', label: 'Présences', icon: ClipboardCheck },
+        { href: '/organisme/satisfaction', label: 'Satisfaction', icon: MessageSquareHeart },
       ],
     },
   ],
@@ -92,6 +97,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/admin/sessions', label: 'Sessions', icon: CalendarDays, mobile: true },
         { href: '/admin/referentiels', label: 'Référentiels', icon: Radar },
         { href: '/admin/contenus', label: 'Supports pédagogiques', icon: FileText },
+        { href: '/admin/satisfaction', label: 'Satisfaction', icon: MessageSquareHeart },
       ],
     },
     {

@@ -12,11 +12,16 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: 'Authentification requise.' }, { status: 401 });
   const supabase = await createClient();
 
-  const [profile, participant, notifications, requests] = await Promise.all([
+  const [profile, participant, notifications, requests, satisfaction] = await Promise.all([
     supabase.from('profiles').select('first_name, last_name, email, phone, role, created_at, terms_accepted_at, privacy_consent_at').eq('id', user.id).single(),
     user.participantId ? supabase.from('participants').select('*').eq('id', user.participantId).single() : Promise.resolve({ data: null }),
     supabase.from('notifications').select('type, title, body, created_at, read_at').order('created_at'),
     supabase.from('data_requests').select('type, status, created_at, processed_at').order('created_at'),
+    // Réponses aux enquêtes de satisfaction (RLS : les siennes uniquement).
+    supabase
+      .from('satisfaction_responses')
+      .select('audience, moment, submitted_at, groups ( name ), satisfaction_answers ( value, choice, text_value, satisfaction_questions ( text ) )')
+      .order('submitted_at'),
   ]);
 
   let passport: Record<string, unknown> | null = null;
@@ -48,7 +53,7 @@ export async function GET() {
 
   await supabase.rpc('log_event', { p_action: 'export.personal_data' });
   const body = JSON.stringify(
-    { exporte_le: new Date().toISOString(), compte: profile.data, fiche_participant: participant.data, passeport: passport, notifications: notifications.data, demandes: requests.data },
+    { exporte_le: new Date().toISOString(), compte: profile.data, fiche_participant: participant.data, passeport: passport, notifications: notifications.data, demandes: requests.data, satisfaction: satisfaction.data },
     null,
     2,
   );
