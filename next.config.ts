@@ -24,6 +24,14 @@ const reportPreviewHeaders = [
   { key: 'Content-Security-Policy', value: "frame-ancestors 'self'; base-uri 'self'; form-action 'self'" },
 ];
 
+// Vérification publique d'un passeport partagé : le jeton est dans l'adresse. Il ne doit
+// fuiter ni par l'en-tête Referer, ni par un cache partagé, ni par l'indexation.
+const verificationHeaders = [
+  { key: 'Referrer-Policy', value: 'no-referrer' },
+  { key: 'Cache-Control', value: 'private, no-store, max-age=0' },
+  { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' },
+];
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
@@ -37,6 +45,8 @@ const nextConfig: NextConfig = {
     return [
       { source: '/((?!api/exports/bilan/).*)', headers: securityHeaders },
       { source: '/api/exports/bilan/:path*', headers: reportPreviewHeaders },
+      // En dernier : remplace la Referrer-Policy générale pour ces pages.
+      { source: '/verifier/:path*', headers: verificationHeaders },
     ];
   },
 };

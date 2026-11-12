@@ -14,7 +14,8 @@ export default defineConfig({
       },
       {
         // Tests d'isolation exécutés contre la pile Supabase locale (npm run db:start).
-        resolve: { alias },
+        // « server-only » neutralisé : certains tests appellent directement les modules serveur.
+        resolve: { alias: { ...alias, 'server-only': fileURLToPath(new URL('./tests/security/server-only-stub.ts', import.meta.url)) } },
         test: {
           name: 'security',
           environment: 'node',

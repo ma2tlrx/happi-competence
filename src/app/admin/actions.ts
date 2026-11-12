@@ -151,6 +151,14 @@ export async function revokeAccessCode(id: string): Promise<Simple> {
   return done(error, ['/admin/codes-acces']);
 }
 
+/** Modération : révoque un lien de partage de passeport (l'administrateur ne voit jamais le jeton). */
+export async function revokePassportShare(id: string): Promise<Simple> {
+  const { supabase } = await admin();
+  if (!uuid.safeParse(id).success) return { ok: false, message: 'Lien introuvable.' };
+  const { error } = await supabase.rpc('revoke_passport_share', { p_share_id: id });
+  return done(error, ['/admin/partages']);
+}
+
 // ── Programmes ───────────────────────────────────────────────────────────────
 const programSchema = z
   .object({

@@ -1,5 +1,7 @@
 import 'server-only';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import {
   highlights,
   levelFor,
@@ -13,7 +15,7 @@ import {
   type ScoringMode,
   type SkillSummary,
 } from '@/lib/evaluation-engine';
-import type { ServerClient } from '@/lib/supabase/server';
+import type { Database } from '@/lib/supabase/database.types';
 
 /**
  * Passeport de compétences d'un participant : lecture unique, partagée par les
@@ -134,7 +136,11 @@ type VersionRow = {
   frameworks: { id: string; code: string; name: string; short_name: string; description: string | null; position: number } | null;
 };
 
-export async function getPassport(supabase: ServerClient, participantId: string): Promise<Passport | null> {
+/**
+ * Le client est celui de l'appelant (RLS) ; seule la page publique de vérification
+ * passe le client de service, après validation du lien par la base (src/lib/passport-share/server.ts).
+ */
+export async function getPassport(supabase: SupabaseClient<Database>, participantId: string): Promise<Passport | null> {
   // Toutes les lectures qui ne dépendent que de l'identifiant partent ensemble.
   const [participantResult, membershipsResult, attendanceResult, evaluationsResult, selfResult, staffResult] = await Promise.all([
     supabase

@@ -13,6 +13,7 @@ import {
   Radar,
   Route,
   Settings,
+  Share2,
   Sparkles,
   User,
   Users,
@@ -45,6 +46,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
       label: 'Moi',
       items: [
         { href: '/participant/auto-evaluation', label: 'Mon auto-évaluation', icon: ListChecks },
+        { href: '/participant/partage', label: 'Partager mon passeport', icon: Share2 },
         { href: '/participant/profil', label: 'Mon profil', icon: User },
       ],
     },
@@ -82,6 +84,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/admin/formateurs', label: 'Formateurs', icon: GraduationCap },
         { href: '/admin/participants', label: 'Participants', icon: Users },
         { href: '/admin/codes-acces', label: 'Codes d’accès', icon: KeyRound },
+        { href: '/admin/partages', label: 'Liens de partage', icon: Share2 },
       ],
     },
     {

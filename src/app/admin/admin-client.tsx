@@ -16,6 +16,7 @@ import {
   createOrganization,
   resolveDataRequest,
   revokeAccessCode,
+  revokePassportShare,
   setContactMessageStatus,
   setOrganizationStatus,
   setParticipantOrganization,
@@ -301,6 +302,16 @@ export function RevokeCodeButton({ id }: { id: string }) {
   return (
     <Button size="sm" variant="ghost" loading={pending} onClick={() => run(() => revokeAccessCode(id), 'Code révoqué.', 'Révoquer ce code ? Il ne pourra plus être utilisé.')}>
       <Trash2 aria-hidden />
+      Révoquer
+    </Button>
+  );
+}
+
+export function RevokePassportShareButton({ id }: { id: string }) {
+  const { pending, run } = useRun();
+  return (
+    <Button size="sm" variant="ghost" loading={pending} onClick={() => run(() => revokePassportShare(id), 'Lien révoqué.', 'Révoquer ce lien de partage ? Le participant verra qu’il a été retiré par l’équipe HAPPI.')}>
+      <Ban aria-hidden />
       Révoquer
     </Button>
   );

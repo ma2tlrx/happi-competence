@@ -1418,6 +1418,100 @@ export type Database = {
           },
         ]
       }
+      passport_share_views: {
+        Row: {
+          id: number
+          ip_hash: string | null
+          share_id: string
+          viewed_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          id?: never
+          ip_hash?: string | null
+          share_id: string
+          viewed_at?: string
+        }
+        Update: {
+          id?: never
+          ip_hash?: string | null
+          share_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passport_share_views_share_id_fkey"
+            columns: ["share_id"]
+            referencedRelation: "passport_shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      passport_shares: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          duration_days: number
+          expires_at: string
+          id: string
+          include_report: boolean
+          include_sociocognitive: boolean
+          label: string
+          last_viewed_at: string | null
+          participant_id: string
+          revoked_at: string | null
+          revoked_by: string | null
+          revoked_reason: string | null
+          token_ciphertext: string
+          token_hash: string
+          view_count: number
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          duration_days: number
+          expires_at: string
+          id?: string
+          include_report?: boolean
+          include_sociocognitive?: boolean
+          label: string
+          last_viewed_at?: string | null
+          participant_id: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoked_reason?: string | null
+          token_ciphertext: string
+          token_hash: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          duration_days?: number
+          expires_at?: string
+          id?: string
+          include_report?: boolean
+          include_sociocognitive?: boolean
+          label?: string
+          last_viewed_at?: string | null
+          participant_id?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoked_reason?: string | null
+          token_ciphertext?: string
+          token_hash?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passport_shares_participant_id_fkey"
+            columns: ["participant_id"]
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pedagogical_content_versions: {
         Row: {
           change_note: string | null
@@ -2554,6 +2648,21 @@ export type Database = {
         Args: { p_label?: string; p_source_version_id: string }
         Returns: string
       }
+      consume_passport_share: {
+        Args: { p_ip_hash?: string; p_token_hash: string }
+        Returns: Json
+      }
+      create_passport_share: {
+        Args: {
+          p_duration_days: number
+          p_include_report?: boolean
+          p_include_sociocognitive?: boolean
+          p_label: string
+          p_token_ciphertext: string
+          p_token_hash: string
+        }
+        Returns: string
+      }
       create_invitation_code: {
         Args: {
           p_expires_at?: string
@@ -2587,6 +2696,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      my_passport_share_secret: { Args: { p_share_id: string }; Returns: string }
       process_deletion_request: {
         Args: { p_note?: string; p_request_id: string }
         Returns: string
@@ -2600,6 +2710,7 @@ export type Database = {
         Returns: Json
       }
       revoke_invitation_code: { Args: { p_id: string }; Returns: undefined }
+      revoke_passport_share: { Args: { p_share_id: string }; Returns: undefined }
       save_evaluation_draft: {
         Args: {
           p_comments?: Json
