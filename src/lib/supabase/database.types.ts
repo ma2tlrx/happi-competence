@@ -2742,6 +2742,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      my_mfa_status: { Args: Record<PropertyKey, never>; Returns: Json }
       process_deletion_request: {
         Args: { p_note?: string; p_request_id: string }
         Returns: string
@@ -2749,6 +2750,15 @@ export type Database = {
       publish_pedagogical_version: {
         Args: { p_version_id: string }
         Returns: undefined
+      }
+      rate_limit_hit: {
+        Args: {
+          p_action: string
+          p_key_hash: string
+          p_limit: number
+          p_window_seconds: number
+        }
+        Returns: Json
       }
       redeem_invitation_code: {
         Args: { p_code: string; p_user_id: string }

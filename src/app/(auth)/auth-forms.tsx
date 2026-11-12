@@ -8,7 +8,16 @@ import { Checkbox, Field, FormMessage, Input, Select, SubmitButton } from '@/com
 import { ORGANIZATION_TYPES } from '@/lib/auth/roles';
 import type { ActionState } from '@/lib/action-state';
 
-import { redeemAccessCode, requestPasswordReset, signIn, signUpOrganization, signUpParticipant, signUpWithAccessCode, updatePassword } from './actions';
+import {
+  redeemAccessCode,
+  requestPasswordReset,
+  signIn,
+  signUpOrganization,
+  signUpParticipant,
+  signUpWithAccessCode,
+  updatePassword,
+  verifyMfaChallenge,
+} from './actions';
 
 type FieldErrors = Record<string, string>;
 
@@ -305,6 +314,35 @@ export function NewPasswordForm({ home }: { home: string }) {
       <PasswordField name="passwordConfirm" label="Confirmation" autoComplete="new-password" error={errors.passwordConfirm} />
       <FormMessage state={state} />
       <SubmitButton size="lg" className="w-full">Enregistrer le mot de passe</SubmitButton>
+    </form>
+  );
+}
+
+/** Saisie du code à six chiffres de l'application d'authentification (après connexion). */
+export function MfaChallengeForm({ next }: { next?: string }) {
+  const [state, action] = useActionState(verifyMfaChallenge, null);
+  const errors = state?.fieldErrors ?? {};
+  return (
+    <form action={action} className="space-y-5" noValidate>
+      <input type="hidden" name="suite" value={next ?? ''} />
+      <Field label="Code de vérification" required error={errors.code} hint="Les 6 chiffres affichés par votre application d’authentification.">
+        {({ id, describedBy, invalid }) => (
+          <Input
+            id={id}
+            name="code"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            pattern="[0-9 ]*"
+            maxLength={7}
+            required
+            className="font-mono text-lg tracking-[0.3em]"
+            aria-describedby={describedBy}
+            aria-invalid={invalid || undefined}
+          />
+        )}
+      </Field>
+      <FormMessage state={state} />
+      <SubmitButton size="lg" className="w-full">Valider</SubmitButton>
     </form>
   );
 }

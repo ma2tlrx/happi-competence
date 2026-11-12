@@ -5,6 +5,7 @@ import { cache } from 'react';
 
 import { createClient } from '@/lib/supabase/server';
 
+import { MFA_CHALLENGE_PATH, MFA_SETUP_PATH, mfaStep, parseAssuranceLevel, parseMfaStatus, type MfaState } from './mfa';
 import { isRole, ROLE_HOME, type OrganizationStatus, type PermissionCode, type Role } from './roles';
 
 export type CurrentUser = {
@@ -23,6 +24,8 @@ export type CurrentUser = {
   permissions: PermissionCode[];
   /** Compte créé pour un accès professionnel mais dont le code n'a pas encore été activé. */
   awaitingAccessCode: boolean;
+  /** Double authentification : niveau de la session, facteur actif, obligation pour ce rôle. */
+  mfa: MfaState;
 };
 
 /**
@@ -41,10 +44,11 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
   // Une seule vague de lectures : profil (avec les permissions de son rôle), fiche participant
   // et rattachement à un organisme. Les deux dernières sont vides pour les autres rôles.
-  const [profileResult, participant, membership] = await Promise.all([
+  const [profileResult, participant, membership, mfaStatus] = await Promise.all([
     supabase.from('profiles').select('*, roles ( role_permissions ( permission_code ) )').eq('id', user.id).maybeSingle(),
     supabase.from('participants').select('id').eq('user_id', user.id).maybeSingle(),
     supabase.from('organization_members').select('member_role, organizations ( id, name, status )').eq('user_id', user.id).maybeSingle(),
+    supabase.rpc('my_mfa_status'),
   ]);
   const profile = profileResult.data;
   if (!profile || !isRole(profile.role)) return null;
@@ -73,21 +77,30 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     permissions: (permissions.data ?? []).map((row) => row.permission_code as PermissionCode),
     awaitingAccessCode:
       profile.role === 'participant' && !participant.data && user.user_metadata?.account_type === 'pro',
+    // Le niveau vient du jeton vérifié ; facteur et obligation viennent de la base.
+    mfa: { ...parseMfaStatus(mfaStatus.error ? null : mfaStatus.data, parseAssuranceLevel(claims.aal)), aal: parseAssuranceLevel(claims.aal) },
   };
 });
 
 /** Page d'accueil de l'espace correspondant au compte. */
 export function homePathFor(user: CurrentUser) {
   if (user.status !== 'active') return '/compte-desactive';
+  const step = mfaStep(user.mfa);
+  if (step === 'challenge') return MFA_CHALLENGE_PATH;
+  if (step === 'enroll') return `${MFA_SETUP_PATH}?obligatoire=1`;
   if (user.awaitingAccessCode) return '/acces-pro';
   return ROLE_HOME[user.role];
 }
 
-/** Exige un utilisateur connecté et actif. */
+/**
+ * Exige un utilisateur connecté et actif. Un compte protégé par la double
+ * authentification doit avoir saisi son code (session aal2).
+ */
 export async function requireUser(): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) redirect('/connexion');
   if (user.status !== 'active') redirect('/compte-desactive');
+  if (mfaStep(user.mfa) === 'challenge') redirect(MFA_CHALLENGE_PATH);
   return user;
 }
 
@@ -98,6 +111,8 @@ export async function requireUser(): Promise<CurrentUser> {
 export async function requireRole(...roles: Role[]): Promise<CurrentUser> {
   const user = await requireUser();
   if (user.awaitingAccessCode) redirect('/acces-pro');
+  // Double authentification exigée pour ce rôle (paramètre administrateur) : activation d'abord.
+  if (mfaStep(user.mfa) === 'enroll') redirect(`${MFA_SETUP_PATH}?obligatoire=1`);
   if (!roles.includes(user.role)) redirect(homePathFor(user));
   return user;
 }

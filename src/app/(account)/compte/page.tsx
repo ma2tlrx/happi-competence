@@ -1,5 +1,6 @@
-import { Download } from 'lucide-react';
+import { Download, ShieldCheck } from 'lucide-react';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { Badge, Card, CardBody, CardHeader, Notice, PageHeader } from '@/components/ui/primitives';
@@ -46,6 +47,21 @@ export default async function ComptePage() {
             <CardHeader title="Mot de passe" description="Au moins 10 caractères, dont une lettre et un chiffre." />
             <CardBody>
               <PasswordForm />
+            </CardBody>
+          </Card>
+          <Card>
+            <CardHeader
+              title="Sécurité"
+              description="Double authentification : un code de votre téléphone en plus du mot de passe."
+              action={user.mfa.enrolled ? <Badge variant="success">Activée</Badge> : <Badge variant="neutral">Désactivée</Badge>}
+            />
+            <CardBody>
+              <Button asChild variant="outline">
+                <Link href="/compte/securite">
+                  <ShieldCheck aria-hidden />
+                  {user.mfa.enrolled ? 'Gérer la double authentification' : 'Activer la double authentification'}
+                </Link>
+              </Button>
             </CardBody>
           </Card>
         </div>

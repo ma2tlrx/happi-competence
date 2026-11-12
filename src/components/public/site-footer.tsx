@@ -72,6 +72,7 @@ export function SiteFooter({ email, phones }: { email: string; phones: string[] 
             <li><Link href="/mentions-legales" className="hover:text-white">Mentions légales</Link></li>
             <li><Link href="/confidentialite" className="hover:text-white">Politique de confidentialité</Link></li>
             <li><Link href="/conditions-utilisation" className="hover:text-white">Conditions d’utilisation</Link></li>
+            <li><Link href="/accessibilite" className="hover:text-white">Accessibilité : non conforme</Link></li>
           </ul>
         </div>
       </div>

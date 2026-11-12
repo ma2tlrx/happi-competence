@@ -4,6 +4,7 @@ import { Document, Image, Page, Text, View } from '@react-pdf/renderer';
 import type { Style } from '@react-pdf/stylesheet';
 import type { ReactNode } from 'react';
 
+import { writingMention } from '@/lib/report/ai-disclosure';
 import { BEHAVIOUR_THEMES, PRIORITIES, type ReportContent, type ReportOptions, type ReportSection } from '@/lib/report/content';
 import type { ReportData, ReportFramework, ReportSkill } from '@/lib/report/model';
 import { formatDate, formatScore } from '@/lib/utils';
@@ -112,6 +113,9 @@ export function Cover({ data, options, meta, root }: Omit<ReportDocumentProps, '
     ['Situations évaluées', `${data.counts.sessionsEvaluated} session${data.counts.sessionsEvaluated > 1 ? 's' : ''}`],
     ['Observations des formateurs', String(data.counts.observations)],
   ];
+  // Transparence sur l'usage de l'IA (règlement européen sur l'IA, art. 50).
+  const mention = writingMention(meta.contentSource);
+  if (mention) facts.push(['Rédaction', mention]);
   return (
     <Page size="A4" style={{ fontFamily: 'DM Sans', color: C.ink, fontSize: 9.5 }}>
       <View style={{ paddingHorizontal: 50, paddingTop: 52, flex: 1 }}>
@@ -608,6 +612,7 @@ export function Methodology({ data, content, meta, number }: { data: ReportData;
         mobilisées » et « à développer » sont repérées à partir d’au moins quatre compétences observées dans un référentiel.
       </Text>
       <H2>Rédaction</H2>
+      {writingMention(meta.contentSource) ? <Text style={[s.p, { fontWeight: 700 }]}>{writingMention(meta.contentSource)}.</Text> : null}
       <Text style={s.p}>{writing}</Text>
       <H2>Limites de ce bilan</H2>
       <Paragraphs text={content?.limits} />

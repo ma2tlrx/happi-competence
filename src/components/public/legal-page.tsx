@@ -18,3 +18,8 @@ export function LegalValue({ value }: { value: string }) {
   if (value) return <>{value}</>;
   return <span className="rounded-xs bg-warning-soft px-1.5 py-0.5 text-[0.9em] font-medium text-warning">à compléter par HAPPI</span>;
 }
+
+/** Point de droit à faire valider avant publication définitive. */
+export function ToValidate({ children = 'à valider par un juriste' }: { children?: ReactNode }) {
+  return <span className="rounded-xs bg-warning-soft px-1.5 py-0.5 text-[0.9em] font-medium text-warning">[{children}]</span>;
+}

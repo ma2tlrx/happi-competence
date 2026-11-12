@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { decodeJwtPayload, MFA_CHALLENGE_PATH } from '@/lib/auth/mfa';
+
 /** Préfixes réservés aux utilisateurs connectés. Le contrôle du rôle est fait côté serveur, dans les layouts. */
 const PROTECTED_PREFIXES = ['/participant', '/organisme', '/formateur', '/admin', '/compte', '/notifications', '/api/exports'];
 
@@ -50,6 +52,27 @@ export async function proxy(request: NextRequest) {
     const redirect = NextResponse.redirect(loginUrl);
     for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie);
     return redirect;
+  }
+
+  // Double authentification : un compte qui a un facteur vérifié doit saisir son code
+  // (session aal2) avant d'accéder à une page privée ou à un export. Le jeton vient d'être
+  // validé par getUser() : on peut en lire le niveau d'assurance sans revérifier la signature.
+  if (isProtected && user?.factors?.some((factor) => factor.status === 'verified')) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (decodeJwtPayload(session?.access_token)?.aal !== 'aal2') {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Double authentification requise.' }, { status: 401 });
+      }
+      const challengeUrl = request.nextUrl.clone();
+      challengeUrl.pathname = MFA_CHALLENGE_PATH;
+      challengeUrl.search = '';
+      challengeUrl.searchParams.set('suite', `${pathname}${request.nextUrl.search}`);
+      const redirect = NextResponse.redirect(challengeUrl);
+      for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie);
+      return redirect;
+    }
   }
 
   if (isProtected) {

@@ -1,7 +1,8 @@
-import { FileDown } from 'lucide-react';
+import { FileDown, Sparkles } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardBody, CardHeader } from '@/components/ui/primitives';
+import { writingMention } from '@/lib/report/ai-disclosure';
 import type { StoredReport } from '@/lib/report/load';
 import { formatDate } from '@/lib/utils';
 
@@ -19,6 +20,13 @@ export function FinalReports({ reports, canDownload = true, title = 'Bilans HAPP
               <span>
                 <span className="font-semibold">Bilan du {formatDate(report.finalizedAt)}</span>
                 <span className="ml-2 text-sm text-ink-subtle">version {report.version}</span>
+                {/* Transparence sur l'usage de l'IA (règlement européen sur l'IA, art. 50). */}
+                {writingMention(report.contentSource) ? (
+                  <span className="mt-0.5 flex items-start gap-1.5 text-sm text-ink-muted">
+                    {report.contentSource === 'manual' ? null : <Sparkles className="mt-0.5 size-3.5 shrink-0" aria-hidden />}
+                    {writingMention(report.contentSource)}
+                  </span>
+                ) : null}
               </span>
               {canDownload ? (
                 <Button asChild size="sm" variant="outline">

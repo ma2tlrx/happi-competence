@@ -60,6 +60,31 @@ ne convient pas à la production.
 Personnalisez au besoin les modèles d’e-mail (**Authentication → Email Templates**)
 en français.
 
+Dans **Authentication → Multi-Factor (MFA)** : vérifiez que **TOTP (App
+Authenticator)** est activé pour l’enrôlement et la vérification (« Enabled »).
+C’est le réglage par défaut de Supabase ; sans lui, la page **Mon compte →
+Sécurité** ne peut pas activer la double authentification. Laissez les autres
+facteurs (téléphone, WebAuthn) désactivés : l’application ne les gère pas.
+
+Une fois votre propre compte administrateur protégé (**Mon compte → Sécurité**),
+vous pouvez cocher **Administration → Paramètres → Exiger la double
+authentification pour les administrateurs et formateurs**. Les comptes concernés
+sans double authentification sont alors renvoyés vers son activation, et la base
+refuse leurs droits tant que la session n’a pas été validée par un code (niveau
+`aal2`). En cas de téléphone perdu, un administrateur réinitialise la double
+authentification depuis **Administration → Utilisateurs**, après avoir vérifié
+l’identité de la personne par un autre moyen.
+
+**Limitation de débit** : connexion, inscription, mot de passe oublié, formulaire
+de contact, codes d’accès et codes de double authentification sont limités par
+adresse IP, par adresse e-mail ou par compte (table privée
+`private.rate_limit_counters`, fonction `public.rate_limit_hit`, réservée à la clé
+de service). Aucun service externe n’est nécessaire. L’adresse IP est lue dans
+`x-forwarded-for` / `x-real-ip`, que Vercel renseigne lui-même : derrière un autre
+hébergeur ou un mandataire, vérifiez que ces en-têtes sont réécrits par
+l’infrastructure, sinon la limite par IP peut être contournée (les limites par
+e-mail et par compte restent efficaces).
+
 ## 4. Déploiement Vercel 👤
 
 1. Importez le dépôt GitHub dans Vercel (framework détecté : Next.js).
@@ -74,6 +99,7 @@ en français.
 | `NEXT_PUBLIC_DEMO_MODE` | `false` | oui |
 | `OPENROUTER_API_KEY` | clé OpenRouter (rédaction des bilans) | **non** — serveur uniquement, facultative |
 | `ANTHROPIC_API_KEY` | clé API Claude, si OpenRouter n’est pas utilisé | **non** — serveur uniquement, facultative |
+| `RATE_LIMIT_SECRET` | chaîne aléatoire longue (clé des empreintes de la limitation de débit) | **non** — serveur uniquement, facultative (à défaut : clé secrète Supabase) |
 | `REPORT_AI_MODEL` | modèle de rédaction (défaut : `anthropic/claude-opus-5.5`) | non, facultative |
 | `EMAIL_PROVIDER` | `brevo`, `smtp` ou `resend` (vide : aucun envoi) | non |
 | `EMAIL_FROM` | `HAPPI Compétence <no-reply@votre-domaine.fr>` | non |
@@ -173,7 +199,10 @@ depuis **Administration → Codes d’accès**.
   signalées « à renseigner » sur ces pages (raison sociale, forme juridique, SIRET,
   adresse, directeur de la publication, hébergeur, contact RGPD…) se saisissent dans
   **Administration → Paramètres**, sans modifier le code. Faites relire ces textes
-  par votre conseil juridique.
+  par votre conseil juridique. Les points de droit encore ouverts sont signalés
+  « à valider par un juriste » sur la politique de confidentialité et la
+  déclaration d’accessibilité ; les brouillons du registre des traitements et de
+  l’analyse d’impact sont dans [conformite/](conformite/).
 - **Référentiels officiels** : les 18 compétences transversales, leurs critères,
   la correspondance avec les sessions et le questionnaire d’auto-évaluation sont
   **provisoires** (repris de l’outil précédent). Les 16 habiletés socio-cognitives

@@ -38,6 +38,16 @@ export function SettingsForm({ values }: { values: Record<string, unknown> }) {
         <Checkbox name="platform.organization_signup_enabled" defaultChecked={values['platform.organization_signup_enabled'] !== false} label="Autoriser les demandes d’espace organisme depuis le site" />
         <Field label="Durée de conservation des données (mois)" error={errors['platform.data_retention_months']}>{({ id, describedBy, invalid }) => <Input id={id} name="platform.data_retention_months" type="number" min={1} max={120} aria-describedby={describedBy} aria-invalid={invalid || undefined} defaultValue={Number(values['platform.data_retention_months'] ?? 36)} />}</Field>
       </fieldset>
+      <fieldset className="space-y-2">
+        <legend className="mb-2 text-sm font-semibold text-ink-muted">Sécurité</legend>
+        <Checkbox
+          name="security.mfa_required_staff"
+          defaultChecked={values['security.mfa_required_staff'] === true}
+          error={errors['security.mfa_required_staff']}
+          label="Exiger la double authentification pour les administrateurs et formateurs"
+          description="Les comptes concernés sans double authentification seront invités à l’activer avant d’accéder à leur espace (les comptes de démonstration ne sont pas concernés). Activez-la d’abord sur votre propre compte."
+        />
+      </fieldset>
       <FormMessage state={state} />
       <SubmitButton>Enregistrer les paramètres</SubmitButton>
     </form>

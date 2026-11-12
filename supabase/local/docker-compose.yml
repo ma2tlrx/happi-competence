@@ -54,6 +54,10 @@ services:
       GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
       GOTRUE_MAILER_AUTOCONFIRM: ${MAILER_AUTOCONFIRM:-true}
       GOTRUE_PASSWORD_MIN_LENGTH: 10
+      # Double authentification TOTP (activée explicitement ; redémarrer la pile pour l'appliquer).
+      GOTRUE_MFA_TOTP_ENROLL_ENABLED: "true"
+      GOTRUE_MFA_TOTP_VERIFY_ENABLED: "true"
+      GOTRUE_MFA_MAX_ENROLLED_FACTORS: 10
       GOTRUE_SMTP_ADMIN_EMAIL: no-reply@happi.test
       GOTRUE_SMTP_HOST: mail
       GOTRUE_SMTP_PORT: 1025
