@@ -5,6 +5,16 @@ import { decodeJwtPayload, MFA_CHALLENGE_PATH } from '@/lib/auth/mfa';
 
 /** Préfixes réservés aux utilisateurs connectés. Le contrôle du rôle est fait côté serveur, dans les layouts. */
 const PROTECTED_PREFIXES = ['/participant', '/organisme', '/formateur', '/admin', '/compte', '/notifications', '/api/exports'];
+/** Pages publiques dont l'adresse porte un jeton (vérification d'un passeport partagé). */
+const TOKEN_PREFIXES = ['/verifier'];
+
+/** Ni cache partagé, ni en-tête Referer : le jeton ne doit pas sortir de la page. */
+function protectToken(response: NextResponse) {
+  response.headers.set('Cache-Control', 'private, no-store, max-age=0');
+  response.headers.set('Referrer-Policy', 'no-referrer');
+  response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  return response;
+}
 
 /**
  * Rafraîchit la session Supabase à chaque requête et renvoie les visiteurs non
@@ -17,6 +27,8 @@ export async function proxy(request: NextRequest) {
   if (!url || !key) return NextResponse.next({ request });
 
   const { pathname } = request.nextUrl;
+  // Route publique : aucune session à exiger ni à rafraîchir (la page n'utilise pas la session).
+  if (TOKEN_PREFIXES.some((prefix) => pathname.startsWith(`${prefix}/`))) return protectToken(NextResponse.next({ request }));
   const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
   // Visiteur sans session sur une page publique : rien à vérifier ni à rafraîchir (aucun appel réseau).
   const hasSession = request.cookies.getAll().some((cookie) => cookie.name.startsWith('sb-') && cookie.name.includes('-auth-token'));

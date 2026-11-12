@@ -31,6 +31,8 @@ const s = StyleSheet.create({
   highlight: { flex: 1, backgroundColor: C.paper, borderRadius: 6, padding: 9 },
   highlightTitle: { fontSize: 9, fontFamily: 'Helvetica-Bold', marginBottom: 4 },
   feedback: { borderLeftWidth: 2, borderLeftColor: C.orange, paddingLeft: 8, marginBottom: 8 },
+  verify: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: C.line, borderRadius: 6, padding: 10, marginBottom: 12 },
+  verifyTitle: { fontSize: 10, fontFamily: 'Helvetica-Bold', marginBottom: 3 },
   footer: { position: 'absolute', bottom: 20, left: 40, right: 40, flexDirection: 'row', justifyContent: 'space-between', fontSize: 7.5, color: C.muted, borderTopWidth: 1, borderTopColor: C.line, paddingTop: 6 },
 });
 
@@ -64,7 +66,20 @@ function names(framework: PassportFramework, codes: string[]) {
   return codes.map((code) => framework.skills.find((skill) => skill.code === code)?.name).filter(Boolean).join(', ');
 }
 
-export function PassportDocument({ passport, mascotPath, generatedAt }: { passport: Passport; mascotPath: string; generatedAt: Date }) {
+/** QR code de vérification : présent seulement si le participant a choisi l'un de ses liens actifs. */
+export type PassportVerification = { qr: string } | null;
+
+export function PassportDocument({
+  passport,
+  mascotPath,
+  generatedAt,
+  verification = null,
+}: {
+  passport: Passport;
+  mascotPath: string;
+  generatedAt: Date;
+  verification?: PassportVerification;
+}) {
   const { participant, group } = passport;
   const feedback = passport.evaluations.filter((evaluation) => evaluation.observation || evaluation.advice);
   return (
@@ -107,6 +122,20 @@ export function PassportDocument({ passport, mascotPath, generatedAt }: { passpo
             Les niveaux décrivent des comportements observés par les formateurs pendant les sessions du programme, à un moment donné. Ils ne constituent
             ni un diagnostic, ni une certification, ni une mesure de la valeur d’une personne.
           </Text>
+
+          {verification ? (
+            <View style={s.verify} wrap={false}>
+              {/* eslint-disable-next-line jsx-a11y/alt-text -- composant PDF, pas d'attribut alt */}
+              <Image src={verification.qr} style={{ width: 72, height: 72 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={s.verifyTitle}>Vérifier ce passeport en ligne</Text>
+                <Text style={{ fontSize: 8.5, color: C.muted }}>
+                  Scannez ce QR code pour consulter les niveaux validés à jour, sur le site de HAPPI Compétence. Le lien a une durée limitée et le participant
+                  peut le révoquer à tout moment.
+                </Text>
+              </View>
+            </View>
+          ) : null}
 
           {passport.frameworks.map((framework) => (
             <View key={framework.code}>

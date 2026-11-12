@@ -24,6 +24,8 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   'report.created': 'Bilan créé',
   'report.content_updated': 'Texte d’un bilan modifié',
   'report.finalized': 'Bilan validé',
+  'passport_share.created': 'Lien de partage du passeport créé',
+  'passport_share.revoked': 'Lien de partage du passeport révoqué',
   'demo.created': 'Démonstration créée',
   'demo.deleted': 'Démonstration supprimée',
   'demo.space_opened': 'Espace de démonstration ouvert',

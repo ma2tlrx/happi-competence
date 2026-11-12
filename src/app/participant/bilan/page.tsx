@@ -1,5 +1,6 @@
-import { FileDown } from 'lucide-react';
+import { FileDown, Share2 } from 'lucide-react';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 import { BilanView } from '@/components/passport/bilan-view';
 import { FinalReports } from '@/components/report/final-reports';
@@ -21,12 +22,20 @@ export default async function BilanPage() {
         title="Mon bilan"
         description="Une synthèse de ce que vos formateurs ont observé, à consulter et à présenter dans votre parcours professionnel."
         actions={
+          <>
+          <Button asChild variant="outline">
+            <Link href="/participant/partage">
+              <Share2 aria-hidden />
+              Partager mon passeport
+            </Link>
+          </Button>
           <Button asChild>
             <a href={`/api/exports/passeport/${passport.participant.id}`} download>
               <FileDown aria-hidden />
               Télécharger mon passeport (PDF)
             </a>
           </Button>
+          </>
         }
       />
       <FinalReports reports={reports} title="Mes bilans HAPPI" />
