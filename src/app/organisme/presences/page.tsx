@@ -1,4 +1,4 @@
-import { ClipboardCheck, FileDown, Sheet } from 'lucide-react';
+import { ClipboardCheck, FileDown, FileSignature, Sheet } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
@@ -67,6 +67,7 @@ export default async function OrganizationAttendancePage({ searchParams }: { sea
                 action={
                   canExport ? (
                     <>
+                      <Button asChild size="sm" variant="outline"><a href={`/api/exports/emargement/${selected.id}`} download><FileSignature aria-hidden />Émargement</a></Button>
                       <Button asChild size="sm" variant="outline"><a href={`/api/exports/presences/${selected.id}?format=pdf`} download><FileDown aria-hidden />PDF</a></Button>
                       <Button asChild size="sm" variant="outline"><a href={`/api/exports/presences/${selected.id}?format=csv`} download><Sheet aria-hidden />CSV</a></Button>
                     </>

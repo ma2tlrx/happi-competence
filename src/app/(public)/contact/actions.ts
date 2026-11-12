@@ -1,10 +1,9 @@
 'use server';
 
-import { createHmac } from 'node:crypto';
-
 import { z } from 'zod';
 
 import { actionError, actionSuccess, validationError, type ActionState } from '@/lib/action-state';
+import { hashIp } from '@/lib/security/origin';
 import { rateLimit, requestIp } from '@/lib/security/rate-limit';
 import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase/admin';
 
@@ -35,14 +34,11 @@ export async function sendContactMessage(_: ActionState, formData: FormData): Pr
     return actionError('Le formulaire est momentanément indisponible. Écrivez-nous directement par e-mail.');
   }
 
-  // Seule une empreinte de l'adresse IP est conservée, pour limiter les envois répétés.
+  // Seule une empreinte HMAC de l'adresse IP est conservée, pour limiter les envois répétés.
   const ip = await requestIp();
   const limited = await rateLimit('contact', { ip });
   if (limited) return actionError(limited);
-  // HMAC à clé secrète serveur : sans la clé, l'empreinte ne permet pas de retrouver l'adresse IP
-  // (un simple SHA-256 d'une IPv4 se retrouve par essai exhaustif).
-  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY ?? '';
-  const originHash = createHmac('sha256', `happi-contact:${secret}`).update(ip).digest('hex');
+  const originHash = hashIp(ip, 'happi-contact');
 
   const { error } = await createAdminClient().rpc('submit_contact_message', {
     p_name: parsed.data.name,

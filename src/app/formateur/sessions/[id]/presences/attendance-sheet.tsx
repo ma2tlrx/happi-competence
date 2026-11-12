@@ -1,13 +1,13 @@
 'use client';
 
-import { Check, CheckCheck, Clock, DoorOpen, FileCheck, X } from 'lucide-react';
+import { Check, CheckCheck, CircleCheck, Clock, DoorOpen, FileCheck, X } from 'lucide-react';
 import { useState, useTransition } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { AutosaveTextarea } from '@/components/ui/autosave-textarea';
 import { Avatar } from '@/components/ui/primitives';
 import { toast } from '@/components/ui/toast';
-import { cn, formatDateTime } from '@/lib/utils';
+import { cn, formatDateTime, formatTime } from '@/lib/utils';
 
 import { recordAttendance, saveAttendanceComment } from './actions';
 
@@ -20,7 +20,33 @@ const OPTIONS: { value: Status; label: string; short: string; icon: typeof Check
   { value: 'excused', label: 'Absence justifiée', short: 'Justifié', icon: FileCheck, active: 'border-petrol-700 bg-petrol-700 text-white' },
 ];
 
-export type AttendanceRow = { participantId: string; firstName: string; lastName: string; status: Status | null; comment: string | null; recordedAt: string | null; recordedBy: string | null };
+export type AttendanceRow = {
+  participantId: string;
+  firstName: string;
+  lastName: string;
+  status: Status | null;
+  comment: string | null;
+  recordedAt: string | null;
+  recordedBy: string | null;
+  /** Émargement : heure de signature et type (signature tracée ou mention « signature impossible »). */
+  signedAt: string | null;
+  signatureKind: 'drawn' | 'unable' | null;
+};
+
+function SignatureMark({ row }: { row: AttendanceRow }) {
+  if (row.signedAt) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-success/20 bg-success-soft px-2 py-0.5 text-xs font-semibold text-success">
+        <CircleCheck className="size-3.5" aria-hidden />
+        {row.signatureKind === 'unable' ? 'Signature impossible' : 'Signé'} ✓ {formatTime(new Date(row.signedAt).toTimeString().slice(0, 5))}
+      </span>
+    );
+  }
+  if (row.status === 'present' || row.status === 'late' || row.status === 'left_early') {
+    return <span className="text-xs font-semibold text-ink-subtle">Non signé</span>;
+  }
+  return null;
+}
 
 export function AttendanceSheet({ sessionId, rows: initialRows, canEdit }: { sessionId: string; rows: AttendanceRow[]; canEdit: boolean }) {
   const [rows, setRows] = useState(initialRows);
@@ -74,8 +100,9 @@ export function AttendanceSheet({ sessionId, rows: initialRows, canEdit }: { ses
               <div className="flex items-center gap-3">
                 <Avatar person={{ first_name: row.firstName, last_name: row.lastName }} />
                 <div>
-                  <p className="font-semibold text-ink">
+                  <p className="flex flex-wrap items-center gap-x-2 font-semibold text-ink">
                     {row.lastName.toUpperCase()} {row.firstName}
+                    <SignatureMark row={row} />
                   </p>
                   <p className="text-xs text-ink-subtle">
                     {row.recordedAt ? `Validé le ${formatDateTime(row.recordedAt)}${row.recordedBy ? ` par ${row.recordedBy}` : ''}` : 'Non renseigné'}
