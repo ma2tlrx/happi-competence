@@ -46,6 +46,27 @@ export async function setUserStatus(userId: string, status: 'active' | 'disabled
   return done(null, ['/admin']);
 }
 
+/**
+ * Réinitialise la double authentification d'un compte (téléphone perdu…) : supprime ses
+ * facteurs. À faire après avoir vérifié l'identité de la personne par un autre canal.
+ * La suppression est journalisée par la base (auth.mfa_disabled).
+ */
+export async function resetUserMfa(userId: string): Promise<Simple> {
+  const { user } = await admin();
+  if (!uuid.safeParse(userId).success) return { ok: false, message: 'Compte invalide.' };
+  if (userId === user.id) return { ok: false, message: 'Gérez votre propre double authentification depuis « Mon compte › Sécurité ».' };
+  if (!isAdminClientConfigured()) return { ok: false, message: 'Action momentanément indisponible.' };
+  const service = createAdminClient();
+  const { data, error } = await service.auth.admin.mfa.listFactors({ userId });
+  if (error) return { ok: false, message: 'Les facteurs de ce compte n’ont pas pu être lus.' };
+  if (!data.factors.length) return { ok: false, message: 'Ce compte n’a pas de double authentification active.' };
+  for (const factor of data.factors) {
+    const { error: deleteError } = await service.auth.admin.mfa.deleteFactor({ userId, id: factor.id });
+    if (deleteError) return { ok: false, message: 'La double authentification n’a pas pu être réinitialisée entièrement.' };
+  }
+  return done(null, ['/admin/utilisateurs']);
+}
+
 // ── Organismes ───────────────────────────────────────────────────────────────
 export async function setOrganizationStatus(organizationId: string, status: 'active' | 'suspended' | 'rejected' | 'pending', reason?: string): Promise<Simple> {
   const { supabase } = await admin();
@@ -257,7 +278,7 @@ export async function resolveDataRequest(id: string, decision: 'completed' | 're
 const LEGAL_KEYS = ['legal.company_name', 'legal.legal_form', 'legal.siret', 'legal.address', 'legal.publication_director', 'legal.host', 'legal.dpo_contact'] as const;
 
 export async function saveSettings(_: ActionState, formData: FormData): Promise<ActionState> {
-  const { supabase } = await admin();
+  const { user, supabase } = await admin();
   const data = entries(formData);
   // Validation explicite : une valeur refusée est signalée, jamais tronquée ni remplacée en silence.
   const errors: Record<string, string> = {};
@@ -271,6 +292,12 @@ export async function saveSettings(_: ActionState, formData: FormData): Promise<
   const retentionRaw = (data['platform.data_retention_months'] ?? '').trim();
   const retention = Number(retentionRaw);
   if (!/^\d+$/.test(retentionRaw) || retention < 1 || retention > 120) errors['platform.data_retention_months'] = 'Indiquez un nombre entier de mois entre 1 et 120.';
+  // Exiger la double authentification : l'administrateur qui l'active doit l'utiliser lui-même,
+  // sinon il serait aussitôt renvoyé vers l'activation.
+  const mfaRequired = data['security.mfa_required_staff'] === 'on';
+  if (mfaRequired && !(user.mfa.enrolled && user.mfa.aal === 'aal2')) {
+    errors['security.mfa_required_staff'] = 'Activez d’abord la double authentification sur votre propre compte (Mon compte › Sécurité).';
+  }
   if (Object.keys(errors).length) return actionError('Certains paramètres sont à corriger.', errors);
 
   const rows: { key: string; value: NonNullable<Json>; is_public: boolean }[] = [
@@ -280,6 +307,7 @@ export async function saveSettings(_: ActionState, formData: FormData): Promise<
   rows.push({ key: 'contact.phones', value: phones, is_public: true });
   rows.push({ key: 'platform.organization_signup_enabled', value: data['platform.organization_signup_enabled'] === 'on', is_public: true });
   rows.push({ key: 'platform.data_retention_months', value: retention, is_public: false });
+  rows.push({ key: 'security.mfa_required_staff', value: mfaRequired, is_public: false });
   const { error } = await supabase.from('app_settings').upsert(rows);
   if (error) return actionError(databaseErrorMessage(error));
   revalidatePath('/', 'layout');

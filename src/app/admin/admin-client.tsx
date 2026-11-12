@@ -14,6 +14,7 @@ import {
   assignTrainer,
   createAccessCode,
   createOrganization,
+  resetUserMfa,
   resolveDataRequest,
   revokeAccessCode,
   setContactMessageStatus,
@@ -79,6 +80,28 @@ export function UserStatusButton({ userId, status, name, disabled }: { userId: s
     >
       {active ? <Ban aria-hidden /> : <RotateCcw aria-hidden />}
       {active ? 'Désactiver' : 'Réactiver'}
+    </Button>
+  );
+}
+
+export function ResetMfaButton({ userId, name, disabled }: { userId: string; name: string; disabled?: boolean }) {
+  const { pending, run } = useRun();
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      loading={pending}
+      disabled={disabled}
+      onClick={() =>
+        run(
+          () => resetUserMfa(userId),
+          `La double authentification de ${name} est réinitialisée.`,
+          `Réinitialiser la double authentification de ${name} ? Vérifiez d’abord son identité par un autre moyen (téléphone, rencontre). La personne devra la réactiver.`,
+        )
+      }
+    >
+      <KeyRound aria-hidden />
+      Réinitialiser la 2FA
     </Button>
   );
 }

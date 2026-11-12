@@ -6,8 +6,10 @@ import { z } from 'zod';
 
 import { siteConfig } from '@/config/site';
 import { actionError, actionSuccess, validationError, type ActionState } from '@/lib/action-state';
+import { MFA_CHALLENGE_PATH, mfaStep, normalizeTotpCode } from '@/lib/auth/mfa';
 import { ORGANIZATION_TYPES } from '@/lib/auth/roles';
 import { getCurrentUser, homePathFor } from '@/lib/auth/session';
+import { rateLimit, requestIp } from '@/lib/security/rate-limit';
 import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { safeInternalPath } from '@/lib/utils';
@@ -43,6 +45,10 @@ export async function signIn(_: ActionState, formData: FormData): Promise<Action
   });
   if (!parsed.success) return validationError(parsed.error);
 
+  // Limites par adresse IP et par adresse e-mail saisie (que le compte existe ou non).
+  const limited = await rateLimit('login', { ip: await requestIp(), email: parsed.data.email });
+  if (limited) return actionError(limited);
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
@@ -63,6 +69,10 @@ export async function signIn(_: ActionState, formData: FormData): Promise<Action
   await supabase.rpc('log_event', { p_action: 'auth.signed_in' });
 
   const next = safeInternalPath(String(formData.get('suite') ?? ''), '');
+  // Compte protégé par la double authentification : saisie du code avant tout accès.
+  if (mfaStep(user.mfa) === 'challenge') {
+    redirect(next ? `${MFA_CHALLENGE_PATH}?suite=${encodeURIComponent(next)}` : MFA_CHALLENGE_PATH);
+  }
   // On ne suit la page demandée que si elle appartient à l'espace du compte.
   const home = homePathFor(user);
   const sameSpace = next && home.split('/')[1] === next.split('/')[1];
@@ -141,6 +151,8 @@ async function createAccount(
 export async function signUpParticipant(_: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = participantSchema.safeParse(formEntries(formData));
   if (!parsed.success) return validationError(parsed.error);
+  const limited = await rateLimit('signup', { ip: await requestIp() });
+  if (limited) return actionError(limited);
   const result = await createAccount(parsed.data, {
     account_type: 'participant',
     first_name: parsed.data.firstName,
@@ -158,6 +170,8 @@ export async function signUpParticipant(_: ActionState, formData: FormData): Pro
 export async function signUpOrganization(_: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = organizationSchema.safeParse(formEntries(formData));
   if (!parsed.success) return validationError(parsed.error);
+  const limited = await rateLimit('signup', { ip: await requestIp() });
+  if (limited) return actionError(limited);
   const result = await createAccount(parsed.data, {
     account_type: 'organisme',
     first_name: parsed.data.firstName,
@@ -197,6 +211,9 @@ export async function signUpWithAccessCode(_: ActionState, formData: FormData): 
   }).safeParse(formEntries(formData));
   if (!parsed.success) return validationError(parsed.error);
   if (!isAdminClientConfigured()) return actionError('L’activation des codes est momentanément indisponible.');
+  // Saisie de codes en série : limite par IP, avant toute vérification du code.
+  const limited = await rateLimit('access_code', { ip: await requestIp() });
+  if (limited) return actionError(limited);
 
   const admin = createAdminClient();
   const { data: check } = await admin.rpc('check_invitation_code', { p_code: parsed.data.code });
@@ -233,6 +250,8 @@ export async function redeemAccessCode(_: ActionState, formData: FormData): Prom
   const user = await getCurrentUser();
   if (!user) redirect('/connexion');
   if (!isAdminClientConfigured()) return actionError('L’activation des codes est momentanément indisponible.');
+  const limited = await rateLimit('access_code', { ip: await requestIp(), user: user.id });
+  if (limited) return actionError(limited);
   const { error } = await createAdminClient().rpc('redeem_invitation_code', { p_code: parsed.data, p_user_id: user.id });
   if (error) {
     const reason = error.message.match(/(INVALID|USED|EXPIRED|REVOKED)_CODE/)?.[1]?.toLowerCase();
@@ -247,6 +266,8 @@ export async function redeemAccessCode(_: ActionState, formData: FormData): Prom
 export async function requestPasswordReset(_: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = email.safeParse(formData.get('email'));
   if (!parsed.success) return { ok: false, fieldErrors: { email: parsed.error.issues[0]!.message } };
+  const limited = await rateLimit('password_reset', { ip: await requestIp(), email: parsed.data });
+  if (limited) return actionError(limited);
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
     redirectTo: `${await siteOrigin()}/auth/confirmation?suite=/nouveau-mot-de-passe`,
@@ -270,6 +291,32 @@ export async function updatePassword(_: ActionState, formData: FormData): Promis
   }
   await supabase.rpc('log_event', { p_action: 'auth.password_changed' });
   return actionSuccess('Votre mot de passe a été modifié.');
+}
+
+// ── Double authentification : saisie du code après connexion ─────────────────
+export async function verifyMfaChallenge(_: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await getCurrentUser();
+  if (!user) redirect('/connexion');
+  const code = normalizeTotpCode(formData.get('code'));
+  if (!code) return { ok: false, fieldErrors: { code: 'Saisissez les 6 chiffres affichés par votre application.' } };
+  const limited = await rateLimit('mfa', { user: user.id, ip: await requestIp() });
+  if (limited) return actionError(limited);
+
+  const supabase = await createClient();
+  const { data: factors, error: listError } = await supabase.auth.mfa.listFactors();
+  const factor = factors?.totp.find((item) => item.status === 'verified');
+  if (listError || !factor) return actionError('Aucune application d’authentification n’est associée à ce compte. Reconnectez-vous.');
+  const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code });
+  if (error) {
+    if (error.status === 429) return actionError('Trop de tentatives. Patientez quelques minutes avant de réessayer.');
+    return actionError('Ce code n’est pas valide ou a expiré. Saisissez le code affiché en ce moment.', { code: 'Code refusé.' });
+  }
+
+  const next = safeInternalPath(String(formData.get('suite') ?? ''), '');
+  // getCurrentUser est mis en cache pour la requête : la session vient de passer en aal2.
+  const home = homePathFor({ ...user, mfa: { ...user.mfa, aal: 'aal2', enrolled: true } });
+  const sameSpace = next && home.split('/')[1] === next.split('/')[1];
+  redirect(sameSpace || next.startsWith('/compte') ? next : home);
 }
 
 export async function signOut() {

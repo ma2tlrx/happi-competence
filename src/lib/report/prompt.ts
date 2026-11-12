@@ -1,5 +1,6 @@
 import { BEHAVIOUR_THEMES, PRIORITIES, type ReportOptions } from './content';
 import type { ReportData } from './model';
+import { redactPersonalData } from './redact';
 
 /**
  * Consignes de rédaction. Stables d'un bilan à l'autre (mises en cache par l'API).
@@ -38,8 +39,14 @@ Contenu attendu :
   .join(' ; ')}.
 - conclusion, closing (une phrase de valorisation propre à HAPPI), limits (limites propres à ce bilan), dataWarnings.`;
 
-/** Dossier transmis à l'IA : aucune donnée d'identité (ni nom, ni structure, ni formateur). */
+/**
+ * Dossier transmis à l'IA : aucune donnée d'identité (ni nom, ni structure, ni formateur).
+ * Les textes libres passent par un filtre qui masque e-mails, téléphones, numéros
+ * d'identification, adresses et le nom de la personne (voir redact.ts).
+ */
 export function buildDossier(data: ReportData, options: ReportOptions) {
+  const names = [data.participant.firstName, data.participant.lastName];
+  const clean = <T extends string | null | undefined>(text: T) => redactPersonalData(text, { names });
   return {
     programme: data.program ? { nom: data.program.name, sessions_prevues: data.program.sessionsCount } : null,
     suffisance_des_donnees: data.sufficiency,
@@ -76,12 +83,12 @@ export function buildDossier(data: ReportData, options: ReportOptions) {
         observations: skill.observations.map((observation) => ({
           session: observation.session,
           niveau: observation.levelLabel,
-          commentaire_formateur: observation.comment,
+          commentaire_formateur: clean(observation.comment),
         })),
       })),
     })),
-    commentaires_de_session: data.feedback.map((item) => ({ session: item.session, observation: item.observation, conseil: item.advice })),
-    auto_evaluation_initiale: data.selfAssessment ? { completee: true, commentaire: data.selfAssessment.comment } : { completee: false },
-    observations_complementaires_du_formateur: options.extraObservations,
+    commentaires_de_session: data.feedback.map((item) => ({ session: item.session, observation: clean(item.observation), conseil: clean(item.advice) })),
+    auto_evaluation_initiale: data.selfAssessment ? { completee: true, commentaire: clean(data.selfAssessment.comment) } : { completee: false },
+    observations_complementaires_du_formateur: clean(options.extraObservations),
   };
 }

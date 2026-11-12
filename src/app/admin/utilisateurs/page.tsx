@@ -7,7 +7,7 @@ import { requireRole } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 import { formatDate } from '@/lib/utils';
 
-import { PermissionToggle, RoleSelect, UserStatusButton } from '../admin-client';
+import { PermissionToggle, ResetMfaButton, RoleSelect, UserStatusButton } from '../admin-client';
 
 export const metadata: Metadata = { title: 'Utilisateurs' };
 const PAGE_SIZE = 25;
@@ -54,7 +54,12 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                       <Td><RoleSelect userId={user.id} role={user.role} disabled={self} /></Td>
                       <Td className="text-sm whitespace-nowrap text-ink-muted">{formatDate(user.created_at)}</Td>
                       <Td>{user.status === 'active' ? <Badge variant="success">Actif</Badge> : <Badge variant="danger">Désactivé</Badge>}</Td>
-                      <Td className="text-right"><UserStatusButton userId={user.id} status={user.status} name={name} disabled={self} /></Td>
+                      <Td className="text-right">
+                        <span className="inline-flex flex-wrap justify-end gap-2">
+                          <ResetMfaButton userId={user.id} name={name} disabled={self} />
+                          <UserStatusButton userId={user.id} status={user.status} name={name} disabled={self} />
+                        </span>
+                      </Td>
                     </Tr>
                   );
                 })}

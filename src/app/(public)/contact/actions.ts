@@ -2,10 +2,10 @@
 
 import { createHmac } from 'node:crypto';
 
-import { headers } from 'next/headers';
 import { z } from 'zod';
 
 import { actionError, actionSuccess, validationError, type ActionState } from '@/lib/action-state';
+import { rateLimit, requestIp } from '@/lib/security/rate-limit';
 import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase/admin';
 
 const schema = z.object({
@@ -36,8 +36,9 @@ export async function sendContactMessage(_: ActionState, formData: FormData): Pr
   }
 
   // Seule une empreinte de l'adresse IP est conservée, pour limiter les envois répétés.
-  const requestHeaders = await headers();
-  const ip = requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim() || requestHeaders.get('x-real-ip') || 'inconnue';
+  const ip = await requestIp();
+  const limited = await rateLimit('contact', { ip });
+  if (limited) return actionError(limited);
   // HMAC à clé secrète serveur : sans la clé, l'empreinte ne permet pas de retrouver l'adresse IP
   // (un simple SHA-256 d'une IPv4 se retrouve par essai exhaustif).
   const secret = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY ?? '';
