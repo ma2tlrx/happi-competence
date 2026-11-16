@@ -1,0 +1,11 @@
+.claude/worktrees/
+node_modules/
+.next/
+supabase/local/.generated/
+test-results/
+playwright-report/
+public/fonts/
+*.png
+*.jpg
+*.woff
+*.woff2

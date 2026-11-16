@@ -36,3 +36,6 @@ coverage
 
 # Captures d’écran locales
 /captures/
+
+# graphify : graphe régénéré localement (graphify update .)
+graphify-out/
