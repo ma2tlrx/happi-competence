@@ -114,7 +114,7 @@ Problèmes identifiés :
 | Aucun serveur d'envoi d'e-mails : Supabase limite à 2 e-mails par heure | P1 (production) | Choix et compte d'un prestataire requis | Configurer un SMTP (Brevo, Mailjet…) dans Supabase › Authentication › SMTP |
 | Longueur minimale de mot de passe à 6 en base (10 dans l'application) | P2 | Modification de configuration bloquée par sécurité | Supabase › Authentication › Policies : 10 caractères |
 | Pas de limitation de débit propre à l'application (connexion, inscription, contact) | P2 | Demande un service partagé (Redis / Upstash) | Ajouter un limiteur par IP, ou un captcha (Turnstile) sur les formulaires publics |
-| CSP sans `script-src` (pas de protection en profondeur contre une XSS) | P2 | Une CSP à nonce demande de revoir le rendu (pages dynamiques) | À planifier ; aucune XSS trouvée |
+| ~~CSP sans `script-src`~~ | P2 | **Corrigé** : CSP à nonce (`src/proxy.ts`, `script-src 'nonce-…' 'strict-dynamic'`), vérifiée sans violation sur 88 pages | `style-src 'unsafe-inline'` conservé (attributs style de Recharts, Motion, Radix) |
 | Ancien mot de passe administrateur en clair dans l'historique git (ancien outil) | P2 | Réécrire l'historique est une opération destructive | Changer ce mot de passe ; purger l'historique si le dépôt devient public |
 | Mentions légales « à compléter » | P2 | Informations légales à fournir | Les saisir dans Admin › Paramètres |
 | Référentiel transversal provisoire, session 6 « thème à préciser » | P3 | Décision pédagogique | Valider les contenus |

@@ -3862,6 +3862,8 @@ export type Database = {
       }
       get_public_catalog: { Args: Record<PropertyKey, never>; Returns: Json }
       get_public_results: { Args: Record<PropertyKey, never>; Returns: Json }
+      health_check: { Args: Record<PropertyKey, never>; Returns: boolean }
+      export_platform_data: { Args: { p_organization_id?: string | null }; Returns: Json }
       import_pedagogical_version: {
         Args: {
           p_change_note?: string
