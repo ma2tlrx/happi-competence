@@ -17,6 +17,7 @@ export const EMAIL_TEMPLATES = [
   'session_cancelled',
   'report_available',
   'participant_invitation',
+  'referral_update',
   'test',
 ] as const;
 export type EmailTemplate = (typeof EMAIL_TEMPLATES)[number];
@@ -28,6 +29,7 @@ export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplate, string> = {
   session_cancelled: 'Séance annulée',
   report_available: 'Bilan disponible',
   participant_invitation: 'Invitation',
+  referral_update: 'Suivi d’orientation',
   test: 'Test',
 };
 
@@ -52,14 +54,18 @@ export type SessionEmailData = {
 export type ReportEmailData = { firstName?: string | null; version?: number | null; link?: string | null };
 export type InvitationEmailData = { firstName?: string | null; groupName?: string | null; programName?: string | null; link?: string | null };
 export type TestEmailData = { firstName?: string | null; provider?: string | null };
+/** Suivi d'une orientation, adressé au conseiller : nom abrégé de la personne, aucun motif. */
+export type ReferralEmailData = { firstName?: string | null; personName?: string | null; statusLabel?: string | null; detail?: string | null; link?: string | null };
 
 export type EmailDataFor<T extends EmailTemplate> = T extends 'report_available'
   ? ReportEmailData
   : T extends 'participant_invitation'
     ? InvitationEmailData
-    : T extends 'test'
-      ? TestEmailData
-      : SessionEmailData;
+    : T extends 'referral_update'
+      ? ReferralEmailData
+      : T extends 'test'
+        ? TestEmailData
+        : SessionEmailData;
 
 export type RenderedEmail = { subject: string; html: string; text: string };
 
@@ -303,6 +309,24 @@ function buildLayout(template: EmailTemplate, data: Record<string, unknown>, ori
           { kind: 'button', label: 'Créer mon compte', href: absoluteLink(origin, invitation.link ?? '/inscription') },
           { kind: 'paragraph', text: 'Si vous ne vous attendiez pas à ce message, vous pouvez l’ignorer.' },
         ],
+      };
+    }
+    case 'referral_update': {
+      const referral = data as ReferralEmailData;
+      const person = referral.personName?.trim() || 'la personne orientée';
+      const status = referral.statusLabel?.trim() || 'mise à jour';
+      return {
+        subject: `Orientation de ${person} : ${status}`,
+        preheader: `Le suivi de votre orientation a évolué : ${status}.`,
+        heading: 'Votre orientation a évolué',
+        greeting: hello(referral.firstName),
+        blocks: [
+          { kind: 'details', rows: [['Personne', person], ['Nouveau statut', status]] },
+          ...(referral.detail?.trim() ? [{ kind: 'paragraph', text: referral.detail.trim() } satisfies Block] : []),
+          { kind: 'paragraph', text: 'Les détails (motif, date d’entretien, groupe) sont consultables dans votre espace, après connexion.' },
+          { kind: 'button', label: 'Voir l’orientation', href: absoluteLink(origin, referral.link ?? '/organisme/orientations') },
+        ],
+        footer: `Vous recevez cet e-mail car vous avez orienté une personne vers ${BRAND}.`,
       };
     }
     case 'test': {

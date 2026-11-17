@@ -19,7 +19,9 @@ export const metadata: Metadata = { title: 'Mon passeport' };
 export default async function ParticipantDashboard({ searchParams }: { searchParams: Promise<{ bienvenue?: string }> }) {
   const { bienvenue } = await searchParams;
   const [{ passport, supabase }, signable] = await Promise.all([getMyPassport(), loadSignableSessions()]);
-  const surveys = await loadMySurveys(supabase);
+  const [surveys, { data: consents }] = await Promise.all([loadMySurveys(supabase), supabase.rpc('my_referral_consents')]);
+  // Personne orientée par un prescripteur : elle confirme elle-même ses consentements.
+  const consentsPending = (consents ?? []).some((row) => !row.participant_confirmed_at);
   const finalStatus = finalStatusOf(passport);
   const { participant, group } = passport;
   const total = group?.sessionsCount ?? 6;
@@ -34,6 +36,19 @@ export default async function ParticipantDashboard({ searchParams }: { searchPar
 
   return (
     <div className="space-y-6">
+      {consentsPending ? (
+        <Notice
+          variant="warning"
+          title="Confirmez vos consentements"
+          action={
+            <Link href="/participant/consentements" className="text-sm font-semibold text-ink underline underline-offset-4">
+              Confirmer
+            </Link>
+          }
+        >
+          La structure qui vous a orienté(e) a indiqué vos choix (droit à l’image, partage de vos résultats). Vérifiez-les et confirmez-les vous-même.
+        </Notice>
+      ) : null}
       {bienvenue && selfDone ? (
         <Notice variant="success" title="Bienvenue dans votre passeport de compétences">
           Votre auto-évaluation est enregistrée. Elle servira de point de départ pour suivre votre progression.

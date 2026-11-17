@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { shortName } from '@/lib/referrals/fields';
+import { isReferralStatus, REFERRAL_STATUS } from '@/lib/referrals/status';
 import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase/admin';
 
 import { enqueueEmails, flushOutboxLater, processOutbox, SKIP_REASONS, type EnqueueInput, type ProcessSummary } from './outbox';
@@ -267,6 +269,53 @@ export async function notifyParticipantInvited(participantId: string, groupId: s
           to: participant.email,
           participantId: participant.id,
           isDemo: participant.is_demo || Boolean(group?.is_demo),
+          createdBy: actorId,
+        },
+      ],
+      admin,
+    );
+  });
+  flushOutboxLater();
+}
+
+const REFERRAL_DETAILS: Partial<Record<string, string>> = {
+  received: 'L’équipe HAPPI a bien reçu votre orientation et va l’étudier.',
+  interview_scheduled: 'Un entretien est prévu avec la personne.',
+  accepted: 'La personne est inscrite dans un groupe ; elle reçoit une invitation à créer son compte.',
+  waitlisted: 'La personne est en liste d’attente : elle sera proposée dès qu’une place compatible se libère.',
+  refused: 'L’équipe HAPPI n’a pas retenu cette orientation. Le motif est indiqué dans votre espace.',
+};
+
+/**
+ * Après un changement de statut d'une orientation : e-mail au conseiller qui l'a envoyée. La
+ * notification in-app est créée par la base (déclencheur) ; l'e-mail ne contient que le prénom et
+ * l'initiale de la personne, sans motif ni information personnelle.
+ */
+export async function notifyReferralUpdate(referralId: string, actorId: string | null) {
+  await guard('orientation', async (admin) => {
+    const { data: referral } = await admin
+      .from('referrals')
+      .select('id, status, status_changed_at, first_name, last_name, referent_id, is_demo')
+      .eq('id', referralId)
+      .maybeSingle();
+    if (!referral?.referent_id || referral.referent_id === actorId || !isReferralStatus(referral.status)) return;
+    const { data: referent } = await admin.from('profiles').select('id, email, first_name, status, is_demo').eq('id', referral.referent_id).maybeSingle();
+    if (!referent || referent.status !== 'active') return;
+    await enqueueEmails(
+      [
+        {
+          key: idempotencyKeys.referral(referral.id, referral.status, referral.status_changed_at),
+          template: 'referral_update',
+          data: {
+            firstName: referent.first_name,
+            personName: shortName(referral.first_name, referral.last_name),
+            statusLabel: REFERRAL_STATUS[referral.status].label,
+            detail: REFERRAL_DETAILS[referral.status] ?? null,
+            link: `/organisme/orientations/${referral.id}`,
+          },
+          to: referent.email,
+          userId: referent.id,
+          isDemo: referral.is_demo || referent.is_demo,
           createdBy: actorId,
         },
       ],

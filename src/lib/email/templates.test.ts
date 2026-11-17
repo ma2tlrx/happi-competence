@@ -56,6 +56,9 @@ describe('modèles d’e-mail', () => {
     expect(renderEmail('session_updated', session, origin).html).toContain('ont changé');
     expect(renderEmail('session_cancelled', session, origin).subject).toBe('Séance 2 du jeudi 12 novembre 2026 annulée');
     expect(renderEmail('report_available', { firstName: 'Inès' }, origin).text).toContain('https://happi.example/participant/bilan');
+    const referral = renderEmail('referral_update', { firstName: 'Nadia', personName: 'Inès B.', statusLabel: 'Acceptée', link: '/organisme/orientations/x' }, origin);
+    expect(referral.subject).toBe('Orientation de Inès B. : Acceptée');
+    expect(referral.text).toContain('https://happi.example/organisme/orientations/x');
     const invitation = renderEmail('participant_invitation', { firstName: 'Inès', programName: 'HAPPI' }, origin);
     expect(invitation.text).toContain('https://happi.example/inscription');
   });
