@@ -5,12 +5,17 @@ import { notFound } from 'next/navigation';
 
 import { SessionStatusBadge } from '@/components/passport/session-status';
 import { SatisfactionResults } from '@/components/satisfaction/results-view';
+import { ReferralStatusBadge } from '@/components/referrals/display';
+import { CapacityForm, WaitlistAssignButton } from '@/components/referrals/staff-actions';
 import { GROUP_STATUS } from '@/components/trainer/labels';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/overlays';
 import { Avatar, Badge, Card, CardBody, CardHeader, EmptyState, Notice, PageHeader, Table, TableWrap, Td, Th, Tr } from '@/components/ui/primitives';
 import { hasPermission, requireRole } from '@/lib/auth/session';
 import { DROPOUT_REASON_LABELS, dropoutAlerts } from '@/lib/outcomes/dropout';
+import { freeSeats, rankCandidates } from '@/lib/referrals/compatibility';
+import { DAYS, labelsOf, SLOTS } from '@/lib/referrals/fields';
+import { OPEN_STATUSES } from '@/lib/referrals/status';
 import { dropReasonLabel } from '@/lib/outcomes/labels';
 import { loadSatisfactionResults } from '@/lib/satisfaction/load';
 import { satisfactionWindow } from '@/lib/satisfaction/window';
@@ -31,12 +36,13 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const supabase = await createClient();
   const { data: group } = await supabase
     .from('groups')
-    .select('id, name, status, start_date, end_date, program_id, organization_id, programs ( id, name, min_group_size, max_group_size ), organizations ( id, name )')
+    .select('id, name, status, start_date, end_date, program_id, organization_id, capacity, is_demo, programs ( id, name, min_group_size, max_group_size ), organizations ( id, name )')
     .eq('id', id)
     .maybeSingle();
   if (!group) notFound();
 
-  const [members, sessions, outline, trainers, programs, organizations, staff, candidates, satisfaction] = await Promise.all([
+  const canReferrals = hasPermission(user, 'referrals.manage');
+  const [members, sessions, outline, trainers, programs, organizations, staff, candidates, satisfaction, waiting] = await Promise.all([
     supabase
       .from('group_members')
       .select('status, joined_at, drop_reason, drop_details, dropped_at, participants ( id, first_name, last_name, email, user_id, organization_id )')
@@ -50,6 +56,16 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
     supabase.from('staff_directory').select('id, first_name, last_name'),
     supabase.from('participants').select('id, first_name, last_name, email').eq('status', 'active').order('last_name').limit(200),
     loadSatisfactionResults(supabase, [id]),
+    canReferrals
+      ? supabase
+          .from('referrals')
+          .select('id, first_name, last_name, status, program_id, availability_days, availability_slots, desired_start_date, created_at, organizations ( name )')
+          .in('status', [...OPEN_STATUSES])
+          .eq('is_demo', group.is_demo)
+          .or(`program_id.is.null,program_id.eq.${group.program_id}`)
+          .order('created_at')
+          .limit(100)
+      : Promise.resolve({ data: [] }),
   ]);
   const sessionIds = (sessions.data ?? []).map((session) => session.id);
   const { data: attendance } = sessionIds.length
@@ -63,6 +79,26 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const memberIds = new Set((members.data ?? []).map((member) => member.participants?.id));
   const max = group.programs?.max_group_size ?? 8;
   const min = group.programs?.min_group_size ?? 4;
+  const seats = freeSeats(group.capacity, max, activeMembers.length);
+  const capacity = Math.min(group.capacity ?? max, max);
+  const today = new Date().toISOString().slice(0, 10);
+  const proposals = rankCandidates(
+    (waiting.data ?? []).map((row) => ({
+      ...row,
+      programId: row.program_id,
+      availabilityDays: row.availability_days,
+      availabilitySlots: row.availability_slots,
+      desiredStartDate: row.desired_start_date,
+      createdAt: row.created_at,
+    })),
+    {
+      programId: group.program_id,
+      startDate: group.start_date,
+      endDate: group.end_date,
+      sessions: (sessions.data ?? []).map((session) => ({ date: session.scheduled_date, startTime: session.start_time, status: session.status })),
+    },
+    today,
+  ).slice(0, 10);
   const planned = new Set((sessions.data ?? []).map((session) => session.program_session_id));
   const missing = (outline.data ?? []).filter((item) => !planned.has(item.id));
   const staffName = new Map((staff.data ?? []).map((person) => [person.id, `${person.first_name} ${person.last_name}`]));
@@ -158,19 +194,18 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
         ) : null}
         <Card>
           <CardHeader
-            title={`Participants (${activeMembers.length}/${max})`}
-            description={
-              activeMembers.length < min
-                ? `Le fonctionnement recommandé prévoit au moins ${min} participants.`
-                : activeMembers.length >= max
-                  ? 'Le groupe est complet.'
-                  : `Entre ${min} et ${max} participants.`
-            }
+            title={`Participants (${activeMembers.length}/${capacity})`}
+            description={[
+              seats === 0 ? 'Le groupe est complet.' : `${seats} place${seats > 1 ? 's' : ''} restante${seats > 1 ? 's' : ''}.`,
+              activeMembers.length < min ? `Le fonctionnement recommandé prévoit au moins ${min} participants.` : null,
+            ]
+              .filter(Boolean)
+              .join(' ')}
             action={
               canManage ? (
                 <AddMemberDialog
                   groupId={group.id}
-                  full={activeMembers.length >= max}
+                  full={seats === 0 && activeMembers.length >= max}
                   candidates={(candidates.data ?? [])
                     .filter((candidate) => !memberIds.has(candidate.id))
                     .map((candidate) => ({ id: candidate.id, label: `${candidate.last_name} ${candidate.first_name}${candidate.email ? ` · ${candidate.email}` : ''}` }))}
@@ -281,6 +316,49 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             ) : null}
           </CardBody>
         </Card>
+
+        {canReferrals || user.role === 'admin' ? (
+          <Card>
+            <CardHeader
+              title="Places et liste d’attente"
+              description={`${seats} place${seats > 1 ? 's' : ''} restante${seats > 1 ? 's' : ''} sur ${capacity}. Personnes orientées en attente, compatibles avec ce groupe (programme, créneaux des séances à venir, date souhaitée).`}
+            />
+            <CardBody className="space-y-4 pt-3">
+              {user.role === 'admin' ? <CapacityForm groupId={group.id} capacity={group.capacity} max={max} /> : null}
+              {canReferrals ? (
+                proposals.length > 0 ? (
+                  <ul className="divide-y divide-line">
+                    {proposals.map(({ candidate, match }) => {
+                      const name = `${candidate.first_name} ${candidate.last_name}`;
+                      return (
+                        <li key={candidate.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                          <span className="min-w-0">
+                            <Link href={`/formateur/orientations/${candidate.id}`} className="font-medium text-ink hover:underline">
+                              {name}
+                            </Link>{' '}
+                            <ReferralStatusBadge status={candidate.status} />
+                            <span className="block text-sm text-ink-muted">
+                              {[
+                                candidate.organizations?.name,
+                                [...labelsOf(candidate.availability_days, DAYS), ...labelsOf(candidate.availability_slots, SLOTS)].join(', ') || null,
+                                match.reasons.join(' · '),
+                              ]
+                                .filter(Boolean)
+                                .join(' · ')}
+                            </span>
+                          </span>
+                          {canManage ? <WaitlistAssignButton referralId={candidate.id} groupId={group.id} name={name} disabled={seats === 0} /> : null}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <p className="text-[0.9375rem] text-ink-muted">Aucune personne en attente compatible avec ce groupe.</p>
+                )
+              ) : null}
+            </CardBody>
+          </Card>
+        ) : null}
 
         <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
           <Card>

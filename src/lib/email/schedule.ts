@@ -70,6 +70,8 @@ export const idempotencyKeys = {
   reminder: (sessionId: string, participantId: string, date: string) => `reminder:${sessionId}:${participantId}:${date}`,
   report: (reportId: string) => `report_available:${reportId}`,
   invitation: (participantId: string) => `invitation:${participantId}`,
+  /** Un e-mail par changement de statut d'une orientation (l'horodatage distingue deux passages au même statut). */
+  referral: (referralId: string, status: string, changedAt: string) => `referral:${referralId}:${status}:${changedAt}`,
   test: (userId: string, now: Date = new Date()) => `test:${userId}:${now.getTime()}`,
 };
 

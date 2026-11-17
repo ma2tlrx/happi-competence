@@ -6,6 +6,7 @@ import {
   CalendarDays,
   ClipboardCheck,
   FileText,
+  FileSignature,
   GraduationCap,
   History,
   KeyRound,
@@ -17,6 +18,7 @@ import {
   Mail,
   Radar,
   Route,
+  Send,
   Settings,
   Share2,
   ShieldCheck,
@@ -57,6 +59,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/participant/evolution', label: 'Mon évolution', icon: TrendingUp },
         { href: '/participant/satisfaction', label: 'Donnez votre avis', icon: MessageSquareHeart },
         { href: '/participant/signalements', label: 'Signaler un problème', icon: MessageSquareWarning },
+        { href: '/participant/consentements', label: 'Mes consentements', icon: FileSignature },
         { href: '/participant/profil', label: 'Mon profil', icon: User },
       ],
     },
@@ -66,6 +69,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
       items: [
         { href: '/organisme/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, mobile: true, short: 'Accueil' },
         { href: '/organisme/programmes', label: 'Programmes', icon: Layers, mobile: true },
+        { href: '/organisme/orientations', label: 'Orientations', icon: Send, mobile: true },
         { href: '/organisme/participants', label: 'Participants', icon: Users, mobile: true },
         { href: '/organisme/sessions', label: 'Sessions', icon: CalendarDays, mobile: true },
         { href: '/organisme/presences', label: 'Présences', icon: ClipboardCheck },
@@ -83,6 +87,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/formateur/sessions', label: 'Sessions', icon: CalendarDays, mobile: true },
         { href: '/formateur/groupes', label: 'Groupes', icon: Users, mobile: true },
         { href: '/formateur/programmes', label: 'Programmes', icon: BookOpen, mobile: true },
+        { href: '/formateur/orientations', label: 'Orientations', icon: Send },
         { href: '/formateur/suivis', label: 'Suivis', icon: CalendarClock },
         { href: '/formateur/registre', label: 'Mon registre', icon: BadgeCheck },
       ],
@@ -117,6 +122,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
     {
       label: 'Pilotage',
       items: [
+        { href: '/admin/orientations', label: 'Orientations', icon: Send },
         { href: '/admin/impact', label: 'Impact', icon: TrendingUp },
         { href: '/admin/suivis', label: 'Suivis', icon: CalendarClock },
         { href: '/admin/qualite', label: 'Qualité', icon: ShieldCheck },

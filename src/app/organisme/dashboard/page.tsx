@@ -1,12 +1,13 @@
-import { CalendarDays, ClipboardCheck, Layers, Users } from 'lucide-react';
+import { CalendarDays, ClipboardCheck, Layers, Send, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { PendingSurveysCard } from '@/components/satisfaction/pending-card';
 import { GROUP_STATUS } from '@/components/trainer/labels';
 import { Badge, Card, CardBody, CardHeader, EmptyState, PageHeader, StatTile, Table, TableWrap, Td, Th, Tr } from '@/components/ui/primitives';
-import { requireRole } from '@/lib/auth/session';
+import { hasPermission, requireRole } from '@/lib/auth/session';
 import { getOrganizationOverview } from '@/lib/organization';
+import { referralBuckets } from '@/lib/referrals/status';
 import { loadMySurveys } from '@/lib/satisfaction/load';
 import { createClient } from '@/lib/supabase/server';
 import { formatDate, formatPercent, formatShortDate, formatTimeRange } from '@/lib/utils';
@@ -16,7 +17,13 @@ export const metadata: Metadata = { title: 'Espace organisme' };
 export default async function OrganizationDashboard() {
   const user = await requireRole('organisme');
   const supabase = await createClient();
-  const [overview, surveys] = await Promise.all([getOrganizationOverview(supabase), loadMySurveys(supabase)]);
+  const canRefer = hasPermission(user, 'org.referrals.write');
+  const [overview, surveys, referrals] = await Promise.all([
+    getOrganizationOverview(supabase),
+    loadMySurveys(supabase),
+    canRefer ? supabase.from('referrals').select('status').limit(2000) : Promise.resolve({ data: [] as { status: string }[] }),
+  ]);
+  const buckets = referralBuckets((referrals.data ?? []).map((row) => row.status));
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = overview.sessions.filter((session) => (session.status === 'planned' || session.status === 'in_progress') && (!session.date || session.date >= today)).slice(0, 5);
 
@@ -27,6 +34,32 @@ export default async function OrganizationDashboard() {
         <div className="mb-6">
           <PendingSurveysCard surveys={surveys} basePath="/organisme/satisfaction" />
         </div>
+      ) : null}
+      {canRefer ? (
+        <Card className="mb-6">
+          <CardHeader
+            title="Mes orientations"
+            description="Personnes orientées vers HAPPI par votre structure."
+            action={
+              <Link href="/organisme/orientations/nouvelle" className="inline-flex min-h-8 items-center gap-1.5 text-sm font-semibold text-petrol-700">
+                <Send className="size-4" aria-hidden />
+                Orienter une personne
+              </Link>
+            }
+          />
+          <CardBody className="grid grid-cols-3 gap-3 pt-3">
+            {[
+              { label: 'En attente', value: buckets.pending, href: '/organisme/orientations' },
+              { label: 'En cours d’instruction', value: buckets.inProgress, href: '/organisme/orientations' },
+              { label: 'Acceptées', value: buckets.accepted, href: '/organisme/orientations?statut=accepted' },
+            ].map((item) => (
+              <Link key={item.label} href={item.href} className="rounded-md border border-line px-3 py-3 hover:border-petrol-400">
+                <span className="block font-display text-2xl font-semibold tabular-nums">{item.value}</span>
+                <span className="text-sm text-ink-muted">{item.label}</span>
+              </Link>
+            ))}
+          </CardBody>
+        </Card>
       ) : null}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
         <StatTile label="Programmes" value={overview.stats.programs} icon={Layers} />

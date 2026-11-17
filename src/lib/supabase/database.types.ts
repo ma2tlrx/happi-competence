@@ -1131,6 +1131,7 @@ export type Database = {
       }
       groups: {
         Row: {
+          capacity: number | null
           created_at: string
           created_by: string | null
           end_date: string | null
@@ -1145,6 +1146,7 @@ export type Database = {
         }
         ComputedFields: never
         Insert: {
+          capacity?: number | null
           created_at?: string
           created_by?: string | null
           end_date?: string | null
@@ -1158,6 +1160,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          capacity?: number | null
           created_at?: string
           created_by?: string | null
           end_date?: string | null
@@ -2693,6 +2696,196 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_events: {
+        Row: {
+          actor_id: string | null
+          consent_kind: string | null
+          consent_value: boolean | null
+          created_at: string
+          from_status: string | null
+          id: number
+          kind: string
+          reason: string | null
+          referral_id: string
+          source: string
+          to_status: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          actor_id?: string | null
+          consent_kind?: string | null
+          consent_value?: boolean | null
+          created_at?: string
+          from_status?: string | null
+          id?: number
+          kind: string
+          reason?: string | null
+          referral_id: string
+          source: string
+          to_status?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          consent_kind?: string | null
+          consent_value?: boolean | null
+          created_at?: string
+          from_status?: string | null
+          id?: number
+          kind?: string
+          reason?: string | null
+          referral_id?: string
+          source?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_events_referral_id_fkey"
+            columns: ["referral_id"]
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          age_band: string | null
+          availability_days: string[]
+          availability_slots: string[]
+          consent_image: boolean
+          consent_share_results: boolean
+          constraints_details: string | null
+          created_at: string
+          desired_start_date: string | null
+          email: string
+          first_name: string
+          group_id: string | null
+          id: string
+          information_acknowledged_at: string
+          information_version: string
+          interview_at: string | null
+          is_demo: boolean
+          last_name: string
+          needs_accommodation: boolean
+          objectives: string | null
+          organization_id: string
+          participant_confirmed_at: string | null
+          participant_id: string | null
+          phone: string | null
+          possible_duplicate: boolean
+          practical_constraints: string[]
+          program_id: string | null
+          reason: string
+          referent_id: string | null
+          status: string
+          status_changed_at: string
+          status_changed_by: string | null
+          status_reason: string | null
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          age_band?: string | null
+          availability_days?: string[]
+          availability_slots?: string[]
+          consent_image?: boolean
+          consent_share_results?: boolean
+          constraints_details?: string | null
+          created_at?: string
+          desired_start_date?: string | null
+          email: string
+          first_name: string
+          group_id?: string | null
+          id?: string
+          information_acknowledged_at: string
+          information_version: string
+          interview_at?: string | null
+          is_demo?: boolean
+          last_name: string
+          needs_accommodation?: boolean
+          objectives?: string | null
+          organization_id: string
+          participant_confirmed_at?: string | null
+          participant_id?: string | null
+          phone?: string | null
+          possible_duplicate?: boolean
+          practical_constraints?: string[]
+          program_id?: string | null
+          reason: string
+          referent_id?: string | null
+          status?: string
+          status_changed_at?: string
+          status_changed_by?: string | null
+          status_reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          age_band?: string | null
+          availability_days?: string[]
+          availability_slots?: string[]
+          consent_image?: boolean
+          consent_share_results?: boolean
+          constraints_details?: string | null
+          created_at?: string
+          desired_start_date?: string | null
+          email?: string
+          first_name?: string
+          group_id?: string | null
+          id?: string
+          information_acknowledged_at?: string
+          information_version?: string
+          interview_at?: string | null
+          is_demo?: boolean
+          last_name?: string
+          needs_accommodation?: boolean
+          objectives?: string | null
+          organization_id?: string
+          participant_confirmed_at?: string | null
+          participant_id?: string | null
+          phone?: string | null
+          possible_duplicate?: boolean
+          practical_constraints?: string[]
+          program_id?: string | null
+          reason?: string
+          referent_id?: string | null
+          status?: string
+          status_changed_at?: string
+          status_changed_by?: string | null
+          status_reason?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_group_id_fkey"
+            columns: ["group_id"]
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_participant_id_fkey"
+            columns: ["participant_id"]
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_program_id_fkey"
+            columns: ["program_id"]
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referent_id_fkey"
+            columns: ["referent_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           granted_at: string
@@ -3579,6 +3772,35 @@ export type Database = {
           p_participant_id?: string
         }
         Returns: Json
+      }
+      assign_referral_to_group: {
+        Args: { p_group_id: string; p_referral_id: string }
+        Returns: Json
+      }
+      cancel_referral: {
+        Args: { p_reason: string; p_referral_id: string }
+        Returns: undefined
+      }
+      confirm_referral_consents: {
+        Args: { p_image: boolean; p_referral_id: string; p_share_results: boolean }
+        Returns: undefined
+      }
+      my_referral_consents: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          consent_image: boolean
+          consent_share_results: boolean
+          information_acknowledged_at: string
+          information_version: string
+          organization_name: string
+          participant_confirmed_at: string | null
+          program_name: string | null
+          referral_id: string
+        }[]
+      }
+      set_referral_status: {
+        Args: { p_interview_at?: string; p_reason?: string; p_referral_id: string; p_status: string }
+        Returns: undefined
       }
       amend_evaluation: {
         Args: {
