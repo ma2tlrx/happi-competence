@@ -5,6 +5,9 @@ import { z } from 'zod';
  * explicite dans les schémas. Les messages écrits dans les schémas restent prioritaires.
  */
 z.config({
+  // Navigateur : pas de compilation de schémas par « new Function » (la CSP interdit eval ;
+  // Zod la teste au premier usage et provoquerait une violation signalée). Serveur : inchangé.
+  jitless: typeof window !== 'undefined',
   customError: (issue) => {
     switch (issue.code) {
       case 'too_big':

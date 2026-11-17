@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { DM_Mono, DM_Sans, Poppins } from 'next/font/google';
+import { connection } from 'next/server';
 
 import { Providers } from '@/components/providers';
 import { Toaster } from '@/components/ui/toast';
@@ -37,7 +38,10 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Rendu à chaque requête : la CSP à nonce (src/proxy.ts) exige que Next.js pose le nonce
+  // de la requête sur ses scripts ; une page pré-rendue au build n'en aurait pas.
+  await connection();
   return (
     <html lang="fr" className={`${dmSans.variable} ${poppins.variable} ${dmMono.variable}`}>
       <body className="min-h-dvh">

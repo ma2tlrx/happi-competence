@@ -105,6 +105,9 @@ e-mail et par compte restent efficaces).
 | `EMAIL_FROM` | `HAPPI Compétence <no-reply@votre-domaine.fr>` | non |
 | `BREVO_API_KEY` / `SMTP_URL` / `RESEND_API_KEY` | selon le fournisseur choisi | **non** — serveur uniquement |
 | `CRON_SECRET` | chaîne aléatoire d’au moins 32 caractères | **non** — serveur uniquement |
+| `SENTRY_DSN` | DSN d’un projet Sentry (UE de préférence) | **non** — serveur uniquement, facultative |
+| `SENTRY_ENVIRONMENT` | `production` (défaut) / `preview` | non, facultative |
+| `NEXT_OUTPUT` | `standalone` **uniquement** pour un hébergement Node.js classique (LWS) ; à laisser vide sur Vercel | non |
 
 Sans clé d’IA, les bilans fonctionnent : ils sont créés avec leurs résultats et se
 rédigent à la main. Les fonctions qui génèrent un bilan peuvent durer jusqu’à deux
@@ -113,8 +116,20 @@ minutes (`maxDuration = 300` sur la page des bilans).
 3. Déployez, puis rattachez votre domaine (**Settings → Domains**) et mettez à jour
    `NEXT_PUBLIC_SITE_URL` et la configuration Auth de l’étape 3.
 
-Les en-têtes de sécurité (CSP, HSTS, `X-Frame-Options`…) sont définis dans
-`next.config.ts`.
+Les en-têtes de sécurité (HSTS, `X-Frame-Options`…) sont définis dans
+`next.config.ts`. La politique de sécurité du contenu des pages est posée à chaque
+requête par `src/proxy.ts`, avec un **nonce** neuf (`script-src 'self' 'nonce-…'
+'strict-dynamic'` : aucun script en ligne injecté ne s’exécute ; voir
+`src/lib/security/csp.ts`). Conséquence : toutes les pages sont rendues à la demande
+(le layout racine appelle `connection()`), ce qui était déjà le cas de toutes sauf
+trois (`/mot-de-passe-oublie`, `/compte-desactive`, page 404). Les routes `/api`
+reçoivent une CSP fixe `default-src 'none'`.
+
+**Supervision** : `GET /api/health` (état, version, commit ; 503 si la base ne répond
+pas) pour une sonde externe ; erreurs serveur journalisées en JSON et, si `SENTRY_DSN`
+est défini, envoyées à Sentry. Détails : [exploitation.md](exploitation.md).
+
+**Autre hébergeur** (Node.js classique, LWS) : [hebergement-lws.md](hebergement-lws.md).
 
 Les fonctions serveur s’exécutent à Dublin (`regions: ["dub1"]` dans `vercel.json`),
 au plus près de la base Supabase (eu-west-1) : chaque page enchaîne plusieurs
@@ -215,8 +230,14 @@ depuis **Administration → Codes d’accès**.
 
 ## 7. Sauvegardes et exploitation
 
+Plan complet (supervision, sauvegardes, restauration testée, reprise, rotation des
+clés, violation de données) : [exploitation.md](exploitation.md).
+
 - Les sauvegardes quotidiennes sont incluses dans les offres payantes de Supabase ;
   activez la restauration à un instant donné (PITR) si la volumétrie le justifie.
+  Ajoutez l’export logique quotidien chiffré (`scripts/backup-db.sh`).
+- **Réversibilité** : Administration → Organismes → **Exporter** (archive ZIP JSON + CSV
+  d’un organisme) ou **Exporter toutes les données** ; chaque export est journalisé.
 - Le journal d’audit (`audit_logs`) est en ajout seul : prévoyez une purge ou un
   archivage annuel selon votre politique de conservation.
 - Chaque utilisateur exporte ses données en libre-service (**Mon compte**) ; les

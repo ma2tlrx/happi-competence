@@ -1,4 +1,17 @@
+import { execSync } from 'node:child_process';
+
 import type { NextConfig } from 'next';
+
+/** Commit construit, affiché par /api/health (Vercel le fournit ; ailleurs, lu dans Git s'il est présent). */
+function buildCommit() {
+  if (process.env.APP_COMMIT_SHA) return process.env.APP_COMMIT_SHA;
+  if (process.env.VERCEL_GIT_COMMIT_SHA) return process.env.VERCEL_GIT_COMMIT_SHA;
+  try {
+    return execSync('git rev-parse HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+  } catch {
+    return '';
+  }
+}
 
 /** En-têtes de sécurité appliqués à toutes les réponses. */
 const baseHeaders = [
@@ -8,12 +21,15 @@ const baseHeaders = [
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
 ];
 
-const securityHeaders = [
-  ...baseHeaders,
-  { key: 'X-Frame-Options', value: 'DENY' },
+// Pages : la CSP (avec nonce, script-src strict) est posée à chaque requête par src/proxy.ts.
+const securityHeaders = [...baseHeaders, { key: 'X-Frame-Options', value: 'DENY' }];
+
+// Routes /api (JSON, CSV, PDF, ZIP) : aucune exécution de script attendue.
+const apiHeaders = [
+  ...securityHeaders,
   {
     key: 'Content-Security-Policy',
-    value: "frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'",
+    value: "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
   },
 ];
 
@@ -33,7 +49,11 @@ const verificationHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Hébergement Node.js classique (LWS / Passenger) : NEXT_OUTPUT=standalone produit un serveur
+  // autonome (.next/standalone, voir scripts/package-lws.mjs). Vercel garde sa sortie par défaut.
+  ...(process.env.NEXT_OUTPUT === 'standalone' ? { output: 'standalone' as const } : {}),
   poweredByHeader: false,
+  env: { APP_COMMIT_SHA: buildCommit() },
   reactStrictMode: true,
   // Le moteur PDF et le client SMTP s'exécutent côté serveur uniquement et ne doivent pas être empaquetés.
   serverExternalPackages: ['@react-pdf/renderer', 'nodemailer'],
@@ -43,7 +63,8 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      { source: '/((?!api/exports/bilan/).*)', headers: securityHeaders },
+      { source: '/((?!api/).*)', headers: securityHeaders },
+      { source: '/api/((?!exports/bilan/).*)', headers: apiHeaders },
       { source: '/api/exports/bilan/:path*', headers: reportPreviewHeaders },
       // En dernier : remplace la Referrer-Policy générale pour ces pages.
       { source: '/verifier/:path*', headers: verificationHeaders },

@@ -1,5 +1,7 @@
+import { Archive } from 'lucide-react';
 import type { Metadata } from 'next';
 
+import { Button } from '@/components/ui/button';
 import { FilterSelect, SearchInput } from '@/components/ui/navigation';
 import { Badge, Card, EmptyState, PageHeader, Table, TableWrap, Td, Th, Tr, type BadgeVariant } from '@/components/ui/primitives';
 import { ORGANIZATION_STATUS_LABELS, ORGANIZATION_TYPES, type OrganizationType } from '@/lib/auth/roles';
@@ -26,7 +28,16 @@ export default async function AdminOrganizationsPage({ searchParams }: { searchP
 
   return (
     <>
-      <PageHeader title="Organismes" description="Validez les demandes, suspendez un accès, créez une structure partenaire." actions={<OrganizationDialog />} />
+      <PageHeader title="Organismes" description="Validez les demandes, suspendez un accès, créez une structure partenaire." actions={
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline">
+              <a href="/api/exports/reversibilite" download title="Archive ZIP (JSON + CSV) de toutes les données de la plateforme, journalisée">
+                <Archive aria-hidden />Exporter toutes les données
+              </a>
+            </Button>
+            <OrganizationDialog />
+          </div>
+        } />
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         <SearchInput placeholder="Nom ou ville" />
         <FilterSelect param="statut" label="Filtrer par statut" allLabel="Tous les statuts" options={Object.entries(ORGANIZATION_STATUS_LABELS).map(([value, label]) => ({ value, label }))} />
@@ -56,6 +67,11 @@ export default async function AdminOrganizationsPage({ searchParams }: { searchP
                     </Td>
                     <Td>
                       <div className="flex flex-wrap justify-end gap-1.5">
+                        <Button asChild variant="outline" size="sm">
+                          <a href={`/api/exports/reversibilite?organisme=${organization.id}`} download aria-label={`Exporter toutes les données de ${organization.name} (archive ZIP)`}>
+                            <Archive aria-hidden />Exporter
+                          </a>
+                        </Button>
                         <OrganizationStatusActions id={organization.id} status={organization.status} name={organization.name} />
                         <OrganizationDialog organization={organization} />
                       </div>

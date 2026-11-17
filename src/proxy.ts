@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 import { decodeJwtPayload, MFA_CHALLENGE_PATH } from '@/lib/auth/mfa';
+import { buildCsp, createNonce } from '@/lib/security/csp';
 
 /** Préfixes réservés aux utilisateurs connectés. Le contrôle du rôle est fait côté serveur, dans les layouts. */
 const PROTECTED_PREFIXES = ['/participant', '/organisme', '/formateur', '/admin', '/compte', '/notifications', '/api/exports'];
@@ -17,24 +18,45 @@ function protectToken(response: NextResponse) {
 }
 
 /**
+ * Politique de sécurité du contenu à nonce (une valeur neuve par requête) sur les pages.
+ * Next.js lit le nonce dans l'en-tête Content-Security-Policy de la requête et l'applique à
+ * ses propres scripts. Les routes /api gardent la CSP fixe de next.config.ts.
+ */
+export async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith('/api/')) return guard(request, () => NextResponse.next({ request }));
+  const nonce = createNonce();
+  const csp = buildCsp({ nonce, isDev: process.env.NODE_ENV === 'development', supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL });
+  // Les en-têtes sont recopiés au moment de l'appel : ils incluent les cookies de session rafraîchis.
+  const next = () => {
+    const headers = new Headers(request.headers);
+    headers.set('x-nonce', nonce);
+    headers.set('Content-Security-Policy', csp);
+    return NextResponse.next({ request: { headers } });
+  };
+  const response = await guard(request, next);
+  response.headers.set('Content-Security-Policy', csp);
+  return response;
+}
+
+/**
  * Rafraîchit la session Supabase à chaque requête et renvoie les visiteurs non
  * connectés vers la page de connexion. Ce filtre est une première barrière :
  * l'autorisation réelle repose sur les contrôles serveur et sur RLS.
  */
-export async function proxy(request: NextRequest) {
+async function guard(request: NextRequest, next: () => NextResponse) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) return NextResponse.next({ request });
+  if (!url || !key) return next();
 
   const { pathname } = request.nextUrl;
   // Route publique : aucune session à exiger ni à rafraîchir (la page n'utilise pas la session).
-  if (TOKEN_PREFIXES.some((prefix) => pathname.startsWith(`${prefix}/`))) return protectToken(NextResponse.next({ request }));
+  if (TOKEN_PREFIXES.some((prefix) => pathname.startsWith(`${prefix}/`))) return protectToken(next());
   const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
   // Visiteur sans session sur une page publique : rien à vérifier ni à rafraîchir (aucun appel réseau).
   const hasSession = request.cookies.getAll().some((cookie) => cookie.name.startsWith('sb-') && cookie.name.includes('-auth-token'));
-  if (!isProtected && !hasSession) return NextResponse.next({ request });
+  if (!isProtected && !hasSession) return next();
 
-  let response = NextResponse.next({ request });
+  let response = next();
   const supabase = createServerClient(url, key, {
     cookies: {
       getAll() {
@@ -42,7 +64,7 @@ export async function proxy(request: NextRequest) {
       },
       setAll(cookiesToSet) {
         for (const { name, value } of cookiesToSet) request.cookies.set(name, value);
-        response = NextResponse.next({ request });
+        response = next();
         for (const { name, value, options } of cookiesToSet) response.cookies.set(name, value, options);
       },
     },

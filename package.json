@@ -21,7 +21,8 @@
     "db:status": "node scripts/local-stack.mjs status",
     "demo:seed": "node --env-file-if-exists=.env.local scripts/seed-demo.mjs",
     "demo:purge": "node --env-file-if-exists=.env.local scripts/seed-demo.mjs --purge",
-    "admin:code": "node --env-file-if-exists=.env.local scripts/create-access-code.mjs"
+    "admin:code": "node --env-file-if-exists=.env.local scripts/create-access-code.mjs",
+    "package:lws": "node scripts/package-lws.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
@@ -30,6 +31,7 @@
     "@supabase/supabase-js": "^2.119.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
+    "fflate": "^0.8.3",
     "lucide-react": "^1.71.0",
     "motion": "^14.12.0",
     "next": "16.4.6",

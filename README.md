@@ -1,5 +1,7 @@
 # HAPPI Compétence
 
+[![CI](https://github.com/ma2tlrx/happi-competence/actions/workflows/ci.yml/badge.svg)](https://github.com/ma2tlrx/happi-competence/actions/workflows/ci.yml)
+
 **Human Abilities & Professional Progress Integration** — *L’avenir se joue ici.*
 
 Plateforme de suivi des compétences d’un programme d’accompagnement en six sessions :
@@ -25,7 +27,7 @@ Vitest, Playwright.
 
 ## Démarrage local
 
-Prérequis : Node.js 20+, Docker.
+Prérequis : Node.js 22 (22.12 au moins), Docker.
 
 ```bash
 npm install
@@ -63,6 +65,8 @@ Application sur http://localhost:3000.
 | `npm run db:start` / `stop` / `reset` / `status` | Pile Supabase locale |
 | `npm run demo:seed` / `demo:purge` | Données de démonstration |
 | `npm run admin:code` | Génère un code d’accès administrateur à usage unique |
+| `npm run package:lws` | Paquet autonome pour un hébergement Node.js / Passenger (LWS) |
+| `scripts/backup-db.sh` / `scripts/restore-db.sh` | Sauvegarde logique et restauration de la base |
 
 ## Sécurité
 
@@ -75,6 +79,10 @@ Application sur http://localhost:3000.
   inscrit dans le code.
 - Les évaluations validées ne se modifient qu’avec un motif, tracé dans un
   historique en ajout seul ; le journal d’audit ne peut être ni modifié ni supprimé.
+- Politique de sécurité du contenu à **nonce** (une valeur par requête, `script-src` strict,
+  aucun script en ligne non autorisé), posée par `src/proxy.ts`.
+- Intégration continue (`.github/workflows/ci.yml`) : lint, types, tests unitaires, build,
+  puis tests de sécurité sur une pile Supabase démarrée dans le runner.
 - Les tests `tests/security` vérifient l’isolation au niveau de la base
   (organisme A ↔ B, formateur ↔ groupe d’un autre, participant ↔ autre participant,
   visiteur anonyme).
@@ -94,5 +102,7 @@ officiel n’a été inventé :
 ## Documentation
 
 - [Mise en production](docs/deploiement.md)
+- [Exploitation : supervision, sauvegardes, reprise, incidents](docs/exploitation.md)
+- [Hébergement LWS (cPanel, Node.js)](docs/hebergement-lws.md)
 - [Architecture et modèle de données](docs/architecture.md)
 - [Format des supports pédagogiques](docs/format-supports-pedagogiques.md)

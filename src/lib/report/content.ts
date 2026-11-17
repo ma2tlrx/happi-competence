@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import '@/lib/zod-fr';
+
 import type { ReportData } from './model';
 
 /**

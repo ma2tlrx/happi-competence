@@ -19,6 +19,8 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   'export.attendance_csv': 'Feuille de présence exportée (CSV)',
   'export.participants_csv': 'Liste des participants exportée',
   'export.personal_data': 'Export des données personnelles',
+  'export.organization_data': 'Export de réversibilité d’un organisme (archive complète)',
+  'export.platform_data': 'Export de réversibilité de toute la plateforme',
   'export.report_pdf': 'Bilan téléchargé',
   'export.signature_sheet_pdf': 'Feuille d’émargement téléchargée',
   'export.certificate_pdf': 'Certificat de réalisation téléchargé',
