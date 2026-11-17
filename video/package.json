@@ -1,0 +1,18 @@
+{
+  "name": "happi-video",
+  "private": true,
+  "description": "Vidéo de présentation HAPPI en motion design : scènes HTML/GSAP rendues image par image (Playwright) et musique générée.",
+  "type": "module",
+  "scripts": {
+    "music": "python3 -I music/compose.py",
+    "captures": "node capture.mjs",
+    "preview": "node render.mjs --preview",
+    "render": "node render.mjs"
+  },
+  "dependencies": {
+    "@fontsource/dm-mono": "^5.2.6",
+    "@fontsource/dm-sans": "^5.2.6",
+    "@fontsource/poppins": "^5.2.6",
+    "gsap": "^3.13.0"
+  }
+}

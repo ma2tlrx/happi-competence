@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     'playwright-report/**',
     'test-results/**',
     '.claude/**',
+    'video/**',
+    'graphify-out/**',
   ]),
 ]);
 
