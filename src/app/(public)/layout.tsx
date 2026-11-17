@@ -4,10 +4,11 @@ import { siteConfig } from '@/config/site';
 import { getCurrentUser, homePathFor } from '@/lib/auth/session';
 import { ROLE_LABELS } from '@/lib/auth/roles';
 import { getPublicCatalog, settingList, settingString } from '@/lib/public-catalog';
+import { getPublicResults } from '@/lib/quality/public';
 import { fullName } from '@/lib/utils';
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const [user, catalog] = await Promise.all([getCurrentUser().catch(() => null), getPublicCatalog()]);
+  const [user, catalog, results] = await Promise.all([getCurrentUser().catch(() => null), getPublicCatalog(), getPublicResults()]);
   const account = user
     ? {
         name: fullName({ first_name: user.firstName, last_name: user.lastName }) || user.email,
@@ -19,7 +20,7 @@ export default async function PublicLayout({ children }: { children: React.React
     <>
       <SiteHeader account={account} />
       <main id="contenu">{children}</main>
-      <SiteFooter email={settingString(catalog, 'contact.email') || siteConfig.contactEmail} phones={settingList(catalog, 'contact.phones')} />
+      <SiteFooter email={settingString(catalog, 'contact.email') || siteConfig.contactEmail} phones={settingList(catalog, 'contact.phones')} showResults={results !== null} />
     </>
   );
 }

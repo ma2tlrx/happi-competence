@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Logo } from '@/components/brand/logo';
 import { publicNavigation, siteConfig } from '@/config/site';
 
-export function SiteFooter({ email, phones }: { email: string; phones: string[] }) {
+export function SiteFooter({ email, phones, showResults = false }: { email: string; phones: string[]; showResults?: boolean }) {
   const year = new Date().getFullYear();
   return (
     <footer className="bg-petrol-950 text-white/70">
@@ -27,6 +27,13 @@ export function SiteFooter({ email, phones }: { email: string; phones: string[] 
                 </Link>
               </li>
             ))}
+            {showResults ? (
+              <li>
+                <Link href="/resultats" className="transition-colors hover:text-white">
+                  Nos résultats
+                </Link>
+              </li>
+            ) : null}
           </ul>
         </nav>
 

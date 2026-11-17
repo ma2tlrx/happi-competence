@@ -1,4 +1,5 @@
 import {
+  BadgeCheck,
   BookOpen,
   Building2,
   CalendarClock,
@@ -10,6 +11,7 @@ import {
   KeyRound,
   LayoutDashboard,
   MessageSquareHeart,
+  MessageSquareWarning,
   Layers,
   ListChecks,
   Mail,
@@ -17,6 +19,7 @@ import {
   Route,
   Settings,
   Share2,
+  ShieldCheck,
   Sparkles,
   TrendingUp,
   User,
@@ -53,6 +56,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/participant/partage', label: 'Partager mon passeport', icon: Share2 },
         { href: '/participant/evolution', label: 'Mon évolution', icon: TrendingUp },
         { href: '/participant/satisfaction', label: 'Donnez votre avis', icon: MessageSquareHeart },
+        { href: '/participant/signalements', label: 'Signaler un problème', icon: MessageSquareWarning },
         { href: '/participant/profil', label: 'Mon profil', icon: User },
       ],
     },
@@ -68,6 +72,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/organisme/suivis', label: 'Suivis', icon: CalendarClock },
         { href: '/organisme/impact', label: 'Impact', icon: TrendingUp },
         { href: '/organisme/satisfaction', label: 'Satisfaction', icon: MessageSquareHeart },
+        { href: '/organisme/signalements', label: 'Signaler un problème', icon: MessageSquareWarning },
       ],
     },
   ],
@@ -79,6 +84,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/formateur/groupes', label: 'Groupes', icon: Users, mobile: true },
         { href: '/formateur/programmes', label: 'Programmes', icon: BookOpen, mobile: true },
         { href: '/formateur/suivis', label: 'Suivis', icon: CalendarClock },
+        { href: '/formateur/registre', label: 'Mon registre', icon: BadgeCheck },
       ],
     },
   ],
@@ -113,6 +119,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
       items: [
         { href: '/admin/impact', label: 'Impact', icon: TrendingUp },
         { href: '/admin/suivis', label: 'Suivis', icon: CalendarClock },
+        { href: '/admin/qualite', label: 'Qualité', icon: ShieldCheck },
       ],
     },
     {
