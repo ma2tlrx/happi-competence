@@ -381,7 +381,7 @@ function methode() {
   tl.to(cam, { zoom: 1.04, duration: 2, ease: 'sine.inOut' }, 18.0);
 
   // DROP : la manette éclate en 6 sessions
-  leave([t1, t2], 19.98, { y: -120, blur: 16, dur: 0.3 });
+  leave([t1, t2], 19.74, { y: -120, blur: 16, dur: 0.24 });
   tl.to(g, { scale: 0.25, opacity: 0, duration: 0.24, ease: 'power3.in' }, 20.0);
   tl.set(cam, { zoom: 1 }, 20.0);
   flash(20.0, 0.45, 0.5);
