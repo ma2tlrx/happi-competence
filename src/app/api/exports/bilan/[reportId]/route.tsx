@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 import { getCurrentUser, hasPermission } from '@/lib/auth/session';
 import { ReportDocument } from '@/lib/pdf/report/report-document';
-import { getReport } from '@/lib/report/load';
+import { getReport, latestValidatedEasyRead } from '@/lib/report/load';
 import { createClient } from '@/lib/supabase/server';
 import { isUuid } from '@/lib/utils';
 
@@ -26,6 +26,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const supabase = await createClient();
   const report = await getReport(supabase, reportId);
   if (!report) return NextResponse.json({ error: 'Bilan introuvable.' }, { status: 404 });
+  // Version facile à lire : seulement validée, et seulement pour un bilan validé.
+  const easyRead = report.status === 'final' ? await latestValidatedEasyRead(supabase, report.id) : null;
 
   const buffer = await renderToBuffer(
     <ReportDocument
@@ -33,6 +35,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       content={report.content}
       options={report.options}
       meta={{ version: report.version, status: report.status, finalizedAt: report.finalizedAt, contentSource: report.contentSource }}
+      easyRead={easyRead?.content ? { content: easyRead.content, contentSource: easyRead.contentSource, validatedAt: easyRead.validatedAt } : null}
     />,
   );
   await supabase.rpc('log_event', {

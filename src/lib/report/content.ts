@@ -100,7 +100,7 @@ export type ReportOptions = z.infer<typeof reportOptionsSchema>;
 
 const LIMITS = { short: 1500, long: 4000 };
 // Une note ou un niveau chiffré écrit dans le texte (« 3/5 », « 4 sur 4 », « niveau 2 ») : interdit, les chiffres viennent du moteur.
-const SCORE_PATTERN = /\b\d(?:[.,]\d+)?\s*(?:\/|sur)\s*\d\b|\bniveau\s+\d\b/i;
+export const SCORE_PATTERN = /\b\d(?:[.,]\d+)?\s*(?:\/|sur)\s*\d\b|\bniveau\s+\d\b/i;
 
 export type ContentIssue = { path: string; message: string };
 

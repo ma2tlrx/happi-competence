@@ -4,13 +4,14 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { EvolutionView } from '@/components/passport/evolution-view';
+import { EasyReadPanel } from '@/components/report/easy-read-panel';
 import { ReportWorkspace } from '@/components/report/report-workspace';
 import { PageHeader } from '@/components/ui/primitives';
 import { requireRole } from '@/lib/auth/session';
 import { buildEvolution } from '@/lib/evolution';
 import { getPassport } from '@/lib/passport';
 import { isAiConfigured } from '@/lib/report/ai';
-import { listReports } from '@/lib/report/load';
+import { listEasyReads, listReports } from '@/lib/report/load';
 import { createClient } from '@/lib/supabase/server';
 import { isUuid } from '@/lib/utils';
 
@@ -28,6 +29,7 @@ export default async function ParticipantReportPage({ params, searchParams }: { 
   if (!participant) notFound();
   const [reports, passport] = await Promise.all([listReports(supabase, id), getPassport(supabase, id)]);
   const selected = reports.find((report) => report.id === version) ?? reports[0] ?? null;
+  const easyReads = selected?.status === 'final' ? await listEasyReads(supabase, selected.id) : [];
   const name = `${participant.first_name} ${participant.last_name}`;
   return (
     <>
@@ -54,6 +56,7 @@ export default async function ParticipantReportPage({ params, searchParams }: { 
         selected={selected}
         aiReady={isAiConfigured()}
       />
+      {selected?.status === 'final' && selected.content ? <EasyReadPanel key={selected.id} reportId={selected.id} easyReads={easyReads} aiReady={isAiConfigured()} /> : null}
       {passport ? (
         <details className="mt-8 rounded-lg border border-line bg-white">
           <summary className="flex min-h-11 cursor-pointer items-center px-5 py-3 font-semibold sm:px-6">

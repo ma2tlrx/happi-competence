@@ -5,6 +5,7 @@ import type { Style } from '@react-pdf/stylesheet';
 import type { ReactNode } from 'react';
 
 import { writingMention } from '@/lib/report/ai-disclosure';
+import { EASY_READ_MENTION, easyReadWritingMention, type EasyReadContent } from '@/lib/report/easy-read';
 import { BEHAVIOUR_THEMES, PRIORITIES, type ReportContent, type ReportOptions, type ReportSection } from '@/lib/report/content';
 import type { ReportData, ReportFramework, ReportSkill } from '@/lib/report/model';
 import { formatDate, formatScore } from '@/lib/utils';
@@ -18,6 +19,8 @@ export type ReportDocumentProps = {
   options: ReportOptions;
   meta: { version: number; status: 'draft' | 'final'; finalizedAt: string | null; contentSource: 'ai' | 'ai_edited' | 'manual' | null };
   root?: string;
+  /** Version facile à lire validée : dernière section du PDF. Jamais un brouillon. */
+  easyRead?: { content: EasyReadContent; contentSource: 'ai' | 'ai_edited' | 'manual'; validatedAt: string | null } | null;
 };
 
 const TO_WRITE = 'À rédiger.';
@@ -634,7 +637,33 @@ export function Methodology({ data, content, meta, number }: { data: ReportData;
   );
 }
 
-export function ReportDocument({ data, content, options, meta, root = process.cwd() }: ReportDocumentProps) {
+// ── Dernière section : version facile à lire ─────────────────────────────────
+export function EasyRead({ easyRead, number }: { easyRead: NonNullable<ReportDocumentProps['easyRead']>; number: string }) {
+  return (
+    <View>
+      <SectionOpener number={`${number} · FACILE À LIRE`} title="Votre bilan en mots simples" lead={EASY_READ_MENTION} />
+      {easyRead.content.sections.map((section, index) => (
+        <View key={index} style={{ marginBottom: 12 }}>
+          <View wrap={false}>
+            <Text style={[s.h2, { fontSize: 15, marginTop: 10 }]}>{section.title}</Text>
+            {section.sentences[0] ? <Text style={{ fontSize: 12.5, lineHeight: 1.6, marginBottom: 6 }}>{section.sentences[0]}</Text> : null}
+          </View>
+          {section.sentences.slice(1).map((sentence, position) => (
+            <Text key={position} style={{ fontSize: 12.5, lineHeight: 1.6, marginBottom: 6 }}>
+              {sentence}
+            </Text>
+          ))}
+        </View>
+      ))}
+      <Text style={[s.small, { marginTop: 14 }]}>
+        {easyReadWritingMention(easyRead.contentSource)}
+        {easyRead.validatedAt ? ` Validée le ${formatDate(easyRead.validatedAt)}.` : ''}
+      </Text>
+    </View>
+  );
+}
+
+export function ReportDocument({ data, content, options, meta, root = process.cwd(), easyRead = null }: ReportDocumentProps) {
   registerReportFonts(root);
   const hidden = new Set(options.hiddenSections);
   const ct = data.frameworks.find((framework) => framework.code === 'transversal');
@@ -655,6 +684,7 @@ export function ReportDocument({ data, content, options, meta, root = process.cw
     recommendations: hidden.has('recommendations') ? '' : next(),
     conclusion: next(),
     methodology: next(),
+    easyRead: easyRead ? next() : '',
   };
   return (
     <Document
@@ -696,6 +726,11 @@ export function ReportDocument({ data, content, options, meta, root = process.cw
       <Frame data={data} meta={meta}>
         <Methodology data={data} content={content} meta={meta} number={numbers.methodology} />
       </Frame>
+      {easyRead ? (
+        <Frame data={data} meta={meta}>
+          <EasyRead easyRead={easyRead} number={numbers.easyRead} />
+        </Frame>
+      ) : null}
     </Document>
   );
 }

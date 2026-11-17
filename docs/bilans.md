@@ -124,3 +124,38 @@ Toute modification de ces règles doit incrémenter `REPORT_ENGINE_VERSION`
   observations des formateurs. Une matrice de tendances comportementales fondée sur
   des mesures de jeu demanderait de collecter ces données.
 - Les compétences transversales sont en référentiel provisoire (signalé dans le bilan).
+
+## Aide à l'observation, version facile à lire, CV de compétences
+
+Migration `supabase/migrations/20261116120000_observation_assistant.sql`.
+
+- **Notes de séance** (page Évaluations d'une séance) : le formateur tape ou dicte
+  (Web Speech API du navigateur, `fr-FR` ; selon le navigateur, le son peut être
+  transcrit par le service de son éditeur) des notes brutes. « Structurer » envoie les
+  notes masquées (`redact.ts`, noms des participants du groupe compris) à l'IA, qui
+  renvoie des faits rattachés aux compétences et critères de la séance, avec l'extrait
+  qui les justifie (`src/lib/observation/`). Le serveur écarte tout code inconnu, tout
+  extrait absent des notes, toute note ou libellé de niveau, tout vocabulaire de
+  diagnostic. Les faits cochés sont ajoutés aux commentaires du brouillon, préfixés
+  « [Aide IA] » ; aucun niveau n'est saisi, rien n'est validé. Les notes ne sont pas
+  enregistrées, sauf ajout explicite aux notes privées de séance (`trainer_notes`).
+  Droit vérifié par `public.authorize_observation_assist` (journal
+  `ai.observation_structured`, sans texte).
+- **Incohérences** (sans IA, `src/lib/observation/consistency.ts`) : commentaire très
+  positif avec un niveau dans le tiers bas de l'échelle, ou l'inverse → simple
+  avertissement. Lexique provisoire, à valider.
+- **Quota IA commun** (`src/lib/ai/quota.ts`) : 10 demandes par heure et par compte,
+  toutes aides confondues (bilan, version facile à lire, structuration).
+- **Version facile à lire** (`src/lib/report/easy-read.ts`, table
+  `participant_report_easy_reads`) : proposée par l'IA ou rédigée à la main à partir
+  d'un bilan **validé**, contrôlée par `checkEasyRead` (pas de note chiffrée, rien sur
+  les compétences non observées, phrases de 18 mots au plus, une idée par phrase),
+  relue puis validée par le formateur. Seule une version validée est visible du
+  participant et de son organisme, et figure en dernière section du PDF. Mention :
+  « inspirée du FALC, non certifiée ».
+- **Écouter** : synthèse vocale du navigateur (`speechSynthesis`, `fr-FR`), lecture,
+  pause, reprise, arrêt ; aucun service externe.
+- **CV de compétences** (`/api/exports/cv/[participantId]`, participant seulement) :
+  une page, compétences observées choisies (14 au plus), libellé du niveau validé, une
+  phrase de descripteur, programme et dates, mention de méthode, QR code du lien de
+  partage actif le plus récent. Ni commentaires, ni présences, ni organisme.

@@ -1578,6 +1578,68 @@ export type Database = {
           },
         ]
       }
+      participant_report_easy_reads: {
+        Row: {
+          content: Json
+          content_model: string | null
+          content_source: string
+          created_at: string
+          created_by: string | null
+          id: string
+          participant_id: string
+          report_id: string
+          status: string
+          updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+          version: number
+        }
+        ComputedFields: never
+        Insert: {
+          content: Json
+          content_model?: string | null
+          content_source: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          participant_id: string
+          report_id: string
+          status?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          version?: number
+        }
+        Update: {
+          content?: Json
+          content_model?: string | null
+          content_source?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          participant_id?: string
+          report_id?: string
+          status?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participant_report_easy_reads_participant_id_fkey"
+            columns: ["participant_id"]
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participant_report_easy_reads_report_id_fkey"
+            columns: ["report_id"]
+            referencedRelation: "participant_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       participant_reports: {
         Row: {
           content: Json | null
@@ -3175,6 +3237,10 @@ export type Database = {
       }
     }
     Functions: {
+      authorize_observation_assist: {
+        Args: { p_participant_id: string; p_session_id: string }
+        Returns: undefined
+      }
       add_participant_to_group: {
         Args: {
           p_email?: string

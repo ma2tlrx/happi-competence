@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Card, EmptyState, Notice } from '@/components/ui/primitives';
 import { hasPermission } from '@/lib/auth/session';
 import type { Aggregation, Rounding, ScoringMode } from '@/lib/evaluation-engine';
+import { isAiConfigured } from '@/lib/report/ai';
 
 import { getSessionContext } from '../context';
 import { SessionHeader } from '../session-nav';
@@ -139,6 +140,7 @@ export default async function EvaluationsPage({ params, searchParams }: { params
           existing={existing}
           canWrite={canWrite}
           initialParticipant={requested && members.some((member) => member.id === requested) ? requested : null}
+          aiReady={isAiConfigured()}
         />
       )}
     </>

@@ -12,9 +12,12 @@ import { Dialog, DialogContent, InfoHint } from '@/components/ui/overlays';
 import { Avatar, Badge, Notice, ProvisionalBadge } from '@/components/ui/primitives';
 import { toast } from '@/components/ui/toast';
 import { deriveSkillScore, scaleValues, SCORING_MODE_LABELS, type FrameworkRules } from '@/lib/evaluation-engine';
+import { checkConsistency } from '@/lib/observation/consistency';
+import { appendToComment, factCommentText, type ValidFact } from '@/lib/observation/structure';
 import { cn, formatDateTime, formatScore } from '@/lib/utils';
 
 import { amendEvaluation, saveDraft, validateEvaluation, type EvaluationPayload } from './actions';
+import { ObservationAssistant } from './observation-assistant';
 
 export type EngineSkill = {
   id: string;
@@ -95,6 +98,7 @@ export function EvaluationWorkspace({
   existing: initialExisting,
   canWrite,
   initialParticipant,
+  aiReady,
 }: {
   sessionId: string;
   sessionStatus: string;
@@ -103,6 +107,8 @@ export function EvaluationWorkspace({
   existing: Record<string, ExistingEvaluation>;
   canWrite: boolean;
   initialParticipant: string | null;
+  /** Service d'IA configuré (aide à la structuration des notes de séance). */
+  aiReady: boolean;
 }) {
   const router = useRouter();
   const [existing, setExisting] = useState(initialExisting);
@@ -170,6 +176,20 @@ export function EvaluationWorkspace({
   const setCriterion = (criterionId: string, value: { observed: boolean | null; score: number | null }) =>
     update((draft) => ({ ...draft, criteria: { ...draft.criteria, [criterionId]: value } }));
   const setComment = (kind: keyof FormState['comments'], value: string) => update((draft) => ({ ...draft, comments: { ...draft.comments, [kind]: value } }));
+
+  // Reprise des faits retenus par le formateur : ajout aux commentaires du brouillon (aucun niveau n'est touché).
+  const insertFromNotes = ({ facts, unattached }: { facts: ValidFact[]; unattached: string[] }) =>
+    update((draft) => {
+      const scores = { ...draft.scores };
+      for (const fact of facts) {
+        const entry = scores[fact.skillId];
+        scores[fact.skillId] = { score: entry?.score ?? null, comment: appendToComment(entry?.comment ?? '', factCommentText(fact), 1500) };
+      }
+      let observation = draft.comments.observation;
+      for (const excerpt of unattached) observation = appendToComment(observation, excerpt, 4000);
+      return { ...draft, scores, comments: { ...draft.comments, observation } };
+    });
+  const knownSkillIds = useMemo(() => new Set(usableFrameworks.flatMap((framework) => framework.skills.map((skill) => skill.id))), [usableFrameworks]);
 
   const goTo = async (participantId: string) => {
     await flush();
@@ -337,6 +357,18 @@ export function EvaluationWorkspace({
           >
             Toute modification sera tracée avec son motif, l’auteur, la date, l’ancienne et la nouvelle valeur.
           </Notice>
+        ) : null}
+
+        {canWrite ? (
+          <ObservationAssistant
+            key={currentId}
+            sessionId={sessionId}
+            participant={{ id: current.id, firstName: current.firstName }}
+            aiReady={aiReady}
+            locked={locked}
+            knownSkillIds={knownSkillIds}
+            onInsert={insertFromNotes}
+          />
         ) : null}
 
         {usableFrameworks.map((framework) => (
@@ -540,6 +572,7 @@ function SkillRow({
   const [showCriteria, setShowCriteria] = useState(derived);
   const descriptor = score !== null ? skill.descriptors[Math.floor(score)] : null;
   const levelLabel = (value: number) => framework.levels.find((level) => level.value === Math.floor(value))?.label ?? '';
+  const consistency = checkConsistency({ comment, score, scaleMin: framework.rules.scaleMin, scaleMax: framework.rules.scaleMax });
 
   return (
     <div
@@ -612,6 +645,14 @@ function SkillRow({
       </div>
       {showComment ? (
         <Textarea className="mt-2" rows={2} maxLength={1500} value={comment} disabled={locked} onChange={(event) => onComment(event.target.value)} aria-label={`Commentaire sur ${skill.name}`} />
+      ) : null}
+      {consistency ? (
+        <p className="mt-2 flex items-start gap-1.5 text-sm text-warning" role="status">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>
+            {consistency.message} <span className="text-ink-subtle">(simple vérification automatique, sans IA ; rien n’est bloqué)</span>
+          </span>
+        </p>
       ) : null}
       {showCriteria && skill.criteria.length > 0 ? (
         <ul className="mt-3 grid gap-2 sm:grid-cols-2">

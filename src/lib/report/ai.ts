@@ -27,7 +27,8 @@ export function isAiConfigured() {
   return aiProvider() !== null;
 }
 
-function createClient(provider: NonNullable<ReturnType<typeof aiProvider>>) {
+/** Client du fournisseur choisi (partagé par toutes les fonctions d'aide par IA). */
+export function createAiClient(provider: NonNullable<ReturnType<typeof aiProvider>>) {
   const common = { maxRetries: 2, timeout: 170_000 };
   if (provider.name === 'openrouter') {
     return new Anthropic({ ...common, baseURL: 'https://openrouter.ai/api', apiKey: null, authToken: process.env.OPENROUTER_API_KEY });
@@ -39,7 +40,14 @@ export type GenerationResult =
   | { ok: true; content: ReportContent; model: string }
   | { ok: false; message: string; issues?: ContentIssue[] };
 
-type Client = Pick<Anthropic, 'beta'>;
+export type AiClient = Pick<Anthropic, 'beta'>;
+/** Client injecté (tests) : aucun appel réseau. */
+export type AiInjection = { client: AiClient; provider: 'openrouter' | 'anthropic'; model: string };
+
+/** Repli automatique en cas de refus : propre à l'API Claude directe (OpenRouter gère son propre routage). */
+export function fallbackOptions(provider: 'openrouter' | 'anthropic'): { betas?: Anthropic.Beta.AnthropicBeta[]; fallbacks?: 'default' } {
+  return provider === 'anthropic' ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' } : {};
+}
 
 /**
  * Rédige le texte d'un bilan à partir de sa photographie. Les résultats ne sont
@@ -49,7 +57,7 @@ type Client = Pick<Anthropic, 'beta'>;
 export async function generateReportContent(
   data: ReportData,
   options: ReportOptions,
-  injected?: { client: Client; provider: 'openrouter' | 'anthropic'; model: string },
+  injected?: AiInjection,
 ): Promise<GenerationResult> {
   const provider = injected ? { name: injected.provider, model: injected.model } : aiProvider();
   if (!provider) {
@@ -58,10 +66,8 @@ export async function generateReportContent(
   if (data.counts.observations === 0) {
     return { ok: false, message: 'Aucune observation validée : il n’y a rien à interpréter. Validez au moins une évaluation de session.' };
   }
-  const api = injected?.client ?? createClient(provider);
-  // Repli automatique en cas de refus : propre à l'API Claude directe (OpenRouter gère son propre routage).
-  const fallback: { betas?: Anthropic.Beta.AnthropicBeta[]; fallbacks?: 'default' } =
-    provider.name === 'anthropic' ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' } : {};
+  const api = injected?.client ?? createAiClient(provider);
+  const fallback = fallbackOptions(provider.name);
   const messages: Anthropic.Beta.BetaMessageParam[] = [
     { role: 'user', content: `Dossier du participant (JSON) :\n\n${JSON.stringify(buildDossier(data, options), null, 1)}` },
   ];
@@ -102,7 +108,8 @@ export async function generateReportContent(
   return { ok: false, message: 'La rédaction n’a pas abouti. Réessayez.' };
 }
 
-function apiErrorMessage(error: unknown) {
+/** Message lisible pour une erreur du service d'IA (clé, crédit, saturation, délai, réseau). */
+export function apiErrorMessage(error: unknown) {
   if (error instanceof Anthropic.AuthenticationError || error instanceof Anthropic.PermissionDeniedError) {
     return 'La clé du service de rédaction est refusée. Vérifiez la variable ANTHROPIC_API_KEY du serveur.';
   }

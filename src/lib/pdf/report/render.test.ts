@@ -77,4 +77,20 @@ describe('rendu PDF du bilan', () => {
       if (out) writeFileSync(join(out, `bilan-${name}.pdf`), buffer);
     }, 60_000);
   }
+
+  it('ajoute la version facile à lire validée en dernière section', async () => {
+    const data = buildReportData(scenarios.complet.passport, supports, new Date('2026-07-01T10:00:00Z'));
+    const props = {
+      data,
+      content: fixtureContent(data),
+      options: reportOptionsSchema.parse({}),
+      meta: { version: 1, status: 'final' as const, finalizedAt: '2026-07-02T10:00:00Z', contentSource: 'ai' as const },
+    };
+    const easyRead = { content: { sections: [{ title: 'Ce qu’est ce bilan', sentences: ['Ce bilan parle de vous.', 'Il dit ce que les formateurs ont vu.'] }] }, contentSource: 'ai' as const, validatedAt: '2026-07-03T10:00:00Z' };
+    const without = await renderToBuffer(createElement(ReportDocument, props) as never);
+    const withEasy = await renderToBuffer(createElement(ReportDocument, { ...props, easyRead }) as never);
+    const pages = (buffer: Buffer) => (buffer.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? []).length;
+    expect(pages(withEasy)).toBe(pages(without) + 1);
+    if (out) writeFileSync(join(out, 'bilan-facile-a-lire.pdf'), withEasy);
+  }, 60_000);
 });

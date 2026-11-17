@@ -5,6 +5,7 @@ import type { ServerClient } from '@/lib/supabase/server';
 
 import { buildReportData } from './build';
 import { reportContentSchema, reportOptionsSchema, type ReportContent, type ReportOptions } from './content';
+import { easyReadSchema, type EasyReadContent } from './easy-read';
 import type { ReportData } from './model';
 
 /** Calcule la photographie d'un bilan à partir des données actuelles (lecture sous les droits de l'appelant). */
@@ -94,4 +95,65 @@ export async function listReports(supabase: ServerClient, participantId: string)
 export async function getReport(supabase: ServerClient, reportId: string): Promise<StoredReport | null> {
   const { data } = await supabase.from('participant_reports').select(COLUMNS).eq('id', reportId).maybeSingle();
   return data ? toReport(data as Row) : null;
+}
+
+// ── Version facile à lire ───────────────────────────────────────────────────
+
+export type StoredEasyRead = {
+  id: string;
+  reportId: string;
+  version: number;
+  status: 'draft' | 'validated';
+  content: EasyReadContent | null;
+  contentSource: 'ai' | 'ai_edited' | 'manual';
+  createdAt: string;
+  updatedAt: string;
+  validatedAt: string | null;
+};
+
+const EASY_COLUMNS = 'id, report_id, version, status, content, content_source, created_at, updated_at, validated_at';
+
+type EasyRow = { id: string; report_id: string; version: number; status: string; content: unknown; content_source: string; created_at: string; updated_at: string; validated_at: string | null };
+
+function toEasyRead(row: EasyRow): StoredEasyRead {
+  const content = easyReadSchema.safeParse(row.content);
+  return {
+    id: row.id,
+    reportId: row.report_id,
+    version: row.version,
+    status: row.status as StoredEasyRead['status'],
+    content: content.success ? content.data : null,
+    contentSource: row.content_source as StoredEasyRead['contentSource'],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    validatedAt: row.validated_at,
+  };
+}
+
+/** Versions faciles à lire d'un bilan visibles par l'appelant (RLS : versions validées seulement pour le participant et son organisme). */
+export async function listEasyReads(supabase: ServerClient, reportId: string): Promise<StoredEasyRead[]> {
+  const { data } = await supabase.from('participant_report_easy_reads').select(EASY_COLUMNS).eq('report_id', reportId).order('version', { ascending: false });
+  return ((data ?? []) as EasyRow[]).map(toEasyRead);
+}
+
+export async function getEasyRead(supabase: ServerClient, id: string): Promise<StoredEasyRead | null> {
+  const { data } = await supabase.from('participant_report_easy_reads').select(EASY_COLUMNS).eq('id', id).maybeSingle();
+  return data ? toEasyRead(data as EasyRow) : null;
+}
+
+/**
+ * Dernière version validée (jamais un brouillon, quel que soit le rôle de l'appelant) :
+ * c'est la seule qui figure dans le PDF et dans l'espace du participant.
+ */
+export async function latestValidatedEasyRead(supabase: ServerClient, reportId: string): Promise<StoredEasyRead | null> {
+  const { data } = await supabase
+    .from('participant_report_easy_reads')
+    .select(EASY_COLUMNS)
+    .eq('report_id', reportId)
+    .eq('status', 'validated')
+    .order('version', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const easyRead = data ? toEasyRead(data as EasyRow) : null;
+  return easyRead?.content ? easyRead : null;
 }
