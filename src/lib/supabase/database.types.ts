@@ -1463,6 +1463,65 @@ export type Database = {
           },
         ]
       }
+      participant_needs_assessments: {
+        Row: {
+          adaptation_needed: boolean
+          adaptation_planned: string | null
+          assessed_on: string
+          constraints_notes: string | null
+          created_at: string
+          disability_referent: string | null
+          expectations: string | null
+          id: string
+          participant_id: string
+          prerequisites: string | null
+          prerequisites_met: string | null
+          recorded_by: string | null
+          recorded_role: string | null
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          adaptation_needed?: boolean
+          adaptation_planned?: string | null
+          assessed_on?: string
+          constraints_notes?: string | null
+          created_at?: string
+          disability_referent?: string | null
+          expectations?: string | null
+          id?: string
+          participant_id: string
+          prerequisites?: string | null
+          prerequisites_met?: string | null
+          recorded_by?: string | null
+          recorded_role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          adaptation_needed?: boolean
+          adaptation_planned?: string | null
+          assessed_on?: string
+          constraints_notes?: string | null
+          created_at?: string
+          disability_referent?: string | null
+          expectations?: string | null
+          id?: string
+          participant_id?: string
+          prerequisites?: string | null
+          prerequisites_met?: string | null
+          recorded_by?: string | null
+          recorded_role?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participant_needs_assessments_participant_id_fkey"
+            columns: ["participant_id"]
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       participant_organization_history: {
         Row: {
           changed_at: string
@@ -2196,6 +2255,220 @@ export type Database = {
             referencedRelation: "staff_directory"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      quality_complaints: {
+        Row: {
+          channel: string
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          organization_id: string | null
+          participant_id: string | null
+          received_on: string
+          reporter_name: string | null
+          responded_on: string | null
+          response: string | null
+          source: string
+          status: string
+          subject: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          channel: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          organization_id?: string | null
+          participant_id?: string | null
+          received_on?: string
+          reporter_name?: string | null
+          responded_on?: string | null
+          response?: string | null
+          source: string
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          organization_id?: string | null
+          participant_id?: string | null
+          received_on?: string
+          reporter_name?: string | null
+          responded_on?: string | null
+          response?: string | null
+          source?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quality_complaints_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quality_complaints_participant_id_fkey"
+            columns: ["participant_id"]
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quality_improvement_actions: {
+        Row: {
+          closed_on: string | null
+          complaint_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_on: string | null
+          effectiveness: string | null
+          id: string
+          origin: string
+          origin_details: string | null
+          owner_name: string | null
+          status: string
+          title: string
+          updated_at: string
+          watch_entry_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          closed_on?: string | null
+          complaint_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_on?: string | null
+          effectiveness?: string | null
+          id?: string
+          origin: string
+          origin_details?: string | null
+          owner_name?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          watch_entry_id?: string | null
+        }
+        Update: {
+          closed_on?: string | null
+          complaint_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_on?: string | null
+          effectiveness?: string | null
+          id?: string
+          origin?: string
+          origin_details?: string | null
+          owner_name?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          watch_entry_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quality_improvement_actions_complaint_id_fkey"
+            columns: ["complaint_id"]
+            referencedRelation: "quality_complaints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quality_improvement_actions_watch_entry_id_fkey"
+            columns: ["watch_entry_id"]
+            referencedRelation: "quality_watch_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quality_public_results: {
+        Row: {
+          computed_at: string | null
+          enabled: boolean
+          id: boolean
+          indicators: Json
+          period_from: string | null
+          period_to: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          computed_at?: string | null
+          enabled?: boolean
+          id?: boolean
+          indicators?: Json
+          period_from?: string | null
+          period_to?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          computed_at?: string | null
+          enabled?: boolean
+          id?: boolean
+          indicators?: Json
+          period_from?: string | null
+          period_to?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+
+        ]
+      }
+      quality_watch_entries: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          decision: string | null
+          id: string
+          impact: string | null
+          kind: string
+          observed_on: string
+          source: string
+          summary: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          decision?: string | null
+          id?: string
+          impact?: string | null
+          kind: string
+          observed_on?: string
+          source: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          decision?: string | null
+          id?: string
+          impact?: string | null
+          kind?: string
+          observed_on?: string
+          source?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: [
+
         ]
       }
       questionnaire_questions: {
@@ -3142,6 +3415,62 @@ export type Database = {
           },
         ]
       }
+      trainer_qualifications: {
+        Row: {
+          completed_on: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          evidence: string | null
+          id: string
+          is_ai_training: boolean
+          kind: string
+          provider: string | null
+          started_on: string | null
+          title: string
+          trainer_id: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          completed_on?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          evidence?: string | null
+          id?: string
+          is_ai_training?: boolean
+          kind: string
+          provider?: string | null
+          started_on?: string | null
+          title: string
+          trainer_id: string
+          updated_at?: string
+        }
+        Update: {
+          completed_on?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          evidence?: string | null
+          id?: string
+          is_ai_training?: boolean
+          kind?: string
+          provider?: string | null
+          started_on?: string | null
+          title?: string
+          trainer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trainer_qualifications_trainer_id_fkey"
+            columns: ["trainer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       staff_directory: {
@@ -3244,6 +3573,7 @@ export type Database = {
         Returns: undefined
       }
       get_public_catalog: { Args: Record<PropertyKey, never>; Returns: Json }
+      get_public_results: { Args: Record<PropertyKey, never>; Returns: Json }
       import_pedagogical_version: {
         Args: {
           p_change_note?: string
@@ -3264,6 +3594,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_quality_export: { Args: { p_from: string; p_to: string }; Returns: undefined }
       my_final_self_assessment_open: { Args: Record<PropertyKey, never>; Returns: boolean }
       my_satisfaction_surveys: {
         Args: Record<PropertyKey, never>
@@ -3308,6 +3639,7 @@ export type Database = {
           value: number | null
         }[]
       }
+      submit_quality_complaint: { Args: { p_description: string; p_subject: string }; Returns: string }
       submit_satisfaction_response: {
         Args: { p_answers: Json; p_group_id: string; p_moment: string }
         Returns: string

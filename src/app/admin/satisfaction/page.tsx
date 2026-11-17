@@ -1,4 +1,4 @@
-import { ArrowRight, FileDown } from 'lucide-react';
+import { ArrowRight, FileDown, ListPlus } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
@@ -36,7 +36,17 @@ export default async function AdminSatisfactionPage({ searchParams }: { searchPa
   const exportQuery = new URLSearchParams(
     Object.entries({ groupe: filters.groupId, programme: filters.programId, du: filters.from, au: filters.to }).filter((entry): entry is [string, string] => Boolean(entry[1])),
   ).toString();
-  const anyProvisional = (surveys ?? []).some((survey) => survey.satisfaction_survey_versions.some((version) => version.status === 'published' && version.is_provisional));
+  // Lien vers le plan d'amélioration, prérempli (origine « satisfaction », période et périmètre filtrés).
+  const scopeLabel = [
+    filters.groupId ? `groupe « ${groupNames[filters.groupId] ?? ''} »` : null,
+    filters.from || filters.to ? `du ${filters.from ? formatDate(filters.from) : '…'} au ${filters.to ? formatDate(filters.to) : '…'}` : null,
+  ].filter(Boolean);
+  const improvementQuery = new URLSearchParams({
+    origine: 'satisfaction',
+    nouveau: '1',
+    precision: `Résultats de satisfaction${scopeLabel.length ? ` (${scopeLabel.join(', ')})` : ''}`,
+  }).toString();
+  const anyProvisional =(surveys ?? []).some((survey) => survey.satisfaction_survey_versions.some((version) => version.status === 'published' && version.is_provisional));
 
   return (
     <>
@@ -104,12 +114,20 @@ export default async function AdminSatisfactionPage({ searchParams }: { searchPa
               Moyennes avec leur effectif (n), taux de réponse sur les invités. La période filtre la date de réponse ; le nombre d’invités reste celui des groupes retenus.
             </p>
           </div>
-          <Button asChild variant="outline">
-            <a href={`/api/exports/satisfaction${exportQuery ? `?${exportQuery}` : ''}`} download>
-              <FileDown aria-hidden />
-              Exporter les réponses (CSV)
-            </a>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline">
+              <Link href={`/admin/qualite/amelioration?${improvementQuery}`}>
+                <ListPlus aria-hidden />
+                Créer une action d’amélioration
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <a href={`/api/exports/satisfaction${exportQuery ? `?${exportQuery}` : ''}`} download>
+                <FileDown aria-hidden />
+                Exporter les réponses (CSV)
+              </a>
+            </Button>
+          </div>
         </div>
         <form method="get" className="mb-5 grid gap-3 rounded-lg border border-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto_auto] lg:items-end">
           <label className="block text-sm font-semibold">
