@@ -79,7 +79,7 @@ function framework(code: 'transversal' | 'sociocognitive', scores: FixtureScores
   };
 }
 
-const TITLES = ['La communication', 'Adaptabilité et gestion du stress', 'Leadership', 'Analyse des problèmes', 'Autonomie et compétitivité', 'Thème à préciser'];
+const TITLES = ['La communication', 'Adaptabilité et gestion du stress', 'Leadership', 'Analyse des problèmes', 'Autonomie et compétitivité', 'Bilan individuel'];
 
 export function fixturePassport({
   ct = {},

@@ -117,7 +117,7 @@ Problèmes identifiés :
 | ~~CSP sans `script-src`~~ | P2 | **Corrigé** : CSP à nonce (`src/proxy.ts`, `script-src 'nonce-…' 'strict-dynamic'`), vérifiée sans violation sur 88 pages | `style-src 'unsafe-inline'` conservé (attributs style de Recharts, Motion, Radix) |
 | Ancien mot de passe administrateur en clair dans l'historique git (ancien outil) | P2 | Réécrire l'historique est une opération destructive | Changer ce mot de passe ; purger l'historique si le dépôt devient public |
 | Mentions légales « à compléter » | P2 | Informations légales à fournir | Les saisir dans Admin › Paramètres |
-| Référentiel transversal provisoire, session 6 « thème à préciser » | P3 | Décision pédagogique | Valider les contenus |
+| Référentiel transversal provisoire, session 6 « bilan individuel » (support officiel à importer) | P3 | Décision pédagogique | Valider les contenus |
 | ~~Export CSV organisme sans les filtres ; groupe futur affiché « En cours » ; session en cours comptée « à venir »~~ | P3 | Corrigé (chantier U1, novembre 2026) | — |
 | Données sous-traitées hors UE (IA) | Conformité | Contrat à signer | Accord de sous-traitance, mention dans la politique de confidentialité |
 | Démonstration activée par défaut | P3 | Fonctionnalité voulue | En production : `HAPPI_ALLOW_DEMO=false` |

@@ -273,7 +273,7 @@ async function seed() {
 
       // Évaluations des présents, validées à la fin de la session
       const skills = mapping.filter((row) => row.session_number === session.number);
-      // La session 6 (thème à préciser) n'a pas encore de compétences associées : pas d'évaluation à valider.
+      // La session 6 est le bilan individuel : elle n'introduit aucune compétence nouvelle, donc pas d'évaluation à valider.
       if (!skills.length) continue;
       for (const [index, participantId] of members.entries()) {
         if (!['present', 'late', 'left_early'].includes(attendance[index].status)) continue;
