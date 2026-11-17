@@ -108,8 +108,8 @@ function seededRandom(seed) {
   return () => (value = (value * 16807) % 2147483647) / 2147483647;
 }
 
-const FIRST_NAMES = ['Inès', 'Lucas', 'Sarah', 'Yanis', 'Chloé', 'Mehdi', 'Léa', 'Hugo', 'Amina', 'Théo', 'Nora', 'Enzo', 'Jade'];
-const LAST_NAMES = ['Martin', 'Benali', 'Dubois', 'Moreau', 'Laurent', 'Haddad', 'Fontaine', 'Girard', 'Diallo', 'Roux', 'Perrin', 'Garnier', 'Faure'];
+const FIRST_NAMES = ['Inès', 'Lucas', 'Sarah', 'Yanis', 'Chloé', 'Mehdi', 'Léa', 'Hugo', 'Amina', 'Théo', 'Nora', 'Enzo', 'Jade', 'Rayan', 'Manon', 'Kenza'];
+const LAST_NAMES = ['Martin', 'Benali', 'Dubois', 'Moreau', 'Laurent', 'Haddad', 'Fontaine', 'Girard', 'Diallo', 'Roux', 'Perrin', 'Garnier', 'Faure', 'Lopez', 'Chevalier', 'Mercier'];
 
 const OBSERVATIONS = [
   'S’est montré(e) à l’écoute de ses coéquipiers pendant l’activité et a proposé une organisation claire.',
@@ -177,7 +177,8 @@ async function seed() {
 
   // Participants avec compte (créés par l'inscription réelle) : le premier de chaque groupe et une autre personne.
   const people = FIRST_NAMES.map((firstName, index) => ({ firstName, lastName: LAST_NAMES[index] }));
-  const accountHolders = [0, 1, 8];
+  // 13 : Rayan, du groupe terminé (enquête de satisfaction « à chaud » ouverte).
+  const accountHolders = [0, 1, 8, 13];
   const participantAccounts = new Map();
   for (const index of accountHolders) {
     const person = people[index];
@@ -208,7 +209,16 @@ async function seed() {
       .single(),
     'Groupe B',
   );
-  must(await admin.from('groups').update({ is_demo: true }).in('id', [groupA.id, groupB.id]), 'Marquage groupes');
+  // Groupe terminé il y a 5 jours : suivis de sortie à saisir et enquêtes « à chaud » ouvertes.
+  const groupC = must(
+    await trainerClient
+      .from('groups')
+      .insert({ name: 'Groupe Littoral — été', program_id: program.id, organization_id: orgA.id, start_date: isoDate(-40), end_date: isoDate(-5), created_by: trainer.id })
+      .select('id')
+      .single(),
+    'Groupe C',
+  );
+  must(await admin.from('groups').update({ is_demo: true }).in('id', [groupA.id, groupB.id, groupC.id]), 'Marquage groupes');
 
   async function addMembers(client, groupId, indexes) {
     const ids = [];
@@ -227,6 +237,7 @@ async function seed() {
   }
   const membersA = await addMembers(trainerClient, groupA.id, [0, 1, 2, 3, 4, 5, 6, 7]);
   const membersB = await addMembers(trainer2Client, groupB.id, [8, 9, 10, 11, 12]);
+  const membersC = await addMembers(trainerClient, groupC.id, [13, 14, 15]);
 
   async function planSessions(client, groupId, offsets, completedCount, trainerId) {
     const rows = programSessions.map((programSession, index) => ({
@@ -243,6 +254,7 @@ async function seed() {
   }
   const sessionsA = await planSessions(trainerClient, groupA.id, [-28, -21, -14, 0, 7, 14], 3, trainer.id);
   const sessionsB = await planSessions(trainer2Client, groupB.id, [-14, -7, 1, 8, 15, 22], 2, trainer2.id);
+  const sessionsC = await planSessions(trainerClient, groupC.id, [-40, -33, -26, -19, -12, -5], 6, trainer.id);
 
   // Correspondances session ↔ compétences (versions publiées).
   const versions = must(await admin.from('framework_versions').select('id, scale_min, scale_max, frameworks ( code )').eq('status', 'published'), 'Versions');
@@ -283,6 +295,8 @@ async function seed() {
   }
   await runSessions(trainerClient, sessionsA, membersA, 3, 7);
   await runSessions(trainer2Client, sessionsB, membersB, 2, 11);
+  await runSessions(trainerClient, sessionsC, membersC, 6, 13);
+  must(await trainerClient.from('groups').update({ status: 'completed' }).eq('id', groupC.id), 'Clôture groupe C');
 
   // Une correction tracée, pour illustrer l'historique des modifications.
   const firstEvaluation = must(
@@ -341,7 +355,7 @@ async function seed() {
   }
 
   writeFileSync(join(process.cwd(), '.demo-credentials.json'), `${JSON.stringify({ genere_le: new Date().toISOString(), comptes: credentials }, null, 2)}\n`, { mode: 0o600 });
-  console.log(`✔ Démonstration prête : 3 organismes, 2 groupes, ${membersA.length + membersB.length} participants, ${credentials.length} comptes.`);
+  console.log(`✔ Démonstration prête : 3 organismes, 3 groupes, ${membersA.length + membersB.length + membersC.length} participants, ${credentials.length} comptes.`);
   console.log('  Identifiants : .demo-credentials.json');
   console.table(credentials.map(({ espace, email }) => ({ espace, email })));
 }

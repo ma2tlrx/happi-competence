@@ -3,9 +3,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { PendingSurveysCard } from '@/components/satisfaction/pending-card';
-import { GROUP_STATUS } from '@/components/trainer/labels';
+import { groupStatusBadge } from '@/components/trainer/labels';
 import { Badge, Card, CardBody, CardHeader, EmptyState, PageHeader, StatTile, Table, TableWrap, Td, Th, Tr } from '@/components/ui/primitives';
+import { parisDate } from '@/lib/attendance/signature';
 import { hasPermission, requireRole } from '@/lib/auth/session';
+import { isUpcomingSession } from '@/lib/listing-rules';
 import { getOrganizationOverview } from '@/lib/organization';
 import { referralBuckets } from '@/lib/referrals/status';
 import { loadMySurveys } from '@/lib/satisfaction/load';
@@ -24,8 +26,12 @@ export default async function OrganizationDashboard() {
     canRefer ? supabase.from('referrals').select('status').limit(2000) : Promise.resolve({ data: [] as { status: string }[] }),
   ]);
   const buckets = referralBuckets((referrals.data ?? []).map((row) => row.status));
-  const today = new Date().toISOString().slice(0, 10);
-  const upcoming = overview.sessions.filter((session) => (session.status === 'planned' || session.status === 'in_progress') && (!session.date || session.date >= today)).slice(0, 5);
+  const today = parisDate();
+  // Séances en cours d'abord (signalées comme telles), puis les séances prévues à venir.
+  const upcoming = [
+    ...overview.sessions.filter((session) => session.status === 'in_progress'),
+    ...overview.sessions.filter((session) => isUpcomingSession(session, today)),
+  ].slice(0, 5);
 
   return (
     <>
@@ -65,7 +71,12 @@ export default async function OrganizationDashboard() {
         <StatTile label="Programmes" value={overview.stats.programs} icon={Layers} />
         <StatTile label="Participants" value={overview.stats.participants} icon={Users} />
         <StatTile label="Sessions réalisées" value={overview.stats.completedSessions} icon={ClipboardCheck} />
-        <StatTile label="Sessions à venir" value={overview.stats.upcomingSessions} icon={CalendarDays} />
+        <StatTile
+          label="Sessions à venir"
+          value={overview.stats.upcomingSessions}
+          detail={overview.stats.ongoingSessions ? `${overview.stats.ongoingSessions} en cours` : undefined}
+          icon={CalendarDays}
+        />
         <StatTile label="Taux de présence" value={formatPercent(overview.stats.attendanceRate)} detail="Retards et départs anticipés inclus" />
       </div>
 
@@ -86,7 +97,7 @@ export default async function OrganizationDashboard() {
                   </thead>
                   <tbody>
                     {overview.groups.map((group) => {
-                      const status = GROUP_STATUS[group.status] ?? GROUP_STATUS.active!;
+                      const status = groupStatusBadge(group.status, group.startDate);
                       return (
                         <Tr key={group.id}>
                           <Td>
@@ -123,7 +134,10 @@ export default async function OrganizationDashboard() {
               <ul className="divide-y divide-line">
                 {upcoming.map((session) => (
                   <li key={session.id} className="py-3">
-                    <p className="font-medium">Session {session.number} · {session.title}</p>
+                    <p className="font-medium">
+                      Session {session.number} · {session.title}
+                      {session.status === 'in_progress' ? <Badge variant="orange" className="ml-2">En cours</Badge> : null}
+                    </p>
                     <p className="text-sm text-ink-muted">{session.groupName} · {formatShortDate(session.date)} · {formatTimeRange(session.startTime, session.endTime)}</p>
                   </li>
                 ))}

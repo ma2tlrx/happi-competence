@@ -22,7 +22,7 @@ export function SituationChart({ data, title }: { data: SituationDatum[]; title:
       <figcaption className="mb-2 text-sm font-semibold text-ink">{title}</figcaption>
       <div style={{ height: Math.max(160, rows.length * 30 + 30) }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={rows} layout="vertical" margin={{ top: 0, right: 36, bottom: 0, left: 0 }}>
+          <BarChart accessibilityLayer={false} data={rows} layout="vertical" margin={{ top: 0, right: 36, bottom: 0, left: 0 }}>
             <CartesianGrid horizontal={false} stroke="#e5e5e0" />
             <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: '#4b6166' }} />
             <YAxis type="category" dataKey="label" width={150} tick={{ fontSize: 12, fill: '#102c32' }} />
@@ -49,7 +49,7 @@ export function CohortChart({ data }: { data: CohortDatum[] }) {
     <figure aria-hidden className="min-w-0">
       <div style={{ height: Math.max(200, data.length * 56 + 60) }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} layout="vertical" margin={{ top: 0, right: 44, bottom: 0, left: 0 }}>
+          <BarChart accessibilityLayer={false} data={data} layout="vertical" margin={{ top: 0, right: 44, bottom: 0, left: 0 }}>
             <CartesianGrid horizontal={false} stroke="#e5e5e0" />
             <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value} %`} tick={{ fontSize: 12, fill: '#4b6166' }} />
             <YAxis type="category" dataKey="name" width={150} tick={{ fontSize: 12, fill: '#102c32' }} />

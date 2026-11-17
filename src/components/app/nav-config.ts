@@ -11,6 +11,7 @@ import {
   History,
   KeyRound,
   LayoutDashboard,
+  LifeBuoy,
   MessageSquareHeart,
   MessageSquareWarning,
   Layers,
@@ -40,6 +41,9 @@ export const SPACE_LABELS: Record<AppSpace, string> = {
   admin: 'Administration',
 };
 
+/** Lien vers le centre d'aide, en fin de menu de chaque espace. */
+const HELP: NavGroup = { items: [{ href: '/aide', label: 'Aide', icon: LifeBuoy }] };
+
 export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
   participant: [
     {
@@ -63,6 +67,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/participant/profil', label: 'Mon profil', icon: User },
       ],
     },
+    HELP,
   ],
   organisme: [
     {
@@ -79,6 +84,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/organisme/signalements', label: 'Signaler un problème', icon: MessageSquareWarning },
       ],
     },
+    HELP,
   ],
   formateur: [
     {
@@ -92,6 +98,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/formateur/registre', label: 'Mon registre', icon: BadgeCheck },
       ],
     },
+    HELP,
   ],
   admin: [
     {
@@ -137,5 +144,6 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/admin/journal-activite', label: 'Journal d’activité', icon: History },
       ],
     },
+    HELP,
   ],
 };

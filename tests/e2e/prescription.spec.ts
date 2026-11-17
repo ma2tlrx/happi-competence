@@ -1,6 +1,17 @@
 import { expect, test } from '@playwright/test';
 
+import { service } from './fixtures';
 import { login, unique } from './helpers';
+
+// Adresses créées par le test, retirées à la fin : sinon chaque exécution ajoute une personne au
+// groupe Horizon (capacité limitée) et la démonstration finit par être pleine.
+const created: string[] = [];
+test.afterEach(async () => {
+  for (const email of created.splice(0)) {
+    await service.from('referrals').delete().eq('email', email);
+    await service.from('participants').delete().eq('email', email);
+  }
+});
 
 /**
  * Prescription en ligne : le conseiller oriente une personne, l'administrateur l'affecte à un groupe,
@@ -12,6 +23,7 @@ test('un organisme oriente une personne, l’administrateur l’affecte, la pers
   const firstName = 'Orientée';
   const lastName = `E2e${id}`;
   const email = `orientee.${id}@demo.happi.test`;
+  created.push(email);
 
   // 1. Le conseiller remplit la fiche d'orientation.
   const prescriber = await browser.newPage();
@@ -20,7 +32,7 @@ test('un organisme oriente une personne, l’administrateur l’affecte, la pers
   await prescriber.getByRole('link', { name: 'Orienter une personne' }).first().click();
   await expect(prescriber.getByRole('heading', { level: 1 })).toHaveText('Orienter une personne');
   await prescriber.getByLabel('Prénom').fill(firstName);
-  await prescriber.getByLabel('Nom', { exact: true }).fill(lastName);
+  await prescriber.getByRole('textbox', { name: 'Nom', exact: true }).fill(lastName);
   await prescriber.getByLabel('Adresse e-mail de la personne').fill(email);
   await prescriber.getByLabel('Tranche d’âge').selectOption('18_25');
   await prescriber.getByLabel('Motif de l’orientation').fill('Souhaite reprendre confiance et travailler la prise de parole avant une formation.');
@@ -46,7 +58,8 @@ test('un organisme oriente une personne, l’administrateur l’affecte, la pers
   const horizon = groupSelect.locator('option', { hasText: 'Horizon' }).first();
   await groupSelect.selectOption(await horizon.getAttribute('value') ?? '');
   await admin.getByRole('button', { name: 'Affecter au groupe' }).click();
-  await expect(admin.getByText(/Personne affectée au groupe/)).toBeVisible();
+  // Le message de confirmation disparaît dès que la fiche se met à jour : on attend l'état « Affectée ».
+  await expect(admin.getByText('Affectée', { exact: true })).toBeVisible();
   await admin.reload();
   await expect(admin.getByText('Acceptée', { exact: true }).first()).toBeVisible();
 

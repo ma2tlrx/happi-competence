@@ -6,6 +6,7 @@ import { SessionStatusBadge } from '@/components/passport/session-status';
 import { Button } from '@/components/ui/button';
 import { Card, CardBody, CardHeader, EmptyState, PageHeader, StatTile } from '@/components/ui/primitives';
 import { requireRole } from '@/lib/auth/session';
+import { displayGroupStatus, isUpcomingSession } from '@/lib/listing-rules';
 import { DROPOUT_REASON_LABELS } from '@/lib/outcomes/dropout';
 import { loadDropoutAlerts } from '@/lib/outcomes/load';
 import { createClient } from '@/lib/supabase/server';
@@ -91,8 +92,8 @@ export default async function TrainerDashboard() {
       ) : null}
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatTile label="Groupes en cours" value={groups.filter((group) => group.status === 'active').length} icon={Users} />
-        <StatTile label="Sessions à venir" value={active.length} icon={CalendarDays} />
+        <StatTile label="Groupes en cours" value={groups.filter((group) => displayGroupStatus({ status: group.status, startDate: group.start_date }, today) === 'active').length} icon={Users} />
+        <StatTile label="Sessions à venir" value={sessions.filter((session) => isUpcomingSession(session, today)).length} icon={CalendarDays} />
         <StatTile label="Sessions réalisées" value={done.length} icon={ClipboardCheck} />
         <StatTile label="Évaluations à compléter" value={pending.length} detail={pluralize(participants, 'participant suivi', 'participants suivis')} icon={ClipboardPen} />
       </div>

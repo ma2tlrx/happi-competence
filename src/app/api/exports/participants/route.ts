@@ -1,14 +1,18 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
 import { getCurrentUser, hasPermission } from '@/lib/auth/session';
+import { filterOrgParticipants } from '@/lib/listing-rules';
 import { getOrganizationOverview } from '@/lib/organization';
 import { createClient } from '@/lib/supabase/server';
 import { formatNumericDate } from '@/lib/utils';
 
 const cell = (value: string) => `"${(/^[=+\-@\t\r]/.test(value) ? `'${value}` : value).replaceAll('"', '""')}"`;
 
-/** Liste des participants visibles (organisme : les siens ; administrateur : tous), au format CSV. */
-export async function GET() {
+/**
+ * Liste des participants visibles (organisme : les siens ; administrateur : tous), au format CSV.
+ * Reprend les filtres de la page (?q=, ?groupe=, ?programme=) ; RLS limite d'office les données.
+ */
+export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Authentification requise.' }, { status: 401 });
   if (!(user.role === 'admin' || (user.role === 'organisme' && hasPermission(user, 'org.exports')))) {
@@ -18,7 +22,11 @@ export async function GET() {
   const overview = await getOrganizationOverview(supabase);
   const lines = [
     ['Nom', 'Prénom', 'E-mail', 'Groupe', 'Programme', 'Entrée', 'Sessions suivies', 'Sessions réalisées', 'Taux de présence', 'Évaluations validées'],
-    ...overview.participants.map((p) => [
+    ...filterOrgParticipants(overview.participants, {
+      q: request.nextUrl.searchParams.get('q'),
+      groupe: request.nextUrl.searchParams.get('groupe'),
+      programme: request.nextUrl.searchParams.get('programme'),
+    }).map((p) => [
       p.lastName,
       p.firstName,
       p.email ?? '',

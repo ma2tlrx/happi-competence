@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 import { myGroupIds } from '@/lib/trainer';
 import { formatDate } from '@/lib/utils';
 
-import { GROUP_STATUS } from '@/components/trainer/labels';
+import { groupStatusBadge } from '@/components/trainer/labels';
 
 import { NewGroupDialog } from './new-group-dialog';
 
@@ -53,7 +53,7 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
               </thead>
               <tbody>
                 {groups.data!.map((group) => {
-                  const status = GROUP_STATUS[group.status] ?? GROUP_STATUS.active!;
+                  const status = groupStatusBadge(group.status, group.start_date);
                   const groupSessions = (sessions.data ?? []).filter((row) => row.group_id === group.id);
                   return (
                     <Tr key={group.id}>

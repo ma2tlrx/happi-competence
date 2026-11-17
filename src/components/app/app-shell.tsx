@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 
 import { Avatar } from '@/components/ui/primitives';
 import { Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger } from '@/components/ui/overlays';
@@ -70,6 +70,7 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const [drawer, setDrawer] = useState(false);
+  const logoutForm = useRef<HTMLFormElement>(null);
   // Ferme le menu lors d'un changement de page (ajustement d'état pendant le rendu, sans effet).
   const [lastPath, setLastPath] = useState(pathname);
   if (pathname !== lastPath) {
@@ -157,19 +158,23 @@ export function AppShell({
             <Link
               href="/notifications"
               className="relative flex size-10 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-petrol-50 hover:text-ink"
-              aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} non lue${unreadCount > 1 ? 's' : ''}` : 'Notifications'}
             >
+              {/* Nom accessible tiré du contenu (« Notifications, 3 non lues ») : il contient le nombre affiché. */}
               <Bell className="size-5" aria-hidden />
+              <span className="sr-only">Notifications{unreadCount > 0 ? ', ' : ''}</span>
               {unreadCount > 0 ? (
                 <span className="absolute top-1.5 right-1.5 flex min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-[0.625rem] leading-4 font-bold text-petrol-950">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               ) : null}
+              {unreadCount > 0 ? <span className="sr-only">{` non lue${unreadCount > 1 ? 's' : ''}`}</span> : null}
             </Link>
             <Menu>
-              <MenuTrigger className="flex items-center gap-2 rounded-md p-1 transition-colors hover:bg-petrol-50" aria-label={`Menu du compte de ${user.firstName}`}>
+              {/* Nom accessible porté par le contenu (et non aria-label) : il reprend le prénom affiché. */}
+              <MenuTrigger className="flex items-center gap-2 rounded-md p-1 transition-colors hover:bg-petrol-50">
                 <Avatar person={person} size="sm" />
-                <span className="hidden max-w-40 truncate pr-1 text-sm font-medium text-ink sm:block">{user.firstName}</span>
+                <span className="sr-only">Menu du compte de </span>
+                <span className="sr-only max-w-40 truncate pr-1 text-sm font-medium text-ink sm:not-sr-only sm:block">{user.firstName}</span>
               </MenuTrigger>
               <MenuContent>
                 <MenuLabel>
@@ -208,16 +213,15 @@ export function AppShell({
                   </Link>
                 </MenuItem>
                 <MenuSeparator />
-                <form action="/deconnexion" method="post">
-                  <MenuItem asChild>
-                    <button type="submit" className="w-full">
-                      <LogOut aria-hidden />
-                      Me déconnecter
-                    </button>
-                  </MenuItem>
-                </form>
+                {/* Le menu se ferme (et se démonte) au choix d'une entrée : un formulaire placé dans le menu
+                    disparaîtrait avant son envoi. Le formulaire de déconnexion reste donc hors du menu. */}
+                <MenuItem onSelect={() => logoutForm.current?.requestSubmit()}>
+                  <LogOut aria-hidden />
+                  Me déconnecter
+                </MenuItem>
               </MenuContent>
             </Menu>
+            <form ref={logoutForm} action="/deconnexion" method="post" hidden />
           </div>
         </div>
       </header>

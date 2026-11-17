@@ -1,6 +1,8 @@
 import 'server-only';
 
+import { parisDate } from '@/lib/attendance/signature';
 import { attendanceRate } from '@/lib/evaluation-engine';
+import { isUpcomingSession } from '@/lib/listing-rules';
 import type { ServerClient } from '@/lib/supabase/server';
 
 export type OrgParticipantRow = {
@@ -81,7 +83,7 @@ export async function getOrganizationOverview(supabase: ServerClient) {
 
   const completedSessionIds = new Set(sessions.filter((session) => session.status === 'completed').map((session) => session.id));
   const globalRate = attendanceRate(attendance.filter((row) => completedSessionIds.has(row.session_id)).map((row) => row.status));
-  const today = new Date().toISOString().slice(0, 10);
+  const today = parisDate();
 
   return {
     participants,
@@ -116,7 +118,9 @@ export async function getOrganizationOverview(supabase: ServerClient) {
       programs: new Set(groups.map((group) => group.programs?.id).filter(Boolean)).size,
       participants: participants.length,
       completedSessions: sessions.filter((session) => session.status === 'completed').length,
-      upcomingSessions: sessions.filter((session) => (session.status === 'planned' || session.status === 'in_progress') && (!session.scheduled_date || session.scheduled_date >= today)).length,
+      // Séances prévues à venir ; une séance en cours n'est plus « à venir ».
+      upcomingSessions: sessions.filter((session) => isUpcomingSession({ status: session.status, date: session.scheduled_date }, today)).length,
+      ongoingSessions: sessions.filter((session) => session.status === 'in_progress').length,
       attendanceRate: globalRate,
     },
     attendance,

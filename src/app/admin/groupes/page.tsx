@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { GROUP_STATUS } from '@/components/trainer/labels';
+import { groupStatusBadge } from '@/components/trainer/labels';
 import { FilterSelect } from '@/components/ui/navigation';
 import { Badge, Card, EmptyState, PageHeader, Table, TableWrap, Td, Th, Tr } from '@/components/ui/primitives';
 import { requireRole } from '@/lib/auth/session';
@@ -40,7 +40,7 @@ export default async function AdminGroupsPage({ searchParams }: { searchParams: 
               <thead><tr><Th>Groupe</Th><Th>Organisme</Th><Th className="text-right">Participants</Th><Th>Formateurs</Th><Th>Statut</Th></tr></thead>
               <tbody>
                 {groups!.map((group) => {
-                  const status = GROUP_STATUS[group.status] ?? GROUP_STATUS.active!;
+                  const status = groupStatusBadge(group.status, group.start_date);
                   return (
                     <Tr key={group.id}>
                       <Td>

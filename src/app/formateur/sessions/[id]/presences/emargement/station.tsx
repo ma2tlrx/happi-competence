@@ -3,7 +3,7 @@
 import { ArrowLeft, CircleCheck, FileDown, Lock, Maximize, Minimize, PenLine } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 
 import { ATTENDANCE_STATUS } from '@/components/passport/session-status';
 import { SignaturePad } from '@/components/attendance/signature-pad';
@@ -58,6 +58,31 @@ export function SigningStation({
   const [attest, setAttest] = useState(false);
   const [pending, start] = useTransition();
   const [fullscreen, setFullscreen] = useState(false);
+  // Au clavier et au lecteur d'écran : le focus suit l'écran affiché (signataire, puis retour à la liste).
+  const signerHeading = useRef<HTMLHeadingElement>(null);
+  const listHeading = useRef<HTMLHeadingElement>(null);
+  const chosenOnce = useRef(false);
+  // L'écran recouvre l'espace formateur : ce qui est dessous devient inerte (ni focus clavier, ni lecteur d'écran).
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const made: Element[] = [];
+    for (let node: HTMLElement | null = root.current; node && node !== document.body; node = node.parentElement) {
+      for (const sibling of Array.from(node.parentElement?.children ?? [])) {
+        // Les zones d'annonce (messages de confirmation) restent actives.
+        if (sibling !== node && !sibling.hasAttribute('inert') && sibling.tagName !== 'SCRIPT' && !sibling.matches('[aria-live]')) {
+          sibling.setAttribute('inert', '');
+          made.push(sibling);
+        }
+      }
+    }
+    return () => made.forEach((element) => element.removeAttribute('inert'));
+  }, []);
+  useEffect(() => {
+    if (selected) {
+      chosenOnce.current = true;
+      signerHeading.current?.focus();
+    } else if (chosenOnce.current) listHeading.current?.focus();
+  }, [selected]);
 
   useEffect(() => {
     const update = () => setFullscreen(Boolean(document.fullscreenElement));
@@ -115,7 +140,7 @@ export function SigningStation({
     });
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-paper">
+    <div ref={root} className="fixed inset-0 z-50 overflow-y-auto bg-paper">
       <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-line bg-white px-4 py-3 sm:px-6">
         <Link href={`/formateur/sessions/${sessionId}/presences`} className="inline-flex min-h-8 items-center gap-1.5 text-sm font-semibold text-petrol-700 hover:text-petrol-950">
           <ArrowLeft className="size-4" aria-hidden />
@@ -159,7 +184,7 @@ export function SigningStation({
           <section aria-labelledby="signataire" className="space-y-4 rounded-xl border border-line bg-white p-5 sm:p-6">
             <div>
               <p className="text-sm text-ink-muted">À signer par</p>
-              <h2 id="signataire" className="font-display text-2xl font-semibold text-ink">
+              <h2 id="signataire" ref={signerHeading} tabIndex={-1} className="font-display text-2xl font-semibold text-ink focus:outline-none">
                 {person.name}
               </h2>
               <p className="text-sm text-ink-muted">Présence : {ATTENDANCE_STATUS[person.status ?? '']?.label ?? '—'}</p>
@@ -205,7 +230,7 @@ export function SigningStation({
         ) : (
           <>
             <section aria-labelledby="a-signer">
-              <h2 id="a-signer" className="mb-3 font-display text-lg font-semibold text-ink">
+              <h2 id="a-signer" ref={listHeading} tabIndex={-1} className="mb-3 font-display text-lg font-semibold text-ink focus:outline-none">
                 Participants présents · {eligible.length - unsigned.length}/{eligible.length} signé(s)
               </h2>
               {eligible.length === 0 ? (

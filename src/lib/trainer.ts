@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { parisDate } from '@/lib/attendance/signature';
 import type { ServerClient } from '@/lib/supabase/server';
 
 export type TrainerSession = {
@@ -48,8 +49,9 @@ export async function myGroupIds(supabase: ServerClient, userId: string) {
   return (data ?? []).map((row) => row.group_id);
 }
 
+/** Date du jour à Paris (AAAA-MM-JJ) : entre minuit et 1 h, la date UTC serait celle de la veille. */
 export function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+  return parisDate();
 }
 
 /**

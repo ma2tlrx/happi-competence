@@ -1,10 +1,25 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
-import { login, unique } from './helpers';
+import { createE2eFixture, demoSessionId, destroyE2eFixture } from './fixtures';
+import { login, signInWith, unique } from './helpers';
 
+// Séance 4 du groupe A : la « séance du jour » le jour de la création de la démonstration.
+const todaySession = () => demoSessionId('Groupe Littoral — automne', 4);
+
+// Présence et évaluation sur un jeu de données propre : une évaluation validée ne se rejoue pas,
+// la séance de la démonstration serait épuisée dès la deuxième exécution.
 test('le formateur saisit une présence et valide une évaluation', async ({ page }) => {
-  await login(page, 'formateur@demo.happi.test');
-  await page.getByRole('link', { name: 'Présences' }).first().click();
+  const f = await createE2eFixture();
+  try {
+    await signInWith(page, f.trainer.email, f.trainer.password);
+    await page.goto(`/formateur/sessions/${f.sessionToday}/presences`);
+    await presenceAndEvaluation(page);
+  } finally {
+    await destroyE2eFixture(f);
+  }
+});
+
+async function presenceAndEvaluation(page: Page) {
   await expect(page).toHaveURL(/\/presences$/);
   const group = page.getByRole('radiogroup').first();
   await group.getByRole('radio').nth(1).click();
@@ -21,11 +36,11 @@ test('le formateur saisit une présence et valide une évaluation', async ({ pag
   const name = await page.locator('#evaluation-titre').innerText();
   await page.getByRole('button', { name: 'Valider l’évaluation' }).click();
   await expect(page.getByText(`Évaluation de ${name.split(' ')[0]} validée.`)).toBeVisible();
-});
+}
 
 test('le lecteur pédagogique reprend là où le formateur s’est arrêté', async ({ page }) => {
   await login(page, 'formateur@demo.happi.test');
-  await page.getByRole('link', { name: 'Ouvrir le lecteur' }).click();
+  await page.goto(`/formateur/sessions/${await todaySession()}/lecteur`);
   await expect(page).toHaveURL(/\/lecteur$/);
   await expect(page.locator('#lecteur-contenu h1')).toBeVisible();
   await page.keyboard.press('ArrowRight');

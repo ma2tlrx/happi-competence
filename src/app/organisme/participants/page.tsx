@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { FilterSelect, Pagination, SearchInput } from '@/components/ui/navigation';
 import { Badge, Card, EmptyState, PageHeader, Table, TableWrap, Td, Th, Tr } from '@/components/ui/primitives';
 import { hasPermission, requireRole } from '@/lib/auth/session';
+import { filterOrgParticipants, orgParticipantFilterQuery } from '@/lib/listing-rules';
 import { getOrganizationOverview } from '@/lib/organization';
 import { createClient } from '@/lib/supabase/server';
 import { formatDate, formatPercent, normalizeText } from '@/lib/utils';
@@ -19,12 +20,9 @@ export default async function OrganizationParticipantsPage({ searchParams }: { s
   const supabase = await createClient();
   const overview = await getOrganizationOverview(supabase);
   const query = normalizeText(q);
-  const filtered = overview.participants.filter(
-    (participant) =>
-      (!query || normalizeText(`${participant.firstName} ${participant.lastName} ${participant.email ?? ''}`).includes(query)) &&
-      (!groupe || participant.groupId === groupe) &&
-      (!programme || participant.programName === programme),
-  );
+  // Même sélection pour la page et l'export CSV.
+  const filters = { q, groupe, programme };
+  const filtered = filterOrgParticipants(overview.participants, filters);
   const pageNumber = Math.max(1, Number(page) || 1);
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const rows = filtered.slice((pageNumber - 1) * PAGE_SIZE, pageNumber * PAGE_SIZE);
@@ -38,9 +36,9 @@ export default async function OrganizationParticipantsPage({ searchParams }: { s
         actions={
           hasPermission(user, 'org.exports') ? (
             <Button asChild variant="outline">
-              <a href="/api/exports/participants" download>
+              <a href={`/api/exports/participants${orgParticipantFilterQuery(filters)}`} download>
                 <Download aria-hidden />
-                Export CSV
+                {query || groupe || programme ? 'Export CSV (sélection)' : 'Export CSV'}
               </a>
             </Button>
           ) : null

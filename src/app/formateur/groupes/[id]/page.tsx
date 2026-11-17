@@ -7,7 +7,7 @@ import { SessionStatusBadge } from '@/components/passport/session-status';
 import { SatisfactionResults } from '@/components/satisfaction/results-view';
 import { ReferralStatusBadge } from '@/components/referrals/display';
 import { CapacityForm, WaitlistAssignButton } from '@/components/referrals/staff-actions';
-import { GROUP_STATUS } from '@/components/trainer/labels';
+import { groupStatusBadge } from '@/components/trainer/labels';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/overlays';
 import { Avatar, Badge, Card, CardBody, CardHeader, EmptyState, Notice, PageHeader, Table, TableWrap, Td, Th, Tr } from '@/components/ui/primitives';
@@ -104,7 +104,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const staffName = new Map((staff.data ?? []).map((person) => [person.id, `${person.first_name} ${person.last_name}`]));
   const canManage = hasPermission(user, 'groups.manage');
   const canLink = hasPermission(user, 'participants.link_organization');
-  const status = GROUP_STATUS[group.status] ?? GROUP_STATUS.active!;
+  const status = groupStatusBadge(group.status, group.start_date);
   // Présences comptées sur les seules sessions terminées, comme le dénominateur (et comme l'espace organisme).
   const completedIds = new Set((sessions.data ?? []).filter((session) => session.status === 'completed').map((session) => session.id));
   const surveyDates = satisfactionWindow({

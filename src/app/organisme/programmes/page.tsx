@@ -1,7 +1,7 @@
 import { Layers } from 'lucide-react';
 import type { Metadata } from 'next';
 
-import { GROUP_STATUS } from '@/components/trainer/labels';
+import { groupStatusBadge } from '@/components/trainer/labels';
 import { SessionSteps } from '@/components/ui/level-meter';
 import { Badge, Card, CardBody, EmptyState, PageHeader } from '@/components/ui/primitives';
 import { requireRole } from '@/lib/auth/session';
@@ -23,7 +23,7 @@ export default async function OrganizationProgramsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {overview.groups.map((group) => {
-            const status = GROUP_STATUS[group.status] ?? GROUP_STATUS.active!;
+            const status = groupStatusBadge(group.status, group.startDate);
             const next = overview.sessions.find((session) => session.groupId === group.id && session.status !== 'completed' && session.status !== 'cancelled');
             return (
               <Card key={group.id}>

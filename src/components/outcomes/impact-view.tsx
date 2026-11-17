@@ -24,33 +24,33 @@ function FilterForm({ access, action, showOrganization }: { access: ImpactAccess
   const control = 'h-10 w-full rounded-md border border-line-strong bg-white px-3 text-[0.9375rem] text-ink focus-visible:outline-2 focus-visible:outline-orange-500';
   return (
     <form method="get" action={action} className="mb-6 grid gap-3 rounded-lg border border-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-5 lg:items-end">
-      <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">
-        Du
-        <input type="date" name="du" defaultValue={filters.from ?? ''} className={control} />
-      </label>
-      <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">
-        Au
-        <input type="date" name="au" defaultValue={filters.to ?? ''} className={control} />
-      </label>
-      <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">
-        Programme
-        <select name="programme" defaultValue={filters.programId ?? ''} className={control}>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="impact-du" className="text-sm font-semibold text-ink">Du</label>
+        <input id="impact-du" type="date" name="du" defaultValue={filters.from ?? ''} className={control} />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="impact-au" className="text-sm font-semibold text-ink">Au</label>
+        <input id="impact-au" type="date" name="au" defaultValue={filters.to ?? ''} className={control} />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="impact-programme" className="text-sm font-semibold text-ink">Programme</label>
+        <select id="impact-programme" name="programme" defaultValue={filters.programId ?? ''} className={control}>
           <option value="">Tous les programmes</option>
           {access.programs.map((program) => (
             <option key={program.id} value={program.id}>{program.name}</option>
           ))}
         </select>
-      </label>
+      </div>
       {showOrganization ? (
-        <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">
-          Organisme
-          <select name="organisme" defaultValue={filters.organizationId ?? ''} className={control}>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="impact-organisme" className="text-sm font-semibold text-ink">Organisme</label>
+          <select id="impact-organisme" name="organisme" defaultValue={filters.organizationId ?? ''} className={control}>
             <option value="">Tous les organismes</option>
             {access.organizations.map((organization) => (
               <option key={organization.id} value={organization.id}>{organization.name}</option>
             ))}
           </select>
-        </label>
+        </div>
       ) : null}
       <div className="flex flex-wrap gap-2">
         <Button type="submit">Appliquer</Button>

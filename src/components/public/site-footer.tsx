@@ -69,6 +69,9 @@ export function SiteFooter({ email, phones, showResults = false }: { email: stri
             <li>
               <Link href="/contact" className="hover:text-white">Formulaire de contact</Link>
             </li>
+            <li>
+              <Link href="/aide" className="hover:text-white">Centre d’aide</Link>
+            </li>
           </ul>
         </div>
       </div>
