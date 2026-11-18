@@ -151,7 +151,7 @@ export function AppShell({
           >
             <MenuIcon className="size-5" aria-hidden />
           </button>
-          <Link href="/" className="flex items-center lg:hidden" aria-label="Retour au site HAPPI">
+          <Link href="/" className="flex min-h-10 items-center lg:hidden" aria-label="Retour au site HAPPI">
             <Image src="/brand/happi-logotype-petrole.png" alt="HAPPI" width={800} height={305} className="h-5 w-auto" />
           </Link>
           <div className="ml-auto flex items-center gap-1.5">
