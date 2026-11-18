@@ -27,7 +27,7 @@ export default async function ComptePage() {
   return (
     <>
       <PageHeader title="Mon compte" description={`${ROLE_LABELS[user.role]} · compte créé le ${formatDate(profile?.created_at)}`} />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="space-y-6">
           <Card>
             <CardHeader title="Informations personnelles" />

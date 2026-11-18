@@ -5,7 +5,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 const base =
-  'inline-flex shrink-0 select-none items-center justify-center gap-2 whitespace-nowrap font-semibold ' +
+  'inline-flex shrink-0 select-none items-center justify-center gap-2 max-w-full font-semibold max-sm:text-center max-sm:leading-snug sm:whitespace-nowrap ' +
   'transition-[background-color,color,border-color,box-shadow,transform] duration-150 ease-out ' +
   'active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 ' +
   'aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:shrink-0';
@@ -23,9 +23,9 @@ const variants = {
 } as const;
 
 const sizes = {
-  sm: 'h-8 rounded-sm px-3 text-sm [&_svg]:size-4',
-  md: 'h-10 rounded-md px-4 text-[0.9375rem] [&_svg]:size-[1.125rem]',
-  lg: 'h-12 rounded-md px-6 text-base [&_svg]:size-5',
+  sm: 'min-h-8 rounded-sm px-3 max-sm:py-1 text-sm [&_svg]:size-4',
+  md: 'min-h-10 rounded-md px-4 max-sm:py-2 text-[0.9375rem] [&_svg]:size-[1.125rem]',
+  lg: 'min-h-12 rounded-md px-6 max-sm:py-2.5 text-base [&_svg]:size-5',
   icon: 'size-10 rounded-md [&_svg]:size-5',
   'icon-sm': 'size-8 rounded-sm [&_svg]:size-4',
 } as const;

@@ -182,13 +182,26 @@
     cursor: not-allowed;
   }
 
-  /* Empêche le zoom automatique d'iOS dans les champs de formulaire */
-  @media (max-width: 640px) {
-    input,
-    select,
-    textarea {
-      font-size: 16px;
-    }
+}
+
+/* Téléphone : hors des couches pour l'emporter sur les classes utilitaires.
+   - champs à 16 px minimum (sinon iOS zoome au focus) ;
+   - cases et boutons radio d'au moins 24 px ;
+   - liens et boutons sans marge propre : zone tactile d'au moins 24 px (WCAG 2.5.8). */
+@media (max-width: 768px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+  input[type='checkbox'],
+  input[type='radio'] {
+    min-width: 1.5rem;
+    min-height: 1.5rem;
+  }
+  a:not([class*=' p']):not([class^='p']):not([class*='sr-only']):not([class*='block']):not([class*='flex']),
+  button:not([class*=' p']):not([class^='p']):not([class*='sr-only']):not([class*='block']):not([class*='flex']):not([class*='size-']) {
+    padding-block: 0.25rem;
   }
 }
 

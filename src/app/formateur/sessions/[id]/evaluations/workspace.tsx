@@ -324,7 +324,7 @@ export function EvaluationWorkspace({
       </nav>
 
       {/* Formulaire d'évaluation */}
-      <motion.section key={currentId} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} aria-labelledby="evaluation-titre" className="min-w-0 space-y-5 pb-24">
+      <motion.section key={currentId} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.25 }} aria-labelledby="evaluation-titre" className="min-w-0 space-y-5 pb-24">
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-white px-5 py-4">
           <div className="flex items-center gap-3">
             <Avatar person={{ first_name: current.firstName, last_name: current.lastName }} size="lg" />
