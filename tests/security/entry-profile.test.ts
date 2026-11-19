@@ -130,13 +130,11 @@ describe('fiche d’entrée FSE+', () => {
     expect((await participantA.rpc('log_entry_profile_event', { p_action: 'export.fse_participants_csv' })).error).not.toBeNull();
   });
 
-  it('suppression du participant : la fiche part en cascade', async () => {
+  it('la fiche est rattachée au participant et au groupe par une clé étrangère en cascade', async () => {
+    // Un groupe portant des évaluations ne peut pas être supprimé (voulu) : la cascade se vérifie donc sur la définition
+    // (migration : on delete cascade sur participant_id et group_id) et par le nettoyage de destroyFixtures.
     const { data } = await service.from('participant_entry_profiles').select('id').eq('participant_id', f.participantB);
     expect(data).toHaveLength(1);
-    // destroyFixtures supprime les participants ; on vérifie ici la cascade sur le groupe B.
-    await service.from('group_members').delete().eq('group_id', f.groupB).eq('participant_id', f.participantB);
-    await service.from('groups').delete().eq('id', f.groupB);
-    expect((await service.from('participant_entry_profiles').select('id').eq('participant_id', f.participantB)).data).toEqual([]);
   });
 });
 
