@@ -20,6 +20,7 @@ const s = StyleSheet.create({
   skillName: { width: 170, fontFamily: 'Helvetica-Bold', fontSize: 9.5, paddingRight: 8 },
   level: { fontSize: 9.5, color: C.petrol, fontFamily: 'Helvetica-Bold' },
   descriptor: { fontSize: 8.5, color: C.muted, marginTop: 1 },
+  mapping: { fontSize: 8, color: C.petrol, marginTop: 1 },
   method: { flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: C.paper, borderRadius: 6, padding: 10, marginTop: 14 },
   footer: { position: 'absolute', bottom: 18, left: 40, right: 40, flexDirection: 'row', justifyContent: 'space-between', fontSize: 7.5, color: C.muted, borderTopWidth: 1, borderTopColor: C.line, paddingTop: 5 },
 });
@@ -58,6 +59,11 @@ export function SkillsCvDocument({ cv, mascotPath, generatedAt, qr = null }: { c
                       {skill.toConfirm ? <Text style={{ fontFamily: 'Helvetica', color: C.muted, fontSize: 8.5 }}> · observée une fois, à confirmer</Text> : null}
                     </Text>
                     {skill.descriptor ? <Text style={s.descriptor}>{skill.descriptor}</Text> : null}
+                    {skill.mappings.length > 0 ? (
+                      <Text style={s.mapping}>
+                        Référentiels publics : {skill.mappings.map((mapping) => `${mapping.label} (${mapping.linkLabel}, ${mapping.source})`).join(' ; ')}
+                      </Text>
+                    ) : null}
                   </View>
                 </View>
               ))}
@@ -75,6 +81,12 @@ export function SkillsCvDocument({ cv, mascotPath, generatedAt, qr = null }: { c
                 {CV_METHOD_MENTION} Chaque niveau a été attribué et validé par un formateur, à partir de comportements observés pendant les mises en situation
                 du programme (jeux coopératifs, débats, débriefings), à un moment donné.
               </Text>
+              {cv.mappingSources.length > 0 ? (
+                <Text style={{ fontSize: 8.5, color: C.muted, marginTop: 3 }}>
+                  Correspondances avec les référentiels publics établies et validées par l’équipe HAPPI, sans effet sur les niveaux observés. Sources :{' '}
+                  {cv.mappingSources.join(' ; ')}.
+                </Text>
+              ) : null}
               {qr ? <Text style={{ fontSize: 8.5, color: C.muted, marginTop: 3 }}>Scannez le QR code pour vérifier ces compétences en ligne (lien à durée limitée, révocable).</Text> : null}
             </View>
           </View>

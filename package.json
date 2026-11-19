@@ -22,6 +22,7 @@
     "demo:seed": "node --env-file-if-exists=.env.local scripts/seed-demo.mjs",
     "demo:purge": "node --env-file-if-exists=.env.local scripts/seed-demo.mjs --purge",
     "admin:code": "node --env-file-if-exists=.env.local scripts/create-access-code.mjs",
+    "referentiels:import": "node --experimental-strip-types --no-warnings --env-file-if-exists=.env.local scripts/import-referentiels-publics.mjs",
     "package:lws": "node scripts/package-lws.mjs"
   },
   "dependencies": {

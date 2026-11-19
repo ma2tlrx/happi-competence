@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 
 import { Logo } from '@/components/brand/logo';
+import { PublicMappings } from '@/components/passport/public-mappings';
 import { LevelMeter } from '@/components/ui/level-meter';
 import { ProvisionalBadge } from '@/components/ui/primitives';
 import type { PublicPassport } from '@/lib/passport-share/public-view';
@@ -131,6 +132,7 @@ function Verified({ passport }: { passport: PublicPassport }) {
                     <Eye className="size-3.5" aria-hidden />
                     Observée sur {skill.observationCount} séance{skill.observationCount > 1 ? 's' : ''}
                   </p>
+                  <PublicMappings mappings={skill.mappings} skillName={skill.name} className="mt-3" />
                 </li>
               ))}
             </ul>

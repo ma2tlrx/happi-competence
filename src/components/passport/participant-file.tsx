@@ -1,4 +1,4 @@
-import { Award, FileDown, FileText } from 'lucide-react';
+import { Award, FileDown, FileSpreadsheet, FileText } from 'lucide-react';
 
 import { BilanView } from '@/components/passport/bilan-view';
 import { EvolutionView } from '@/components/passport/evolution-view';
@@ -73,6 +73,14 @@ export function ParticipantFile({
               <a href={`/api/exports/passeport/${participant.id}`} download>
                 <FileDown aria-hidden />
                 Fiche de compétences (PDF)
+              </a>
+            </Button>
+          ) : null}
+          {canDownload ? (
+            <Button asChild variant="outline">
+              <a href={`/api/exports/resultats/${participant.id}`} download>
+                <FileSpreadsheet aria-hidden />
+                Résultats (CSV)
               </a>
             </Button>
           ) : null}

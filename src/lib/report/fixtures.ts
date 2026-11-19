@@ -3,7 +3,7 @@
  * Structure identique à celle du référentiel publié ; valeurs fixées par scénario.
  */
 import { highlights, levelFor, summarizeProfile, type FrameworkRules, type Observation } from '@/lib/evaluation-engine';
-import type { Passport, PassportFramework } from '@/lib/passport';
+import type { Passport, PassportFramework, PassportSkill } from '@/lib/passport';
 
 const RULES_CT: FrameworkRules = { scaleMin: 1, scaleMax: 5, scaleStep: 1, scoringMode: 'direct', aggregation: 'latest', rounding: 'none' };
 const RULES_HBS: FrameworkRules = { ...RULES_CT, scaleMax: 4 };
@@ -55,6 +55,7 @@ function framework(code: 'transversal' | 'sociocognitive', scores: FixtureScores
       selfValue: null,
       selfQuestion: null,
       lastComment: null,
+      publicMappings: [] as PassportSkill['publicMappings'],
     };
   });
   return {

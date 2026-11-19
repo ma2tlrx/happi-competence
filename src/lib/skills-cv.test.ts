@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { SkillsCvDocument } from '@/lib/pdf/skills-cv-document';
 import { fixturePassport } from '@/lib/report/fixtures';
 
-import { buildSkillsCv, CV_MAX_SKILLS, firstSentence, observedSkillOptions } from './skills-cv';
+import { buildSkillsCv, CV_MAX_MAPPINGS, CV_MAX_SKILLS, firstSentence, observedSkillOptions } from './skills-cv';
 
 const passport = fixturePassport({
   attended: [1, 2],
@@ -41,6 +41,35 @@ describe('CV de compétences', () => {
     const many = fixturePassport({ attended: [1], evaluated: [1], ct: Object.fromEntries(observedCodes().map((code) => [code, [[1, 3]]])) });
     expect(buildSkillsCv(many, null).frameworks.flatMap((f) => f.skills).length).toBeLessThanOrEqual(CV_MAX_SKILLS);
   });
+
+  it('reprend les correspondances validées du passeport, bornées, avec leur source', () => {
+    const withMappings = structuredClone(passport);
+    const skill = withMappings.frameworks[0]!.skills.find((item) => item.code === 'relationnel')!;
+    const source = { code: 'src_a', name: 'Source fictive', publisher: 'Éditeur fictif', version: '1.0' };
+    skill.publicMappings = ['Un', 'Deux', 'Trois'].map((label) => ({ code: label, label, linkType: 'close' as const, source }));
+    const cv = buildSkillsCv(withMappings, ['relationnel']);
+    expect(cv.frameworks[0]!.skills[0]!.mappings).toEqual([
+      { label: 'Un', linkLabel: 'proche', source: 'Source fictive 1.0' },
+      { label: 'Deux', linkLabel: 'proche', source: 'Source fictive 1.0' },
+    ]);
+    expect(CV_MAX_MAPPINGS).toBe(2);
+    expect(cv.mappingSources).toEqual(['Source fictive (Éditeur fictif), version 1.0']);
+    expect(buildSkillsCv(passport, null).mappingSources).toEqual([]);
+  });
+
+  it('reste sur une page avec le maximum de compétences et de correspondances', async () => {
+    const many = fixturePassport({ attended: [1], evaluated: [1], ct: Object.fromEntries(observedCodes().map((code) => [code, [[1, 3]]])) });
+    const source = { code: 'src_a', name: 'Source fictive au nom assez long', publisher: 'Éditeur fictif', version: '1.2.1' };
+    for (const framework of many.frameworks) {
+      for (const skill of framework.skills) {
+        skill.publicMappings = ['Premier élément fictif au libellé plutôt long', 'Second élément fictif'].map((label) => ({ code: label, label, linkType: 'partial' as const, source }));
+      }
+    }
+    const cv = buildSkillsCv(many, null);
+    const mascotPath = join(process.cwd(), 'public', 'brand', 'happi-mascotte.png');
+    const pdf = await renderToBuffer(createElement(SkillsCvDocument, { cv, mascotPath, generatedAt: new Date('2026-11-16') }) as never);
+    expect((pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? []).length).toBe(1);
+  }, 60_000);
 
   it('garde la première phrase du descripteur', () => {
     expect(firstSentence('Première phrase. Deuxième.')).toBe('Première phrase.');

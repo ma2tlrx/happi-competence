@@ -1,4 +1,5 @@
 import type { Passport } from '@/lib/passport';
+import type { PublicSkillMapping } from '@/lib/public-frameworks/mappings';
 import type { ReportContent } from '@/lib/report/content';
 
 /**
@@ -30,6 +31,8 @@ export type PublicSkill = {
   descriptor: string | null;
   /** Nombre de séances où la compétence a été observée. */
   observationCount: number;
+  /** Correspondances validées avec les référentiels publics, source comprise (jamais les propositions). */
+  mappings: PublicSkillMapping[];
 };
 
 export type PublicFramework = {
@@ -102,6 +105,12 @@ export function buildPublicPassport(
             levelLabel: skill.level?.label ?? null,
             descriptor: levelValue === null ? null : (skill.levels.find((descriptor) => descriptor.value === levelValue)?.description ?? null),
             observationCount: new Set(skill.summary.observations.map((observation) => observation.sessionNumber)).size,
+            mappings: skill.publicMappings.map((mapping) => ({
+              code: mapping.code,
+              label: mapping.label,
+              linkType: mapping.linkType,
+              source: { code: mapping.source.code, name: mapping.source.name, publisher: mapping.source.publisher, version: mapping.source.version },
+            })),
           };
         }),
     }));

@@ -1,7 +1,8 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Link2 } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { Button } from '@/components/ui/button';
 import { Badge, Card, CardBody, CardHeader, Notice, PageHeader, ProvisionalBadge } from '@/components/ui/primitives';
 import { requireRole } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
@@ -24,7 +25,18 @@ export default async function FrameworksPage() {
 
   return (
     <>
-      <PageHeader title="Référentiels" description="Compétences, catégories, échelles, critères d’observation et correspondances avec les sessions, versionnés." />
+      <PageHeader
+        title="Référentiels"
+        description="Compétences, catégories, échelles, critères d’observation et correspondances avec les sessions, versionnés."
+        actions={
+          <Button asChild variant="outline">
+            <Link href="/admin/referentiels/correspondances">
+              <Link2 aria-hidden />
+              Correspondances ROME et ESCO
+            </Link>
+          </Button>
+        }
+      />
       <Notice className="mb-6" title="Comment fonctionnent les versions">
         Une version publiée est figée : pour faire évoluer un référentiel, créez une nouvelle version (copie modifiable), publiez-la, puis activez-la pour un programme.
         Chaque évaluation conserve la version et les critères appliqués au moment où elle a été validée.
