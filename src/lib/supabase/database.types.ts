@@ -307,6 +307,196 @@ export type Database = {
         }
         Relationships: []
       }
+      calibration_exercises: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          instructions: string | null
+          session_id: string
+          status: string
+          title: string
+        }
+        ComputedFields: never
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          instructions?: string | null
+          session_id: string
+          status?: string
+          title: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          instructions?: string | null
+          session_id?: string
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calibration_exercises_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calibration_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          created_by: string | null
+          criteria: Json
+          exercise_id: string | null
+          id: string
+          official_revision: number | null
+          origin: string
+          participant_id: string
+          rater_id: string
+          session_id: string
+          status: string
+          submitted_at: string | null
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          exercise_id?: string | null
+          id?: string
+          official_revision?: number | null
+          origin: string
+          participant_id: string
+          rater_id: string
+          session_id: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          exercise_id?: string | null
+          id?: string
+          official_revision?: number | null
+          origin?: string
+          participant_id?: string
+          rater_id?: string
+          session_id?: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calibration_ratings_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "calibration_exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calibration_ratings_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calibration_ratings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calibration_scores: {
+        Row: {
+          comment: string | null
+          rating_id: string
+          score: number | null
+          score_source: string
+          skill_id: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          comment?: string | null
+          rating_id: string
+          score?: number | null
+          score_source?: string
+          skill_id: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          rating_id?: string
+          score?: number | null
+          score_source?: string
+          skill_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calibration_scores_rating_id_fkey"
+            columns: ["rating_id"]
+            isOneToOne: false
+            referencedRelation: "calibration_ratings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calibration_scores_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reliability_settings: {
+        Row: {
+          computed_at: string | null
+          id: boolean
+          min_pairs: number
+          publish: boolean
+          snapshot: Json | null
+          updated_at: string
+          updated_by: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          computed_at?: string | null
+          id?: boolean
+          min_pairs?: number
+          publish?: boolean
+          snapshot?: Json | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          computed_at?: string | null
+          id?: boolean
+          min_pairs?: number
+          publish?: boolean
+          snapshot?: Json | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           audience: string | null
@@ -3862,6 +4052,46 @@ export type Database = {
       }
       get_public_catalog: { Args: Record<PropertyKey, never>; Returns: Json }
       get_public_results: { Args: Record<PropertyKey, never>; Returns: Json }
+      start_second_rating: { Args: { p_session_id: string }; Returns: Json }
+      save_second_rating: {
+        Args: { p_comment?: string | null; p_criteria?: Json; p_rating_id: string; p_scores?: Json }
+        Returns: string
+      }
+      submit_second_rating: { Args: { p_rating_id: string }; Returns: undefined }
+      get_my_second_ratings: {
+        Args: { p_session_id?: string | null }
+        Returns: {
+          comment: string | null
+          criteria: Json
+          exercise_id: string | null
+          exercise_instructions: string | null
+          exercise_status: string | null
+          exercise_title: string | null
+          group_name: string
+          origin: string
+          participant_id: string
+          participant_label: string
+          program_id: string
+          rating_id: string
+          session_date: string | null
+          session_id: string
+          session_number: number
+          session_status: string
+          session_title: string
+          status: string
+          submitted_at: string | null
+          updated_at: string
+        }[]
+      }
+      get_second_rating_feedback: { Args: { p_rating_id: string }; Returns: Json }
+      create_calibration_exercise: {
+        Args: { p_instructions: string | null; p_participant_ids: string[]; p_rater_ids: string[]; p_session_id: string; p_title: string }
+        Returns: Json
+      }
+      close_calibration_exercise: { Args: { p_exercise_id: string }; Returns: undefined }
+      cancel_second_rating: { Args: { p_rating_id: string }; Returns: undefined }
+      log_reliability_export: { Args: { p_include_demo: boolean; p_rows: number }; Returns: undefined }
+      get_public_reliability: { Args: Record<PropertyKey, never>; Returns: Json }
       health_check: { Args: Record<PropertyKey, never>; Returns: boolean }
       export_platform_data: { Args: { p_organization_id?: string | null }; Returns: Json }
       import_pedagogical_version: {

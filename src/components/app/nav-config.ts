@@ -19,6 +19,7 @@ import {
   Mail,
   Radar,
   Route,
+  Scale,
   Send,
   Settings,
   Share2,
@@ -95,6 +96,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/formateur/programmes', label: 'Programmes', icon: BookOpen, mobile: true },
         { href: '/formateur/orientations', label: 'Orientations', icon: Send },
         { href: '/formateur/suivis', label: 'Suivis', icon: CalendarClock },
+        { href: '/formateur/seconde-cotation', label: 'Seconde cotation', icon: Scale },
         { href: '/formateur/registre', label: 'Mon registre', icon: BadgeCheck },
       ],
     },
@@ -133,6 +135,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/admin/impact', label: 'Impact', icon: TrendingUp },
         { href: '/admin/suivis', label: 'Suivis', icon: CalendarClock },
         { href: '/admin/qualite', label: 'Qualité', icon: ShieldCheck },
+        { href: '/admin/fiabilite', label: 'Fiabilité de la mesure', icon: Scale },
       ],
     },
     {
