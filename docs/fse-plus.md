@@ -12,6 +12,12 @@ n'autorisait pas l'accès à `eur-lex.europa.eu`, `fse.gouv.fr`, `legifrance.gou
 Les informations ci-dessous proviennent d'extraits renvoyés par un moteur de recherche, qui citent ces documents. Chaque point non lu dans
 le texte source est marqué **à vérifier**.
 
+Nouvelle tentative le 19 novembre 2026, après ouverture réseau de `eur-lex.europa.eu`, `ec.europa.eu`, `travail-emploi.gouv.fr` et
+`www.service-public.fr` : **toujours aucune lecture possible**. EUR-Lex renvoie une réponse vide (code 202, page de vérification anti-robot) ;
+`travail-emploi.gouv.fr` refuse la requête (« Request Rejected ») ; `www.service-public.fr` redirige vers `www.service-public.gouv.fr`
+(hôte non ouvert) ; la boîte à outils de la Commission est sur `sfc.ec.europa.eu` (hôte non ouvert). Les points « à vérifier » restent donc
+à contrôler par une personne, navigateur en main, sur les liens ci-dessous.
+
 | Réf. | Source | Ce qu'on en a tiré | Lu en entier ? |
 | --- | --- | --- | --- |
 | [R1] | Règlement (UE) 2021/1057 du 24 juin 2021 (FSE+), JO L 231 du 30.6.2021 — <https://eur-lex.europa.eu/eli/reg/2021/1057> | Annexe I : indicateurs communs de réalisation et de résultat pour les participants ; art. 2 : définition de l'indicateur de résultat à long terme (« effets six mois après que le participant a quitté l'opération ») | Non — **à vérifier** |
