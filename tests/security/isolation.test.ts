@@ -215,9 +215,8 @@ describe('visiteur non connecté et fonctions réservées au serveur', () => {
 
 describe('codes d’accès et journal', () => {
   it('ne stocke jamais le code en clair et ne l’accepte qu’une seule fois', async () => {
-    const admin = await service.from('profiles').select('id').eq('role', 'admin').limit(1).single();
-    expect(admin.data).not.toBeNull();
-    // Création par la fonction métier, au nom d'un administrateur, via la clé de service.
+    // Aucun compte n'est nécessaire (l'intégration continue démarre une base vide) : on contrôle la fonction métier
+    // et ce que contient la table, sans dépendre des données de démonstration.
     const created = await service.rpc('check_invitation_code', { p_code: 'inexistant' });
     expect(created.data).toMatchObject({ valid: false, reason: 'invalid' });
     const columns = await service.from('invitation_codes').select('*').limit(1);
