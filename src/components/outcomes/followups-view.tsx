@@ -80,7 +80,7 @@ export function FollowupsView({ items, canEdit, participantHref }: { items: Foll
                             groupId={item.groupId}
                             groupName={item.groupName}
                             kind={item.kind}
-                            existing={item.outcome ? { situation: item.outcome.situation, observedOn: item.outcome.observedOn, details: item.outcome.details } : null}
+                            existing={item.outcome ? { situation: item.outcome.situation, observedOn: item.outcome.observedOn, details: item.outcome.details, qualificationObtained: item.outcome.qualificationObtained } : null}
                           />
                         ) : null}
                       </Td>

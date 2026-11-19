@@ -15,6 +15,7 @@ Règles **provisoires** sur les séances terminées : deux dernières présences
 ## Situations des participants (`participant_outcomes`)
 - Une ligne par (participant, groupe, moment) ; moments : `entry`, `exit`, `followup_3m`, `followup_6m`.
 - Situations — **catégories provisoires, à aligner sur les nomenclatures de vos financeurs (FSE+, France Travail, CEJ)** : emploi durable (CDI, CDD ≥ 6 mois), emploi de transition (CDD < 6 mois, intérim, contrat aidé), formation qualifiante ou certifiante, création d'activité, immersion / stage, recherche active d'emploi, autre étape du parcours (soins, logement, mobilité…), sans nouvelles.
+- Ajouts FSE+ (chantier F2, provisoires) : situation « autre formation ou reprise d'études » et case « qualification obtenue » (sortie). Correspondance avec les indicateurs de résultat FSE+ et fiche d'entrée : `docs/fse-plus.md`.
 - Écriture : administrateur ; formateur du groupe (permission `outcomes.write`) ; membre de l'organisme du participant (permission `org.outcomes.write`). Lecture : les mêmes, l'organisme avec `org.impact.read`, et le participant pour ses propres lignes. Suppression : administrateur seulement.
 - Historique : chaque saisie / modification / suppression est journalisée (`outcome.recorded`, `outcome.updated` avec la situation précédente, `outcome.deleted`).
 

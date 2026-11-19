@@ -356,6 +356,33 @@ async function seed() {
     must(await client.from('self_assessments').update({ status: 'completed', comment: 'J’ai hâte de voir ce que les jeux vont révéler.' }).eq('id', assessment.id), 'Clôture auto-évaluation');
   }
 
+  // ── Fiches d'entrée FSE+ (profils fictifs) et situations de sortie du groupe terminé ──
+  // Saisies par la conseillère de la Mission Locale (permission org.entry_profile.manage) : jamais par le formateur.
+  const orgClientA = await signedIn(orgUserA.email, orgUserA.password);
+  const PROFILES = [
+    { labour_status: 'chomeur', unemployment_duration: '12_23_mois', diploma_level: 'niveau_3', age_band: '18_29', gender: 'homme', france_travail_registered: 'oui', cej: 'oui', qpv_resident: 'oui', disability: 'non' },
+    { labour_status: 'inactif', diploma_level: 'sans_diplome', age_band: 'moins_18', gender: 'femme', france_travail_registered: 'non', cej: 'non', disability: 'ne_souhaite_pas_repondre', homeless_or_housing_excl: 'non' },
+    { labour_status: 'chomeur', unemployment_duration: 'moins_6_mois', diploma_level: 'niveau_4', age_band: '18_29', gender: 'homme', france_travail_registered: 'oui', rsa_beneficiary: 'non', rural_area: 'ne_sait_pas' },
+    { labour_status: 'chomeur', unemployment_duration: '24_mois_plus', diploma_level: 'niveau_2', age_band: '30_54', gender: 'femme', rsa_beneficiary: 'oui', rqth: 'oui', disability: 'oui', minority: 'ne_souhaite_pas_repondre' },
+    { labour_status: 'en_emploi', diploma_level: 'niveau_5', age_band: '18_29', gender: 'non_binaire', third_country_national: 'non', zrr_frr_resident: 'non' },
+    { labour_status: 'chomeur', unemployment_duration: '6_11_mois', diploma_level: 'niveau_3', age_band: '18_29', gender: 'homme', third_country_national: 'oui', foreign_background: 'ne_souhaite_pas_repondre', cej: 'oui' },
+  ];
+  const entryRows = [
+    // Inès (compte participant) : fiche commencée par la conseillère, à compléter dans son espace.
+    { participant_id: membersA[0], group_id: groupA.id, entry_date: isoDate(-28), labour_status: 'chomeur' },
+    ...membersA.slice(1, 7).map((participantId, index) => ({ participant_id: participantId, group_id: groupA.id, entry_date: isoDate(-28), ...PROFILES[index] })),
+    ...membersC.map((participantId, index) => ({ participant_id: participantId, group_id: groupC.id, entry_date: isoDate(-40), ...PROFILES[(index + 2) % PROFILES.length] })),
+  ].map((row) => ({ ...row, participant_informed_at: new Date().toISOString() }));
+  must(await orgClientA.from('participant_entry_profiles').insert(entryRows), 'Fiches d’entrée');
+  // Groupe terminé : deux sorties saisies dans les 4 semaines, la troisième reste « non renseignée ».
+  must(
+    await trainerClient.from('participant_outcomes').insert([
+      { participant_id: membersC[0], group_id: groupC.id, kind: 'exit', situation: 'emploi_transition', observed_on: isoDate(-3), qualification_obtained: false, details: 'Intérim, préparation de commandes.' },
+      { participant_id: membersC[1], group_id: groupC.id, kind: 'exit', situation: 'formation_autre', observed_on: isoDate(-2), qualification_obtained: false },
+    ]),
+    'Situations de sortie',
+  );
+
   writeFileSync(join(process.cwd(), '.demo-credentials.json'), `${JSON.stringify({ genere_le: new Date().toISOString(), comptes: credentials }, null, 2)}\n`, { mode: 0o600 });
   console.log(`✔ Démonstration prête : 3 organismes, 3 groupes, ${membersA.length + membersB.length + membersC.length} participants, ${credentials.length} comptes.`);
   console.log('  Identifiants : .demo-credentials.json');

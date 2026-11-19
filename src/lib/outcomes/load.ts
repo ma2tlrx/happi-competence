@@ -17,9 +17,9 @@ import { followupTasks, type FollowupTask } from './schedule';
 const PAGE = 1000;
 const CHUNK = 150;
 
-type Page<T> = PromiseLike<{ data: T[] | null; error: { message: string } | null }>;
+export type Page<T> = PromiseLike<{ data: T[] | null; error: { message: string } | null }>;
 
-async function fetchAll<T>(build: (from: number, to: number) => Page<T>): Promise<T[]> {
+export async function fetchAll<T>(build: (from: number, to: number) => Page<T>): Promise<T[]> {
   const rows: T[] = [];
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await build(from, from + PAGE - 1);
@@ -29,7 +29,7 @@ async function fetchAll<T>(build: (from: number, to: number) => Page<T>): Promis
   }
 }
 
-async function inChunks<T>(ids: string[], build: (chunk: string[], from: number, to: number) => Page<T>): Promise<T[]> {
+export async function inChunks<T>(ids: string[], build: (chunk: string[], from: number, to: number) => Page<T>): Promise<T[]> {
   const unique = [...new Set(ids)];
   const chunks: string[][] = [];
   for (let index = 0; index < unique.length; index += CHUNK) chunks.push(unique.slice(index, index + CHUNK));
@@ -128,7 +128,17 @@ export async function loadImpactDataset(supabase: ServerClient, scope: ImpactSco
   };
 }
 
-export type OutcomeRecord = { id: string; participantId: string; groupId: string | null; kind: string; situation: string; details: string | null; observedOn: string; updatedAt: string };
+export type OutcomeRecord = {
+  id: string;
+  participantId: string;
+  groupId: string | null;
+  kind: string;
+  situation: string;
+  details: string | null;
+  observedOn: string;
+  qualificationObtained: boolean | null;
+  updatedAt: string;
+};
 
 export type FollowupItem = FollowupTask & { participantName: string; organizationName: string | null; outcome: OutcomeRecord | null };
 
@@ -137,12 +147,22 @@ export async function loadFollowups(supabase: ServerClient, scope: ImpactScope, 
   const dataset = await loadImpactDataset(supabase, scope);
   const participantIds = dataset.participants.map((participant) => participant.id);
   const records = await inChunks(participantIds, (chunk, from, to) =>
-    supabase.from('participant_outcomes').select('id, participant_id, group_id, kind, situation, details, observed_on, updated_at').in('participant_id', chunk).range(from, to),
+    supabase.from('participant_outcomes').select('id, participant_id, group_id, kind, situation, details, observed_on, qualification_obtained, updated_at').in('participant_id', chunk).range(from, to),
   );
   const recordByKey = new Map(
     records.map((row) => [
       `${row.participant_id}:${row.group_id ?? ''}:${row.kind}`,
-      { id: row.id, participantId: row.participant_id, groupId: row.group_id, kind: row.kind, situation: row.situation, details: row.details, observedOn: row.observed_on, updatedAt: row.updated_at },
+      {
+        id: row.id,
+        participantId: row.participant_id,
+        groupId: row.group_id,
+        kind: row.kind,
+        situation: row.situation,
+        details: row.details,
+        observedOn: row.observed_on,
+        qualificationObtained: row.qualification_obtained,
+        updatedAt: row.updated_at,
+      },
     ]),
   );
   const lastSession = new Map<string, string>();
@@ -211,7 +231,7 @@ export async function loadDropoutAlerts(supabase: ServerClient, groupIds: string
 export async function loadParticipantOutcomes(supabase: ServerClient, participantId: string): Promise<OutcomeRecord[]> {
   const { data } = await supabase
     .from('participant_outcomes')
-    .select('id, participant_id, group_id, kind, situation, details, observed_on, updated_at')
+    .select('id, participant_id, group_id, kind, situation, details, observed_on, qualification_obtained, updated_at')
     .eq('participant_id', participantId);
   return (data ?? []).map((row) => ({
     id: row.id,
@@ -221,6 +241,7 @@ export async function loadParticipantOutcomes(supabase: ServerClient, participan
     situation: row.situation,
     details: row.details,
     observedOn: row.observed_on,
+    qualificationObtained: row.qualification_obtained,
     updatedAt: row.updated_at,
   }));
 }

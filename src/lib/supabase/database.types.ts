@@ -1466,6 +1466,123 @@ export type Database = {
           },
         ]
       }
+      participant_entry_profiles: {
+        Row: {
+          age_band: string | null
+          cej: string | null
+          created_at: string
+          created_by: string | null
+          diploma_level: string | null
+          disability: string | null
+          education_isced: string | null
+          entry_date: string | null
+          foreign_background: string | null
+          france_travail_registered: string | null
+          gender: string | null
+          group_id: string | null
+          homeless_or_housing_excl: string | null
+          id: string
+          labour_status: string | null
+          minority: string | null
+          participant_confirmed_at: string | null
+          participant_id: string
+          participant_informed_at: string | null
+          qpv_resident: string | null
+          recorded_by: string | null
+          rqth: string | null
+          rsa_beneficiary: string | null
+          rural_area: string | null
+          third_country_national: string | null
+          unemployment_duration: string | null
+          updated_at: string
+          zrr_frr_resident: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          age_band?: string | null
+          cej?: string | null
+          created_at?: string
+          created_by?: string | null
+          diploma_level?: string | null
+          disability?: string | null
+          entry_date?: string | null
+          foreign_background?: string | null
+          france_travail_registered?: string | null
+          gender?: string | null
+          group_id?: string | null
+          homeless_or_housing_excl?: string | null
+          id?: string
+          labour_status?: string | null
+          minority?: string | null
+          participant_confirmed_at?: string | null
+          participant_id: string
+          participant_informed_at?: string | null
+          qpv_resident?: string | null
+          recorded_by?: string | null
+          rqth?: string | null
+          rsa_beneficiary?: string | null
+          rural_area?: string | null
+          third_country_national?: string | null
+          unemployment_duration?: string | null
+          updated_at?: string
+          zrr_frr_resident?: string | null
+        }
+        Update: {
+          age_band?: string | null
+          cej?: string | null
+          created_at?: string
+          created_by?: string | null
+          diploma_level?: string | null
+          disability?: string | null
+          entry_date?: string | null
+          foreign_background?: string | null
+          france_travail_registered?: string | null
+          gender?: string | null
+          group_id?: string | null
+          homeless_or_housing_excl?: string | null
+          id?: string
+          labour_status?: string | null
+          minority?: string | null
+          participant_confirmed_at?: string | null
+          participant_id?: string
+          participant_informed_at?: string | null
+          qpv_resident?: string | null
+          recorded_by?: string | null
+          rqth?: string | null
+          rsa_beneficiary?: string | null
+          rural_area?: string | null
+          third_country_national?: string | null
+          unemployment_duration?: string | null
+          updated_at?: string
+          zrr_frr_resident?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participant_entry_profiles_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participant_entry_profiles_group_id_fkey"
+            columns: ["group_id"]
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participant_entry_profiles_participant_id_fkey"
+            columns: ["participant_id"]
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participant_entry_profiles_recorded_by_fkey"
+            columns: ["recorded_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       participant_needs_assessments: {
         Row: {
           adaptation_needed: boolean
@@ -1594,6 +1711,7 @@ export type Database = {
           kind: string
           observed_on: string
           participant_id: string
+          qualification_obtained: boolean | null
           recorded_by: string | null
           situation: string
           updated_at: string
@@ -1608,6 +1726,7 @@ export type Database = {
           kind: string
           observed_on?: string
           participant_id: string
+          qualification_obtained?: boolean | null
           recorded_by?: string | null
           situation: string
           updated_at?: string
@@ -1621,6 +1740,7 @@ export type Database = {
           kind?: string
           observed_on?: string
           participant_id?: string
+          qualification_obtained?: boolean | null
           recorded_by?: string | null
           situation?: string
           updated_at?: string
@@ -3882,6 +4002,10 @@ export type Database = {
           p_entity_type?: string
           p_metadata?: Json
         }
+        Returns: undefined
+      }
+      log_entry_profile_event: {
+        Args: { p_action: string; p_metadata?: Json; p_participant_id?: string }
         Returns: undefined
       }
       log_quality_export: { Args: { p_from: string; p_to: string }; Returns: undefined }

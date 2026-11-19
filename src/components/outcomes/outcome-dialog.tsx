@@ -17,7 +17,7 @@ export type OutcomeDialogProps = {
   groupId: string | null;
   groupName?: string | null;
   kind: OutcomeKind;
-  existing?: { situation: string; observedOn: string; details: string | null } | null;
+  existing?: { situation: string; observedOn: string; details: string | null; qualificationObtained?: boolean | null } | null;
   size?: 'sm' | 'md';
 };
 
@@ -76,6 +76,23 @@ export function OutcomeDialog({ participantId, participantName, groupId, groupNa
               <Input id={id} name="observedOn" type="date" max={today} defaultValue={existing?.observedOn ?? today} required aria-describedby={describedBy} aria-invalid={invalid || undefined} />
             )}
           </Field>
+          {kind === 'exit' ? (
+            <Field label="Qualification obtenue au terme du parcours" optional error={errors.qualificationObtained} hint="Diplôme, titre ou certification délivré à l’issue d’une évaluation (indicateur FSE+). Laisser vide si vous ne savez pas.">
+              {({ id, describedBy, invalid }) => (
+                <Select
+                  id={id}
+                  name="qualificationObtained"
+                  defaultValue={existing?.qualificationObtained === true ? 'oui' : existing?.qualificationObtained === false ? 'non' : ''}
+                  aria-describedby={describedBy}
+                  aria-invalid={invalid || undefined}
+                >
+                  <option value="">Non renseigné</option>
+                  <option value="oui">Oui</option>
+                  <option value="non">Non</option>
+                </Select>
+              )}
+            </Field>
+          ) : null}
           <Field label="Précisions" optional error={errors.details} hint={`Employeur, intitulé de la formation, démarche en cours… ${OUTCOME_DETAILS_MAX} caractères au plus.`}>
             {({ id, describedBy, invalid }) => (
               <Textarea id={id} name="details" rows={3} maxLength={OUTCOME_DETAILS_MAX} defaultValue={existing?.details ?? ''} aria-describedby={describedBy} aria-invalid={invalid || undefined} />
