@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 
 import { Logo } from '@/components/brand/logo';
 import { localImagePath, resolvePublicBadge, type PublicBadge } from '@/lib/badges/server';
+import { rateLimit, requestIp } from '@/lib/security/rate-limit';
 import { formatDate } from '@/lib/utils';
 
 /**
@@ -19,7 +20,8 @@ export const metadata: Metadata = {
 
 export default async function BadgeVerifierPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const badge = await resolvePublicBadge(id);
+  const limited = await rateLimit('verify', { ip: await requestIp() });
+  const badge = limited ? null : await resolvePublicBadge(id);
   return (
     <div className="min-h-dvh bg-paper">
       <header className="border-b border-line bg-white">
@@ -29,7 +31,11 @@ export default async function BadgeVerifierPage({ params }: { params: Promise<{ 
         </div>
       </header>
       <main id="contenu" className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
-        {!badge ? (
+        {limited ? (
+          <Message icon={ShieldOff} title="Trop de vérifications">
+            {limited}
+          </Message>
+        ) : !badge ? (
           <Message icon={ShieldOff} title="Ce lien de vérification n’est pas disponible">
             Le lien est peut-être incomplet ou erroné. Demandez à la personne concernée de vous le transmettre à nouveau.
           </Message>

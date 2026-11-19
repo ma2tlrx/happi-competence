@@ -8,6 +8,7 @@ import { LevelMeter } from '@/components/ui/level-meter';
 import { ProvisionalBadge } from '@/components/ui/primitives';
 import type { PublicPassport } from '@/lib/passport-share/public-view';
 import { resolvePublicPassport } from '@/lib/passport-share/server';
+import { rateLimit, requestIp } from '@/lib/security/rate-limit';
 import { clientIpFrom } from '@/lib/passport-share/token';
 import { formatDate, formatDateTime, formatScore } from '@/lib/utils';
 
@@ -24,7 +25,9 @@ export const metadata: Metadata = {
 
 export default async function VerifierPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const passport = await resolvePublicPassport(token, clientIpFrom(await headers()));
+  const requestHeaders = await headers();
+  const limited = await rateLimit('verify', { ip: await requestIp() });
+  const passport = limited ? null : await resolvePublicPassport(token, clientIpFrom(requestHeaders));
   return (
     <div className="min-h-dvh bg-paper">
       <header className="border-b border-line bg-white">
@@ -33,8 +36,17 @@ export default async function VerifierPage({ params }: { params: Promise<{ token
           <span className="text-sm font-semibold text-ink-muted">Vérification de passeport</span>
         </div>
       </header>
-      <main id="contenu" className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">{passport ? <Verified passport={passport} /> : <Unavailable />}</main>
+      <main id="contenu" className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">{limited ? <TooManyRequests message={limited} /> : passport ? <Verified passport={passport} /> : <Unavailable />}</main>
     </div>
+  );
+}
+
+function TooManyRequests({ message }: { message: string }) {
+  return (
+    <section className="rounded-xl border border-line bg-white px-6 py-12 text-center">
+      <h1 className="font-display text-xl font-semibold text-ink">Trop de vérifications</h1>
+      <p className="mx-auto mt-2 max-w-md text-ink-muted">{message}</p>
+    </section>
   );
 }
 

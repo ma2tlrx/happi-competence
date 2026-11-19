@@ -87,13 +87,30 @@ function chunks<T>(values: T[], size = 200): T[][] {
  * Secondes cotations soumises et évaluations officielles validées correspondantes (lecture
  * administrateur, sous RLS). Les données de démonstration sont exclues sauf demande explicite.
  */
+const PAGE = 1000;
+
+/** Lit toutes les pages d'une requête : la base ne renvoie que 1 000 lignes par appel, sans erreur au-delà. */
+async function fetchAll<T>(build: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>): Promise<{ data: T[]; error: { message: string } | null }> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await build(from, from + PAGE - 1);
+    if (error) return { data: rows, error };
+    rows.push(...(data ?? []));
+    if (!data || data.length < PAGE) return { data: rows, error: null };
+  }
+}
+
 export async function loadReliabilityDataset(supabase: Supabase, { includeDemo }: { includeDemo: boolean }): Promise<ReliabilityDataset> {
-  const { data: ratingRows, error } = await supabase
-    .from('calibration_ratings')
-    .select('id, session_id, participant_id, rater_id, origin, official_revision, calibration_scores ( skill_id, score )')
-    .eq('status', 'submitted');
+  const { data: ratingRows, error } = await fetchAll((from, to) =>
+    supabase
+      .from('calibration_ratings')
+      .select('id, session_id, participant_id, rater_id, origin, official_revision, calibration_scores ( skill_id, score )')
+      .eq('status', 'submitted')
+      .order('id')
+      .range(from, to),
+  );
   if (error) throw new Error(`Secondes cotations : ${error.message}`);
-  let ratings = ratingRows ?? [];
+  let ratings = ratingRows;
 
   const participantIds = [...new Set(ratings.map((row) => row.participant_id))];
   if (!includeDemo && participantIds.length) {
@@ -108,13 +125,17 @@ export async function loadReliabilityDataset(supabase: Supabase, { includeDemo }
   const sessionIds = [...new Set(ratings.map((row) => row.session_id))];
   const officials: ReliabilityDataset['officials'] = [];
   for (const part of chunks(sessionIds)) {
-    const { data, error: officialError } = await supabase
-      .from('evaluations')
-      .select('session_id, participant_id, evaluator_id, revision, evaluation_scores ( skill_id, score )')
-      .in('session_id', part)
-      .eq('status', 'validated');
+    const { data, error: officialError } = await fetchAll((from, to) =>
+      supabase
+        .from('evaluations')
+        .select('session_id, participant_id, evaluator_id, revision, evaluation_scores ( skill_id, score )')
+        .in('session_id', part)
+        .eq('status', 'validated')
+        .order('id')
+        .range(from, to),
+    );
     if (officialError) throw new Error(`Évaluations officielles : ${officialError.message}`);
-    for (const row of data ?? []) {
+    for (const row of data) {
       officials.push({
         sessionId: row.session_id,
         participantId: row.participant_id,
