@@ -27,6 +27,11 @@ export function SiteFooter({ email, phones, showResults = false }: { email: stri
                 </Link>
               </li>
             ))}
+            <li>
+              <Link href="/methode" className="transition-colors hover:text-white">
+                Notre méthode
+              </Link>
+            </li>
             {showResults ? (
               <li>
                 <Link href="/resultats" className="transition-colors hover:text-white">

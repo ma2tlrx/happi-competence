@@ -54,7 +54,7 @@ export type ExistingEvaluation = {
 };
 type Member = { id: string; name: string; firstName: string; lastName: string; attendance: string | null };
 
-type FormState = {
+export type FormState = {
   scores: Record<string, { score: number | null; comment: string }>;
   criteria: Record<string, { observed: boolean | null; score: number | null }>;
   comments: { observation: string; advice: string; private: string };
@@ -472,7 +472,7 @@ function SaveIndicator({ state, validated, editing, validatedAt }: { state: { st
   );
 }
 
-function FrameworkSection({
+export function FrameworkSection({
   framework,
   form,
   locked,

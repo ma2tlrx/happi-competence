@@ -45,6 +45,7 @@ export function SessionHeader({
           { href: `${base}/presences`, label: 'Présences' },
           { href: `${base}/evaluations`, label: 'Évaluations' },
           { href: `${base}/lecteur`, label: 'Lecteur pédagogique' },
+          { href: `/formateur/seconde-cotation/${session.id}`, label: 'Coter en second' },
         ]}
       />
     </header>
