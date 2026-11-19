@@ -39,6 +39,22 @@ const share = { expiresAt: '2026-12-31T00:00:00.000Z' };
 const now = new Date('2026-11-12T10:00:00.000Z');
 
 describe('vue publique du passeport', () => {
+  it('publie les correspondances validées des seules compétences partagées, source comprise', () => {
+    const value = passport();
+    const source = { code: 'src_a', name: 'Source fictive', publisher: 'Éditeur fictif', version: '1.0' };
+    value.frameworks.find((f) => f.code === 'transversal')!.skills.find((s) => s.code === 'relationnel')!.publicMappings = [
+      { code: 'F1', label: 'Élément fictif', linkType: 'equivalent', source },
+    ];
+    value.frameworks.find((f) => f.code === 'sociocognitive')!.skills.find((s) => s.code === 'cooperation')!.publicMappings = [
+      { code: 'F2', label: 'Élément HBS fictif', linkType: 'close', source },
+    ];
+    const view = buildPublicPassport(value, { includeSociocognitive: false, includeReport: false }, share, null, now);
+    expect(view.frameworks[0]!.skills.find((s) => s.code === 'relationnel')!.mappings).toEqual([{ code: 'F1', label: 'Élément fictif', linkType: 'equivalent', source }]);
+    expect(JSON.stringify(view)).not.toContain('Élément HBS fictif');
+    const withHbs = buildPublicPassport(value, { includeSociocognitive: true, includeReport: false }, share, null, now);
+    expect(JSON.stringify(withHbs)).toContain('Élément HBS fictif');
+  });
+
   it('ne publie que les compétences observées, avec niveau validé, descripteur et nombre de séances', () => {
     const view = buildPublicPassport(passport(), { includeSociocognitive: false, includeReport: false }, share, null, now);
     expect(view.frameworks.map((f) => f.code)).toEqual(['transversal']);

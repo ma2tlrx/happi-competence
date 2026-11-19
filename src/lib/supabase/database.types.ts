@@ -870,6 +870,96 @@ export type Database = {
           },
         ]
       }
+      external_frameworks: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          license: string
+          name: string
+          notes: string | null
+          position: number
+          publisher: string
+          retrieved_on: string
+          source_url: string
+          updated_at: string
+          version: string
+        }
+        ComputedFields: never
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          license: string
+          name: string
+          notes?: string | null
+          position?: number
+          publisher: string
+          retrieved_on: string
+          source_url: string
+          updated_at?: string
+          version: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          license?: string
+          name?: string
+          notes?: string | null
+          position?: number
+          publisher?: string
+          retrieved_on?: string
+          source_url?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      external_skills: {
+        Row: {
+          code: string
+          created_at: string
+          definition: string | null
+          framework_id: string
+          id: string
+          is_active: boolean
+          label: string
+          position: number
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          code: string
+          created_at?: string
+          definition?: string | null
+          framework_id: string
+          id?: string
+          is_active?: boolean
+          label: string
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          definition?: string | null
+          framework_id?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_skills_framework_id_fkey"
+            columns: ["framework_id"]
+            referencedRelation: "external_frameworks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       framework_versions: {
         Row: {
           aggregation: string
@@ -3569,6 +3659,71 @@ export type Database = {
             foreignKeyName: "skill_level_descriptors_skill_id_fkey"
             columns: ["skill_id"]
             referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skill_mappings: {
+        Row: {
+          created_at: string
+          external_skill_id: string
+          framework_id: string
+          id: string
+          justification: string | null
+          link_type: string
+          origin: string
+          proposed_at: string
+          proposed_by: string | null
+          skill_code: string
+          status: string
+          updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          external_skill_id: string
+          framework_id: string
+          id?: string
+          justification?: string | null
+          link_type: string
+          origin?: string
+          proposed_at?: string
+          proposed_by?: string | null
+          skill_code: string
+          status?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          external_skill_id?: string
+          framework_id?: string
+          id?: string
+          justification?: string | null
+          link_type?: string
+          origin?: string
+          proposed_at?: string
+          proposed_by?: string | null
+          skill_code?: string
+          status?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_mappings_external_skill_id_fkey"
+            columns: ["external_skill_id"]
+            referencedRelation: "external_skills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_mappings_framework_id_fkey"
+            columns: ["framework_id"]
+            referencedRelation: "frameworks"
             referencedColumns: ["id"]
           },
         ]

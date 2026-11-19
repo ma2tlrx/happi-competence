@@ -15,6 +15,8 @@ import {
   type ScoringMode,
   type SkillSummary,
 } from '@/lib/evaluation-engine';
+import { loadValidatedMappings } from '@/lib/public-frameworks/load';
+import { mappingKey, type PublicSkillMapping } from '@/lib/public-frameworks/mappings';
 import type { Database } from '@/lib/supabase/database.types';
 
 /**
@@ -35,6 +37,8 @@ export type PassportSkill = {
   selfValue: number | null;
   selfQuestion: string | null;
   lastComment: { text: string; sessionNumber: number } | null;
+  /** Correspondances VALIDÉES avec les référentiels publics (ROME, ESCO…), source comprise. */
+  publicMappings: PublicSkillMapping[];
 };
 
 export type PassportCategory = { code: string; name: string; description: string | null; skills: PassportSkill[] };
@@ -297,7 +301,7 @@ export async function getPassport(supabase: SupabaseClient<Database>, participan
     }
   }
 
-  const [versionsResult, skillsResult, categoriesResult, levelsResult] = await Promise.all([
+  const [versionsResult, skillsResult, categoriesResult, levelsResult, publicMappings] = await Promise.all([
     supabase
       .from('framework_versions')
       .select('id, label, is_provisional, scale_min, scale_max, scale_step, scoring_mode, aggregation, rounding, status, frameworks ( id, code, name, short_name, description, position )')
@@ -305,6 +309,7 @@ export async function getPassport(supabase: SupabaseClient<Database>, participan
     supabase.from('skills').select('id, version_id, code, name, description, position, category_id, is_active, skill_level_descriptors ( level_value, description )').in('version_id', [...versionIds]),
     supabase.from('skill_categories').select('id, version_id, code, name, description, position').in('version_id', [...versionIds]),
     supabase.from('scale_levels').select('version_id, value, label, description').in('version_id', [...versionIds]),
+    loadValidatedMappings(supabase),
   ]);
 
   // Une version par référentiel pour l'affichage : la plus récente utilisée.
@@ -385,6 +390,7 @@ export async function getPassport(supabase: SupabaseClient<Database>, participan
           selfValue: self?.value ?? null,
           selfQuestion: self?.text ?? null,
           lastComment: commented?.comment ? { text: commented.comment, sessionNumber: commented.sessionNumber } : null,
+          publicMappings: publicMappings.get(mappingKey(framework.code, skill.code)) ?? [],
         };
       });
       const categories = (categoriesResult.data ?? [])

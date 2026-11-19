@@ -6,6 +6,8 @@ import type { PassportFramework, PassportSkill } from '@/lib/passport';
 import { AGGREGATION_LABELS } from '@/lib/evaluation-engine';
 import { cn, formatScore } from '@/lib/utils';
 
+import { PublicMappings } from './public-mappings';
+
 /** Évolution session après session : un point par observation validée. */
 export function ObservationTrail({ skill, max, min }: { skill: PassportSkill; min: number; max: number }) {
   const points = skill.summary.observations;
@@ -100,6 +102,7 @@ export function SkillCard({ skill, framework, showSelf }: { skill: PassportSkill
       </div>
 
       {levelText ? <p className="mt-4 text-sm text-ink-muted">{levelText}</p> : null}
+      <PublicMappings mappings={skill.publicMappings} skillName={skill.name} className="mt-4" />
 
       <div className="mt-auto pt-4">
         {skill.summary.observations.length > 0 ? (
