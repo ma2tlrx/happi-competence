@@ -67,7 +67,7 @@ export function OutcomesCard({
                             groupId={group.id}
                             groupName={group.name}
                             kind={kind}
-                            existing={record ? { situation: record.situation, observedOn: record.observedOn, details: record.details } : null}
+                            existing={record ? { situation: record.situation, observedOn: record.observedOn, details: record.details, qualificationObtained: record.qualificationObtained } : null}
                           />
                         ) : null}
                       </Td>

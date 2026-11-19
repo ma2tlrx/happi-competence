@@ -20,6 +20,11 @@ const outcomeSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide.')
     .refine((value) => value <= new Date().toISOString().slice(0, 10), 'La date ne peut pas être dans le futur.'),
   details: z.string().trim().max(OUTCOME_DETAILS_MAX, `${OUTCOME_DETAILS_MAX} caractères au plus.`).transform((value) => value || null),
+  // Indicateur FSE+ EECR03 (sortie uniquement) : vide = non renseigné.
+  qualificationObtained: z
+    .enum(['oui', 'non', ''])
+    .optional()
+    .transform((value) => (value === 'oui' ? true : value === 'non' ? false : null)),
 });
 
 function entries(formData: FormData) {
@@ -41,13 +46,13 @@ export async function saveOutcome(_: ActionState, formData: FormData): Promise<A
   if (!allowed) return actionError('Vous n’êtes pas autorisé à renseigner les situations des participants.');
   const parsed = outcomeSchema.safeParse(entries(formData));
   if (!parsed.success) return validationError(parsed.error);
-  const { participantId, groupId, kind, situation, observedOn, details } = parsed.data;
+  const { participantId, groupId, kind, situation, observedOn, details, qualificationObtained } = parsed.data;
 
   const supabase = await createClient();
   let lookup = supabase.from('participant_outcomes').select('id').eq('participant_id', participantId).eq('kind', kind);
   lookup = groupId ? lookup.eq('group_id', groupId) : lookup.is('group_id', null);
   const { data: existing } = await lookup.maybeSingle();
-  const values = { situation, observed_on: observedOn, details };
+  const values = { situation, observed_on: observedOn, details, qualification_obtained: kind === 'exit' ? qualificationObtained : null };
   const { error } = existing
     ? await supabase.from('participant_outcomes').update(values).eq('id', existing.id).select('id').single()
     : await supabase.from('participant_outcomes').insert({ participant_id: participantId, group_id: groupId, kind, ...values }).select('id').single();

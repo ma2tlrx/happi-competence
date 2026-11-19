@@ -3,6 +3,7 @@
  *
  * Les listes reprennent les codes autorisés par la base (migration 20261113100000) ;
  * elles sont PROVISOIRES et doivent être alignées sur les nomenclatures des financeurs.
+ * Correspondance avec les indicateurs de résultat FSE+ : src/lib/fse/outcomes.ts.
  */
 
 export const PROVISIONAL_OUTCOMES_NOTICE =
@@ -34,6 +35,8 @@ export const OUTCOME_SITUATIONS = {
   emploi_durable: { label: 'Emploi durable', hint: 'CDI, CDD de 6 mois ou plus' },
   emploi_transition: { label: 'Emploi de transition', hint: 'CDD de moins de 6 mois, intérim, contrat aidé' },
   formation_qualifiante: { label: 'Formation qualifiante ou certifiante', hint: null },
+  // Ajoutée pour l'indicateur FSE+ EECR02 (toute formation ou reprise d'études) — provisoire, à valider.
+  formation_autre: { label: 'Autre formation ou reprise d’études', hint: 'Remise à niveau, formation pré-qualifiante, retour en scolarité' },
   creation_activite: { label: 'Création d’activité', hint: null },
   immersion_stage: { label: 'Immersion ou stage', hint: null },
   recherche_emploi: { label: 'Recherche active d’emploi', hint: null },

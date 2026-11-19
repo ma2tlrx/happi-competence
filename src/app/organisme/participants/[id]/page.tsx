@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { ParticipantFile } from '@/components/passport/participant-file';
+import { EntryProfileSummaryCard } from '@/components/fse/entry-profile-editor';
 import { OutcomesCard } from '@/components/outcomes/outcomes-card';
 import { NeedsAssessmentCard } from '@/components/quality/needs-assessment-card';
 import { FinalReports } from '@/components/report/final-reports';
 import { Notice } from '@/components/ui/primitives';
 import { hasPermission, requireRole } from '@/lib/auth/session';
+import { canManageEntryProfiles, loadEntryProfiles } from '@/lib/fse/load';
 import { loadParticipantOutcomes, participantGroups } from '@/lib/outcomes/load';
 import { getPassport } from '@/lib/passport';
 import { loadNeedsAssessment } from '@/lib/quality/load';
@@ -29,10 +31,12 @@ export default async function OrganizationParticipantPage({ params }: { params: 
   await supabase.rpc('log_event', { p_action: 'participant_file.viewed', p_entity_type: 'participant', p_entity_id: id });
   const canWriteOutcomes = hasPermission(user, 'org.outcomes.write');
   const canReadOutcomes = canWriteOutcomes || hasPermission(user, 'org.impact.read');
-  const [reports, outcomes, needs] = await Promise.all([
+  const canManageEntry = canManageEntryProfiles(user);
+  const [reports, outcomes, needs, entryProfiles] = await Promise.all([
     listReports(supabase, id),
     canReadOutcomes ? loadParticipantOutcomes(supabase, id) : Promise.resolve([]),
     loadNeedsAssessment(supabase, id),
+    canManageEntry ? loadEntryProfiles(supabase, id) : Promise.resolve([]),
   ]);
   return (
     <>
@@ -60,6 +64,7 @@ export default async function OrganizationParticipantPage({ params }: { params: 
           canEdit={canWriteOutcomes}
         />
       ) : null}
+      {canManageEntry ? <EntryProfileSummaryCard href={`/organisme/participants/${id}/fiche-entree`} groups={participantGroups(passport)} profiles={entryProfiles} /> : null}
       <NeedsAssessmentCard
         participantId={id}
         participantName={`${passport.participant.firstName} ${passport.participant.lastName}`}

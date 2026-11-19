@@ -19,7 +19,15 @@ function share(count: number, n: number) {
   return n > 0 ? `${count} (${Math.round((count / n) * 100)} %)` : String(count);
 }
 
-function FilterForm({ access, action, showOrganization }: { access: ImpactAccess; action: string; showOrganization: boolean }) {
+export function FilterForm({
+  access,
+  action,
+  showOrganization,
+}: {
+  access: Pick<ImpactAccess, 'filters' | 'programs' | 'organizations'>;
+  action: string;
+  showOrganization: boolean;
+}) {
   const { filters } = access;
   const control = 'h-10 w-full rounded-md border border-line-strong bg-white px-3 text-[0.9375rem] text-ink focus-visible:outline-2 focus-visible:outline-orange-500';
   return (

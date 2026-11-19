@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { ImpactTabs } from '@/components/fse/impact-tabs';
 import { ImpactView } from '@/components/outcomes/impact-view';
 import { PageHeader } from '@/components/ui/primitives';
 import { requireRole } from '@/lib/auth/session';
@@ -16,6 +17,7 @@ export default async function AdminImpactPage({ searchParams }: { searchParams: 
         title="Tableau de bord d’impact"
         description="Inscriptions, abandons, assiduité, progression observée et situations de sortie, par cohorte et par organisme. Chaque taux est donné avec son effectif (n)."
       />
+      <ImpactTabs />
       {access ? <ImpactView access={access} action="/admin/impact" exportHref="/api/exports/impact" showOrganization /> : null}
     </>
   );

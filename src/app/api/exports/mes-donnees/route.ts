@@ -27,7 +27,7 @@ export async function GET() {
   let passport: Record<string, unknown> | null = null;
   if (user.participantId) {
     const id = user.participantId;
-    const [memberships, attendance, selfAssessments, evaluations, notes, reports, organizations, outcomes] = await Promise.all([
+    const [memberships, attendance, selfAssessments, evaluations, notes, reports, organizations, outcomes, entryProfiles] = await Promise.all([
       supabase.from('group_members').select('status, joined_at, left_at, drop_reason, drop_details, dropped_at, groups ( name, start_date, end_date, programs ( name ) )').eq('participant_id', id),
       supabase.from('attendance').select('status, comment, recorded_at, sessions ( number, scheduled_date )').eq('participant_id', id),
       supabase.from('self_assessments').select('kind, status, comment, started_at, completed_at, self_assessment_answers ( value, comment, questionnaire_questions ( text ) )').eq('participant_id', id),
@@ -39,7 +39,9 @@ export async function GET() {
       // Bilans validés (RLS : le participant ne voit jamais les brouillons).
       supabase.from('participant_reports').select('version, finalized_at, data, content').eq('participant_id', id).order('version'),
       supabase.from('participant_organization_history').select('*').eq('participant_id', id),
-      supabase.from('participant_outcomes').select('kind, situation, details, observed_on, created_at, updated_at, groups ( name )').eq('participant_id', id),
+      supabase.from('participant_outcomes').select('kind, situation, details, observed_on, qualification_obtained, created_at, updated_at, groups ( name )').eq('participant_id', id),
+      // Fiches d'entrée FSE+ (RLS : les siennes uniquement).
+      supabase.from('participant_entry_profiles').select('*, groups ( name )').eq('participant_id', id),
     ]);
     passport = {
       groupes: memberships.data,
@@ -50,6 +52,7 @@ export async function GET() {
       bilans: reports.data,
       rattachements_organismes: organizations.data,
       situations: outcomes.data,
+      fiches_entree: entryProfiles.data,
     };
   }
 
