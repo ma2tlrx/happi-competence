@@ -1008,6 +1008,143 @@ export type Database = {
         }
         Relationships: []
       }
+      funders: {
+        Row: {
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_demo: boolean
+          kind: string
+          name: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_demo?: boolean
+          kind: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_demo?: boolean
+          kind?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      funding_convention_groups: {
+        Row: {
+          convention_id: string
+          created_at: string
+          created_by: string | null
+          group_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          convention_id: string
+          created_at?: string
+          created_by?: string | null
+          group_id: string
+        }
+        Update: {
+          convention_id?: string
+          created_at?: string
+          created_by?: string | null
+          group_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_convention_groups_convention_id_fkey"
+            columns: ["convention_id"]
+            referencedRelation: "funding_conventions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_convention_groups_group_id_fkey"
+            columns: ["group_id"]
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funding_conventions: {
+        Row: {
+          amount_eur: number | null
+          created_at: string
+          created_by: string | null
+          end_date: string
+          funder_id: string
+          id: string
+          is_demo: boolean
+          notes: string | null
+          planned_hours_per_participant: number
+          planned_participants: number
+          reference: string | null
+          start_date: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          amount_eur?: number | null
+          created_at?: string
+          created_by?: string | null
+          end_date: string
+          funder_id: string
+          id?: string
+          is_demo?: boolean
+          notes?: string | null
+          planned_hours_per_participant: number
+          planned_participants: number
+          reference?: string | null
+          start_date: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount_eur?: number | null
+          created_at?: string
+          created_by?: string | null
+          end_date?: string
+          funder_id?: string
+          id?: string
+          is_demo?: boolean
+          notes?: string | null
+          planned_hours_per_participant?: number
+          planned_participants?: number
+          reference?: string | null
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_conventions_funder_id_fkey"
+            columns: ["funder_id"]
+            referencedRelation: "funders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_members: {
         Row: {
           added_by: string | null
@@ -3884,7 +4021,24 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_funding_export: { Args: { p_document: string; p_convention_id?: string; p_year?: number }; Returns: undefined }
       log_quality_export: { Args: { p_from: string; p_to: string }; Returns: undefined }
+      org_funding_conventions: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          end_date: string
+          funder_kind: string
+          funder_name: string
+          group_ids: string[]
+          id: string
+          planned_hours_per_participant: number
+          planned_participants: number
+          reference: string | null
+          start_date: string
+          status: string
+          title: string
+        }[]
+      }
       my_final_self_assessment_open: { Args: Record<PropertyKey, never>; Returns: boolean }
       my_satisfaction_surveys: {
         Args: Record<PropertyKey, never>
