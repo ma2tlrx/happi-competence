@@ -61,6 +61,22 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/api/exports/**': ['./public/fonts/report/**/*', './public/brand/**/*'],
   },
+  // Anciennes adresses du site WordPress : redirection permanente (301) pour garder le référencement
+  // et les liens déjà diffusés. Les pages du thème de démonstration (boutique, blog d'exemple,
+  // portfolio, variantes d'accueil) n'avaient pas de contenu propre : elles renvoient vers l'accueil.
+  async redirects() {
+    const permanent = true;
+    return [
+      { source: '/contacts', destination: '/contact', permanent },
+      { source: '/(about-us|history|mission|our-team|team|gallery)', destination: '/approche', permanent },
+      { source: '/services', destination: '/programme', permanent },
+      { source: '/(shop|shop-2|cart|checkout|my-account-2|wishlist-2)/:rest*', destination: '/', permanent },
+      { source: '/(shop|shop-2|cart|checkout|my-account-2|wishlist-2)', destination: '/', permanent },
+      { source: '/(product|portfolio|team|blog|category|tag|author)/:rest*', destination: '/', permanent },
+      { source: '/:variant(blog-.+|portfolio-.+|masonry-.+|homepage-.+)', destination: '/', permanent },
+      { source: '/(sample-page|page-d-exemple|typography|elements|coming-soon|mega-menu-page|bonjour-tout-le-monde)', destination: '/', permanent },
+    ];
+  },
   async headers() {
     return [
       { source: '/((?!api/).*)', headers: securityHeaders },
