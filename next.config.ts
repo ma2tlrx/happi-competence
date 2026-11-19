@@ -68,6 +68,7 @@ const nextConfig: NextConfig = {
       { source: '/api/exports/bilan/:path*', headers: reportPreviewHeaders },
       // En dernier : remplace la Referrer-Policy générale pour ces pages.
       { source: '/verifier/:path*', headers: verificationHeaders },
+      { source: '/badges/verifier/:path*', headers: verificationHeaders },
     ];
   },
 };

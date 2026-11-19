@@ -1,4 +1,5 @@
 import {
+  Award,
   BadgeCheck,
   BookOpen,
   Building2,
@@ -60,6 +61,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
       items: [
         { href: '/participant/auto-evaluation', label: 'Mon auto-évaluation', icon: ListChecks },
         { href: '/participant/partage', label: 'Partager mon passeport', icon: Share2 },
+        { href: '/participant/badges', label: 'Mes badges', icon: Award },
         { href: '/participant/evolution', label: 'Mon évolution', icon: TrendingUp },
         { href: '/participant/satisfaction', label: 'Donnez votre avis', icon: MessageSquareHeart },
         { href: '/participant/signalements', label: 'Signaler un problème', icon: MessageSquareWarning },
@@ -133,6 +135,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/admin/impact', label: 'Impact', icon: TrendingUp },
         { href: '/admin/suivis', label: 'Suivis', icon: CalendarClock },
         { href: '/admin/qualite', label: 'Qualité', icon: ShieldCheck },
+        { href: '/admin/badges', label: 'Badges', icon: Award },
       ],
     },
     {
