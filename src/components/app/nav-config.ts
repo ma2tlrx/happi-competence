@@ -8,6 +8,7 @@ import {
   FileText,
   FileSignature,
   GraduationCap,
+  HandCoins,
   History,
   KeyRound,
   LayoutDashboard,
@@ -80,6 +81,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/organisme/presences', label: 'Présences', icon: ClipboardCheck },
         { href: '/organisme/suivis', label: 'Suivis', icon: CalendarClock },
         { href: '/organisme/impact', label: 'Impact', icon: TrendingUp },
+        { href: '/organisme/financements', label: 'Financements', icon: HandCoins },
         { href: '/organisme/satisfaction', label: 'Satisfaction', icon: MessageSquareHeart },
         { href: '/organisme/signalements', label: 'Signaler un problème', icon: MessageSquareWarning },
       ],
@@ -131,6 +133,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
       items: [
         { href: '/admin/orientations', label: 'Orientations', icon: Send },
         { href: '/admin/impact', label: 'Impact', icon: TrendingUp },
+        { href: '/admin/financements', label: 'Financements', icon: HandCoins },
         { href: '/admin/suivis', label: 'Suivis', icon: CalendarClock },
         { href: '/admin/qualite', label: 'Qualité', icon: ShieldCheck },
       ],

@@ -54,6 +54,10 @@ async function purge() {
   // Les participants d'abord (leurs évaluations bloquent la suppression des sessions).
   must(await admin.from('participants').delete().eq('is_demo', true), 'Participants');
   must(await admin.from('groups').delete().eq('is_demo', true), 'Groupes');
+  // Conventions et financeurs démo : supprimés en cascade avec leur dernier groupe ; ces deux
+  // lignes rattrapent une convention démo restée sans groupe (création interrompue).
+  must(await admin.from('funding_conventions').delete().eq('is_demo', true), 'Conventions démo');
+  must(await admin.from('funders').delete().eq('is_demo', true), 'Financeurs démo');
   // Fiche réelle rattachée par erreur à un organisme démo : détachée, jamais supprimée.
   const demoOrgs = must(await admin.from('organizations').select('id').eq('is_demo', true), 'Organismes démo').map((row) => row.id);
   if (demoOrgs.length) {
@@ -299,6 +303,35 @@ async function seed() {
   await runSessions(trainer2Client, sessionsB, membersB, 2, 11);
   await runSessions(trainerClient, sessionsC, membersC, 6, 13);
   must(await trainerClient.from('groups').update({ status: 'completed' }).eq('id', groupC.id), 'Clôture groupe C');
+
+  // ── Convention de financement (démo) : groupes A et C, financés par France Travail ──
+  const funder = must(
+    await admin.from('funders').insert({ name: 'France Travail — démonstration', kind: 'france_travail', contact_name: 'Conseiller entreprise (démo)', is_demo: true }).select('id').single(),
+    'Financeur démo',
+  );
+  const convention = must(
+    await admin
+      .from('funding_conventions')
+      .insert({
+        funder_id: funder.id,
+        reference: 'DEMO-FT-0001',
+        title: 'HAPPI Compétence — révéler ses compétences par le jeu (démonstration)',
+        start_date: isoDate(-60),
+        end_date: isoDate(120),
+        planned_participants: 12,
+        planned_hours_per_participant: 18,
+        status: 'en_cours',
+        notes: 'Convention fictive de démonstration.',
+        is_demo: true,
+      })
+      .select('id')
+      .single(),
+    'Convention démo',
+  );
+  must(
+    await admin.from('funding_convention_groups').insert([groupA.id, groupC.id].map((groupId) => ({ convention_id: convention.id, group_id: groupId }))),
+    'Rattachement des groupes à la convention démo',
+  );
 
   // Une correction tracée, pour illustrer l'historique des modifications.
   const firstEvaluation = must(
