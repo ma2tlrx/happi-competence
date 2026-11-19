@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/participant/', '/organisme/', '/formateur/', '/admin/', '/compte', '/notifications', '/api/', '/verifier/'],
+      disallow: ['/participant/', '/organisme/', '/formateur/', '/admin/', '/compte', '/notifications', '/api/', '/verifier/', '/badges/'],
     },
     host: siteConfig.url,
   };

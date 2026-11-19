@@ -6,8 +6,8 @@ import { buildCsp, createNonce } from '@/lib/security/csp';
 
 /** Préfixes réservés aux utilisateurs connectés. Le contrôle du rôle est fait côté serveur, dans les layouts. */
 const PROTECTED_PREFIXES = ['/participant', '/organisme', '/formateur', '/admin', '/compte', '/notifications', '/api/exports'];
-/** Pages publiques dont l'adresse porte un jeton (vérification d'un passeport partagé). */
-const TOKEN_PREFIXES = ['/verifier'];
+/** Pages publiques dont l'adresse porte un jeton (vérification d'un passeport partagé, d'un badge). */
+const TOKEN_PREFIXES = ['/verifier', '/badges/verifier'];
 
 /** Ni cache partagé, ni en-tête Referer : le jeton ne doit pas sortir de la page. */
 function protectToken(response: NextResponse) {

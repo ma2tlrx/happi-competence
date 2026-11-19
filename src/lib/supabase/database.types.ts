@@ -497,6 +497,123 @@ export type Database = {
         }
         Relationships: []
       }
+      badge_assertions: {
+        Row: {
+          award_snapshot: Json
+          badge_class_id: string
+          credential_ciphertext: string
+          credential_sha256: string
+          group_id: string | null
+          id: string
+          issued_at: string
+          issued_by: string | null
+          participant_id: string
+          public_id_hash: string
+          revocation_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          signing_kid: string
+        }
+        ComputedFields: never
+        Insert: {
+          award_snapshot?: Json
+          badge_class_id: string
+          credential_ciphertext: string
+          credential_sha256: string
+          group_id?: string | null
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          participant_id: string
+          public_id_hash: string
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          signing_kid: string
+        }
+        Update: {
+          award_snapshot?: Json
+          badge_class_id?: string
+          credential_ciphertext?: string
+          credential_sha256?: string
+          group_id?: string | null
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          participant_id?: string
+          public_id_hash?: string
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          signing_kid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "badge_assertions_badge_class_id_fkey"
+            columns: ["badge_class_id"]
+            referencedRelation: "badge_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "badge_assertions_group_id_fkey"
+            columns: ["group_id"]
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "badge_assertions_participant_id_fkey"
+            columns: ["participant_id"]
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      badge_classes: {
+        Row: {
+          award_rule: Json
+          created_at: string
+          created_by: string | null
+          criteria_narrative: string
+          description: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          is_provisional: boolean
+          name: string
+          related_skills: Json
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          award_rule?: Json
+          created_at?: string
+          created_by?: string | null
+          criteria_narrative: string
+          description: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          is_provisional?: boolean
+          name: string
+          related_skills?: Json
+          updated_at?: string
+        }
+        Update: {
+          award_rule?: Json
+          created_at?: string
+          created_by?: string | null
+          criteria_narrative?: string
+          description?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          is_provisional?: boolean
+          name?: string
+          related_skills?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           audience: string | null
@@ -4361,6 +4478,25 @@ export type Database = {
       }
     }
     Functions: {
+      badge_credential_ciphertext: { Args: { p_assertion_id: string }; Returns: string }
+      issue_badge_assertion: {
+        Args: {
+          p_award_snapshot?: Json
+          p_badge_class_id: string
+          p_credential_ciphertext: string
+          p_credential_sha256: string
+          p_group_id?: string
+          p_issued_at: string
+          p_participant_id: string
+          p_public_id_hash: string
+          p_signing_kid: string
+        }
+        Returns: string
+      }
+      revoke_badge_assertion: {
+        Args: { p_assertion_id: string; p_reason: string }
+        Returns: undefined
+      }
       authorize_observation_assist: {
         Args: { p_participant_id: string; p_session_id: string }
         Returns: undefined
