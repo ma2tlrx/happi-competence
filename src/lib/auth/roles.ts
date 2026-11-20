@@ -37,7 +37,8 @@ export type PermissionCode =
   | 'org.impact.read'
   | 'referrals.manage'
   | 'org.referrals.write'
-  | 'org.entry_profile.manage';
+  | 'org.entry_profile.manage'
+  | 'games.manage';
 
 export const ORGANIZATION_TYPES = {
   mission_locale: 'Mission Locale',

@@ -9,6 +9,7 @@ import {
   ClipboardList,
   FileText,
   FileSignature,
+  Gamepad2,
   GraduationCap,
   HandCoins,
   History,
@@ -34,8 +35,19 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
+import type { PermissionCode } from '@/lib/auth/roles';
+
 export type AppSpace = 'participant' | 'organisme' | 'formateur' | 'admin';
-export type NavItem = { href: string; label: string; icon: LucideIcon; mobile?: boolean; exact?: boolean; short?: string };
+export type NavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  mobile?: boolean;
+  exact?: boolean;
+  short?: string;
+  /** Entrée visible seulement avec cette permission (l'administrateur les a toutes). Le contrôle réel reste côté serveur. */
+  permission?: PermissionCode;
+};
 export type NavGroup = { label?: string; items: NavItem[] };
 
 export const SPACE_LABELS: Record<AppSpace, string> = {
@@ -100,6 +112,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/formateur/sessions', label: 'Sessions', icon: CalendarDays, mobile: true },
         { href: '/formateur/groupes', label: 'Groupes', icon: Users, mobile: true },
         { href: '/formateur/programmes', label: 'Programmes', icon: BookOpen, mobile: true },
+        { href: '/jeux', label: 'Jeux', icon: Gamepad2, permission: 'games.manage' },
         { href: '/formateur/orientations', label: 'Orientations', icon: Send },
         { href: '/formateur/suivis', label: 'Suivis', icon: CalendarClock },
         { href: '/formateur/seconde-cotation', label: 'Seconde cotation', icon: Scale },
@@ -131,6 +144,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/admin/sessions', label: 'Sessions', icon: CalendarDays, mobile: true },
         { href: '/admin/referentiels', label: 'Référentiels', icon: Radar },
         { href: '/admin/contenus', label: 'Supports pédagogiques', icon: FileText },
+        { href: '/jeux', label: 'Jeux', icon: Gamepad2, permission: 'games.manage' },
         { href: '/admin/satisfaction', label: 'Satisfaction', icon: MessageSquareHeart },
       ],
     },
@@ -158,3 +172,9 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
     HELP,
   ],
 };
+
+/** Navigation d'un espace, sans les entrées dont la permission manque à l'utilisateur. */
+export function visibleNavigation(space: AppSpace, access: { isAdmin: boolean; permissions?: readonly string[] }): NavGroup[] {
+  const allowed = (item: NavItem) => !item.permission || access.isAdmin || (access.permissions ?? []).includes(item.permission);
+  return NAVIGATION[space].map((group) => ({ ...group, items: group.items.filter(allowed) })).filter((group) => group.items.length > 0);
+}
