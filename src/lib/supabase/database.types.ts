@@ -1542,6 +1542,269 @@ export type Database = {
           },
         ]
       }
+      game_questions: {
+        Row: {
+          answers: NonNullable<Json>
+          id: string
+          image_url: string | null
+          position: number
+          quiz_id: string
+          text: string
+          time_limit: number
+          type: string
+        }
+        ComputedFields: never
+        Insert: {
+          answers?: NonNullable<Json>
+          id?: string
+          image_url?: string | null
+          position?: number
+          quiz_id: string
+          text: string
+          time_limit?: number
+          type?: string
+        }
+        Update: {
+          answers?: NonNullable<Json>
+          id?: string
+          image_url?: string | null
+          position?: number
+          quiz_id?: string
+          text?: string
+          time_limit?: number
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            referencedRelation: "game_quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_quizzes: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          owner_id: string
+          theme_color: string
+          title: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          owner_id: string
+          theme_color?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          owner_id?: string
+          theme_color?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_quizzes_owner_id_fkey"
+            columns: ["owner_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_session_players: {
+        Row: {
+          id: string
+          joined_at: string
+          nickname: string
+          score: number
+          session_id: string
+          token_hash: string
+        }
+        ComputedFields: never
+        Insert: {
+          id?: string
+          joined_at?: string
+          nickname: string
+          score?: number
+          session_id: string
+          token_hash: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          nickname?: string
+          score?: number
+          session_id?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_session_players_session_id_fkey"
+            columns: ["session_id"]
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_sessions: {
+        Row: {
+          code: string
+          created_at: string
+          finished_at: string | null
+          id: string
+          max_players: number
+          owner_id: string
+          quiz_id: string
+          status: string
+        }
+        ComputedFields: never
+        Insert: {
+          code: string
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          max_players?: number
+          owner_id: string
+          quiz_id: string
+          status?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          max_players?: number
+          owner_id?: string
+          quiz_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_sessions_owner_id_fkey"
+            columns: ["owner_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_sessions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            referencedRelation: "game_quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_states: {
+        Row: {
+          expires_at: string
+          id: string
+          state: NonNullable<Json>
+          version: number
+        }
+        ComputedFields: never
+        Insert: {
+          expires_at: string
+          id: string
+          state: NonNullable<Json>
+          version?: number
+        }
+        Update: {
+          expires_at?: string
+          id?: string
+          state?: NonNullable<Json>
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_states_id_fkey"
+            columns: ["id"]
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_undercover_configs: {
+        Row: {
+          civil_word: string
+          created_at: string
+          id: string
+          include_mister_white: boolean
+          name: string
+          owner_id: string
+          undercover_word: string
+        }
+        ComputedFields: never
+        Insert: {
+          civil_word: string
+          created_at?: string
+          id?: string
+          include_mister_white?: boolean
+          name: string
+          owner_id: string
+          undercover_word: string
+        }
+        Update: {
+          civil_word?: string
+          created_at?: string
+          id?: string
+          include_mister_white?: boolean
+          name?: string
+          owner_id?: string
+          undercover_word?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_undercover_configs_owner_id_fkey"
+            columns: ["owner_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_undercover_games: {
+        Row: {
+          code: string
+          expires_at: string
+          id: string
+          owner_id: string
+          state: NonNullable<Json>
+          version: number
+        }
+        ComputedFields: never
+        Insert: {
+          code: string
+          expires_at: string
+          id?: string
+          owner_id: string
+          state: NonNullable<Json>
+          version?: number
+        }
+        Update: {
+          code?: string
+          expires_at?: string
+          id?: string
+          owner_id?: string
+          state?: NonNullable<Json>
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_undercover_games_owner_id_fkey"
+            columns: ["owner_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_members: {
         Row: {
           added_by: string | null
@@ -4728,6 +4991,7 @@ export type Database = {
           value: number | null
         }[]
       }
+      save_game_questions: { Args: { p_questions: Json; p_quiz_id: string }; Returns: undefined }
       submit_quality_complaint: { Args: { p_description: string; p_subject: string }; Returns: string }
       submit_satisfaction_response: {
         Args: { p_answers: Json; p_group_id: string; p_moment: string }
@@ -4760,6 +5024,7 @@ export type Database = {
         Args: { p_version_id: string }
         Returns: undefined
       }
+      purge_expired_games: { Args: Record<PropertyKey, never>; Returns: Json }
       rate_limit_hit: {
         Args: {
           p_action: string
