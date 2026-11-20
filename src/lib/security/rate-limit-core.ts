@@ -30,10 +30,15 @@ export const RATE_LIMITS = {
   'mfa.user': { limit: 10, windowSeconds: 15 * 60 },
   // Pages publiques de vérification (passeport, badge) : large pour un recruteur qui ouvre plusieurs liens, bloquant pour un script.
   'verify.ip': { limit: 60, windowSeconds: 10 * 60 },
+  // Jeux (routes publiques, sans compte). Entrée dans une partie : large pour une classe derrière une
+  // seule adresse (50 joueurs en quelques minutes), bloquant pour qui essaie des codes en série.
+  'game_join.ip': { limit: 150, windowSeconds: 10 * 60 },
+  // Actions en cours de partie (réponse, vote, rôle) : une réponse par question et par joueur.
+  'game_play.ip': { limit: 1500, windowSeconds: 10 * 60 },
 } as const satisfies Record<string, RateLimitRule>;
 
 export type RateLimitAction = keyof typeof RATE_LIMITS;
-export type RateLimitScope = 'login' | 'signup' | 'password_reset' | 'contact' | 'access_code' | 'mfa' | 'verify';
+export type RateLimitScope = 'login' | 'signup' | 'password_reset' | 'contact' | 'access_code' | 'mfa' | 'verify' | 'game_join' | 'game_play';
 export type RateLimitSubject = 'ip' | 'email' | 'user';
 
 const SCOPE_MESSAGES: Record<RateLimitScope, string> = {
@@ -44,6 +49,8 @@ const SCOPE_MESSAGES: Record<RateLimitScope, string> = {
   access_code: 'Trop de codes saisis. Pour protéger les accès, patientez {delai} avant de réessayer.',
   mfa: 'Trop de codes de vérification saisis. Patientez {delai} avant de réessayer.',
   verify: 'Trop de vérifications depuis cette connexion. Patientez {delai} avant de réessayer.',
+  game_join: 'Trop de tentatives pour rejoindre une partie depuis cette connexion. Patientez {delai} avant de réessayer.',
+  game_play: 'Trop d’actions en peu de temps depuis cette connexion. Patientez {delai} avant de réessayer.',
 };
 
 /** Délai lisible, arrondi à la minute supérieure (« 1 minute », « 15 minutes », « 1 heure »). */
