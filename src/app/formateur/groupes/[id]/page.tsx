@@ -387,7 +387,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
               ) : null}
               {missing.length > 0 && hasPermission(user, 'sessions.manage') ? (
                 <div className={(sessions.data ?? []).length > 0 ? 'mt-4 border-t border-line pt-4' : ''}>
-                  <PlanSessionsForm groupId={group.id} missing={missing} defaultStart={group.start_date} />
+                  <PlanSessionsForm groupId={group.id} missing={missing} total={(outline.data ?? []).length} defaultStart={group.start_date} />
                 </div>
               ) : null}
             </CardBody>

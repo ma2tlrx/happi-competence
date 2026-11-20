@@ -190,7 +190,7 @@ export function OrganizationSelect({ participantId, groupId, value, organization
   );
 }
 
-export function PlanSessionsForm({ groupId, missing, defaultStart }: { groupId: string; missing: { number: number; title: string }[]; defaultStart: string | null }) {
+export function PlanSessionsForm({ groupId, missing, total, defaultStart }: { groupId: string; missing: { number: number; title: string }[]; total: number; defaultStart: string | null }) {
   const [state, action] = useActionState(planSessions.bind(null, groupId), null);
   const suggested = (index: number) => {
     if (!defaultStart) return '';
@@ -201,7 +201,7 @@ export function PlanSessionsForm({ groupId, missing, defaultStart }: { groupId: 
   return (
     <form action={action} className="space-y-4">
       <p className="text-[0.9375rem] text-ink-muted">
-        {missing.length === 6 ? 'Créez les six sessions du programme en une fois.' : 'Créez les sessions restantes.'} Les dates proposées suivent un rythme hebdomadaire et restent modifiables.
+        {missing.length === total ? `Créez les ${total} sessions du programme en une fois.` : 'Créez les sessions restantes.'} Les dates proposées suivent un rythme hebdomadaire et restent modifiables.
       </p>
       <ul className="grid gap-3 sm:grid-cols-2">
         {missing.map((session, index) => (
