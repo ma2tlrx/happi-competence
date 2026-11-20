@@ -39,8 +39,8 @@ describe('getLeaderboard', () => {
     });
     expect(board.map((e) => [e.rank, e.nickname])).toEqual([[1, 'Ben'], [2, 'Cléo'], [3, 'Ana']]);
   });
-  it('ne contient ni jeton ni empreinte', () => {
-    const [entry] = getLeaderboard({ a: { id: 'a', nickname: 'Ana', score: 1, tokenHash: 'secret' } });
+  it('ne contient ni identifiant de compte ni statistique privée', () => {
+    const [entry] = getLeaderboard({ a: { id: 'a', nickname: 'Ana', score: 1, userId: 'secret', participantId: 'secret', answeredCount: 3 } });
     expect(Object.keys(entry).sort()).toEqual(['id', 'nickname', 'rank', 'score']);
   });
 });

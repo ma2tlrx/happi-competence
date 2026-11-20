@@ -25,6 +25,12 @@ export type UndercoverPlayer = {
   isEliminated: boolean;
   eliminatedInRound?: number;
   joinedAt: number;
+  /** Compte (profil) du joueur, jamais exposé aux écrans : vérifie que l'action vient de lui. Absent pour l'animateur. */
+  userId?: string;
+  /** Fiche participant (absente en mode essai et pour l'animateur). */
+  participantId?: string | null;
+  /** Mode essai : aucun résultat n'est enregistré. */
+  trial?: boolean;
 };
 
 export type RoundResult = {
@@ -42,8 +48,8 @@ export type UndercoverState = {
   status: UndercoverStatus;
   hostId: string;
   players: Record<string, UndercoverPlayer>;
-  /** Empreintes SHA-256 des jetons des joueurs (jamais les jetons). */
-  playerTokenHashes: Record<string, string>;
+  /** Numéro de la manche de jeu (1, puis +1 à chaque « rejouer ») : clé d'idempotence des résultats. */
+  playNumber?: number;
   themeId?: string;
   customWordPair?: WordPair;
   includeMisterWhite: boolean;
@@ -93,7 +99,6 @@ export function newUndercoverGame(input: {
   code: string;
   hostId: string;
   hostNickname: string;
-  hostTokenHash: string;
   themeId?: string;
   customWordPair?: WordPair;
   includeMisterWhite?: boolean;
@@ -107,7 +112,7 @@ export function newUndercoverGame(input: {
     players: {
       [input.hostId]: { id: input.hostId, nickname: input.hostNickname, isHost: true, isEliminated: false, joinedAt: input.now },
     },
-    playerTokenHashes: { [input.hostId]: input.hostTokenHash },
+    playNumber: 1,
     themeId: input.themeId,
     customWordPair: input.customWordPair,
     includeMisterWhite: input.includeMisterWhite ?? true,
@@ -121,14 +126,36 @@ export function newUndercoverGame(input: {
   };
 }
 
-export function joinGame(state: UndercoverState, input: { id: string; nickname: string; tokenHash: string; now: number }) {
+export function joinGame(
+  state: UndercoverState,
+  input: { id: string; nickname: string; userId: string; participantId?: string | null; trial?: boolean; now: number },
+) {
   if (state.status !== 'lobby') return fail('already_started');
   if (Object.keys(state.players).length >= state.maxPlayers) return fail('full');
   const taken = Object.values(state.players).some((p) => p.nickname.toLowerCase() === input.nickname.toLowerCase());
   if (taken) return fail('nickname_taken');
-  state.players[input.id] = { id: input.id, nickname: input.nickname, isHost: false, isEliminated: false, joinedAt: input.now };
-  state.playerTokenHashes[input.id] = input.tokenHash;
+  state.players[input.id] = {
+    id: input.id,
+    nickname: input.nickname,
+    isHost: false,
+    isEliminated: false,
+    joinedAt: input.now,
+    userId: input.userId,
+    participantId: input.participantId ?? null,
+    trial: input.trial === true,
+  };
   return ok(state.players[input.id]);
+}
+
+/** Joueur (hors animateur) correspondant au compte : reprise après déconnexion, ou refus d'une seconde place. */
+export function findPlayerByUser(state: UndercoverState, userId: string): UndercoverPlayer | undefined {
+  return Object.values(state.players).find((p) => !p.isHost && p.userId === userId);
+}
+
+/** L'identifiant de joueur désigne-t-il bien le compte connecté ? (Seule garantie d'identité : plus aucun jeton.) */
+export function isPlayerOf(state: UndercoverState, playerId: string, userId: string): boolean {
+  const player = state.players[playerId];
+  return !!player && !player.isHost && !!player.userId && player.userId === userId;
 }
 
 export function getActivePlayers(state: UndercoverState): UndercoverPlayer[] {
@@ -193,9 +220,9 @@ export function checkWinCondition(state: UndercoverState): UndercoverWinner | nu
  * Vote d'un joueur. Un joueur peut changer son vote tant que l'animateur n'a pas résolu le tour.
  * Pendant un départage, seuls les joueurs à égalité peuvent être désignés.
  */
-export function submitVote(state: UndercoverState, voterId: string, targetId: string, tokenHash: string) {
+export function submitVote(state: UndercoverState, voterId: string, targetId: string, userId: string) {
   if (state.status !== 'voting') return fail('bad_phase');
-  if (state.playerTokenHashes[voterId] !== tokenHash) return fail('forbidden');
+  if (!isPlayerOf(state, voterId, userId)) return fail('forbidden');
 
   const voter = state.players[voterId];
   const target = state.players[targetId];
@@ -321,9 +348,9 @@ export function startVoting(state: UndercoverState) {
 }
 
 /** Le Fourmi Caché éliminé tente de deviner le mot des civils. */
-export function spyGuess(state: UndercoverState, spyId: string, tokenHash: string, guess: string, now: number) {
+export function spyGuess(state: UndercoverState, spyId: string, userId: string, guess: string, now: number) {
   if (state.status !== 'spy_guess') return fail('bad_phase');
-  if (state.playerTokenHashes[spyId] !== tokenHash) return fail('forbidden');
+  if (!isPlayerOf(state, spyId, userId)) return fail('forbidden');
   const spy = state.players[spyId];
   if (!spy || spy.role !== 'spy') return fail('forbidden');
 
@@ -368,10 +395,11 @@ export function replayGame(state: UndercoverState) {
   state.spyGuessCorrect = undefined;
   state.startedAt = undefined;
   state.finishedAt = undefined;
+  state.playNumber = (state.playNumber ?? 1) + 1;
   return ok(null);
 }
 
-/** Rôle et mot d'un joueur : réservés à lui seul (jeton vérifié par l'appelant). */
+/** Rôle et mot d'un joueur : réservés à lui seul (compte vérifié par l'appelant, voir isPlayerOf). */
 export function myRole(state: UndercoverState, playerId: string) {
   const player = state.players[playerId];
   if (!player) return fail('not_found');
@@ -383,7 +411,7 @@ export type PublicPlayer = Omit<UndercoverPlayer, 'role' | 'word'>;
 
 export type PublicUndercoverState = Omit<
   UndercoverState,
-  'playerTokenHashes' | 'players' | 'wordPair' | 'votes' | 'customWordPair' | 'themeId' | 'spyGuess'
+  'players' | 'playNumber' | 'wordPair' | 'votes' | 'customWordPair' | 'themeId' | 'spyGuess'
 > & {
   players: Record<string, PublicPlayer>;
   playerCount: number;

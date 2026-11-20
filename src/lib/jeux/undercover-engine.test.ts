@@ -29,10 +29,10 @@ function seeded(seed = 7) {
 
 const words = { civil: 'Chat', undercover: 'Chien' };
 
-/** Salon avec un animateur et `count` joueurs j1..jn (jeton « hash-jN »). */
+/** Salon avec un animateur et `count` joueurs j1..jn (compte « u-jN »). */
 function lobby(count: number, includeMisterWhite = true): UndercoverState {
-  const s = newUndercoverGame({ gameId: 'g1', code: 'ABC234', hostId: 'host', hostNickname: 'Animateur', hostTokenHash: 'hash-host', customWordPair: words, includeMisterWhite, now: 1 });
-  for (let i = 1; i <= count; i++) joinGame(s, { id: `j${i}`, nickname: `Joueur${i}`, tokenHash: `hash-j${i}`, now: 2 });
+  const s = newUndercoverGame({ gameId: 'g1', code: 'ABC234', hostId: 'host', hostNickname: 'Animateur', customWordPair: words, includeMisterWhite, now: 1 });
+  for (let i = 1; i <= count; i++) joinGame(s, { id: `j${i}`, nickname: `Joueur${i}`, userId: `u-j${i}`, participantId: `part-j${i}`, now: 2 });
   return s;
 }
 
@@ -48,18 +48,18 @@ function toVoting(s: UndercoverState) {
 }
 
 const ids = (s: UndercoverState, role: string) => Object.values(s.players).filter((p) => p.role === role).map((p) => p.id);
-const vote = (s: UndercoverState, voter: string, target: string) => submitVote(s, voter, target, `hash-${voter}`);
+const vote = (s: UndercoverState, voter: string, target: string) => submitVote(s, voter, target, `u-${voter}`);
 
 describe('salon', () => {
   it('limite à 8 joueurs (animateur compris) et refuse les pseudos en double', () => {
     const s = lobby(7);
-    expect(joinGame(s, { id: 'x', nickname: 'Joueur1', tokenHash: 'h', now: 3 })).toEqual({ ok: false, code: 'full' });
+    expect(joinGame(s, { id: 'x', nickname: 'Joueur1', userId: 'u-x', now: 3 })).toEqual({ ok: false, code: 'full' });
     const t = lobby(2);
-    expect(joinGame(t, { id: 'x', nickname: 'joueur1', tokenHash: 'h', now: 3 })).toEqual({ ok: false, code: 'nickname_taken' });
+    expect(joinGame(t, { id: 'x', nickname: 'joueur1', userId: 'u-x', now: 3 })).toEqual({ ok: false, code: 'nickname_taken' });
   });
   it('refuse l’entrée une fois la partie commencée', () => {
     const s = started(4);
-    expect(joinGame(s, { id: 'x', nickname: 'Nouveau', tokenHash: 'h', now: 3 })).toEqual({ ok: false, code: 'already_started' });
+    expect(joinGame(s, { id: 'x', nickname: 'Nouveau', userId: 'u-x', now: 3 })).toEqual({ ok: false, code: 'already_started' });
   });
   it('exige trois joueurs hors animateur', () => {
     expect(startGame(lobby(2), 10)).toEqual({ ok: false, code: 'not_enough_players' });
@@ -101,7 +101,7 @@ describe('vote : validité', () => {
     expect(submitVote(s, 'j1', 'j2', 'mauvais')).toEqual({ ok: false, code: 'forbidden' });
     expect(vote(s, 'j1', 'j1')).toEqual({ ok: false, code: 'invalid_vote' });
     expect(vote(s, 'j1', 'host')).toEqual({ ok: false, code: 'invalid_vote' });
-    expect(submitVote(s, 'host', 'j2', 'hash-host')).toEqual({ ok: false, code: 'invalid_vote' });
+    expect(submitVote(s, 'host', 'j2', 'u-host')).toEqual({ ok: false, code: 'forbidden' });
   });
   it('indique quand tout le monde a voté, et permet de changer son vote', () => {
     const s = started(3);
@@ -228,10 +228,10 @@ describe('victoire', () => {
     const spy = ids(s, 'spy')[0];
     eliminate(s, spy);
     expect(s.status).toBe('spy_guess');
-    expect(spyGuess(s, spy, 'mauvais-jeton', 'Chat', 40)).toEqual({ ok: false, code: 'forbidden' });
+    expect(spyGuess(s, spy, 'u-mauvais', 'Chat', 40)).toEqual({ ok: false, code: 'forbidden' });
     const civil = ids(s, 'civil')[0];
-    expect(spyGuess(s, civil, `hash-${civil}`, 'Chat', 40)).toEqual({ ok: false, code: 'forbidden' });
-    expect(spyGuess(s, spy, `hash-${spy}`, '  chat ', 40)).toMatchObject({ ok: true });
+    expect(spyGuess(s, civil, `u-${civil}`, 'Chat', 40)).toEqual({ ok: false, code: 'forbidden' });
+    expect(spyGuess(s, spy, `u-${spy}`, '  chat ', 40)).toMatchObject({ ok: true });
     expect(s.winner).toBe('spy');
     expect(s.winnerIds).toEqual([spy]);
     expect(s.status).toBe('game_over');
@@ -241,7 +241,7 @@ describe('victoire', () => {
     const s = fresh();
     const spy = ids(s, 'spy')[0];
     eliminate(s, spy);
-    spyGuess(s, spy, `hash-${spy}`, 'Poisson', 40);
+    spyGuess(s, spy, `u-${spy}`, 'Poisson', 40);
     expect(s.spyGuessCorrect).toBe(false);
     expect(s.winner).toBe('civils');
   });
@@ -291,8 +291,10 @@ describe('aucune fuite dans la vue publique', () => {
     toVoting(s);
     vote(s, 'j1', 'j2');
     const text = JSON.stringify(toPublicState(s));
-    expect(text).not.toContain('hash-');
-    expect(text).not.toContain('playerTokenHashes');
+    expect(text).not.toContain('u-j');
+    expect(text).not.toContain('part-j');
+    expect(text).not.toContain('userId');
+    expect(text).not.toContain('participantId');
     expect(text).not.toContain('"role"');
     expect(text).not.toContain('"word"');
     expect(text).not.toContain('Chien');

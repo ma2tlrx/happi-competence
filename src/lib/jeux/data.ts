@@ -9,6 +9,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database, Json } from '@/lib/supabase/database.types';
 
+import type { GameResultInsert } from './results';
 import type { QuestionInput } from './schemas';
 
 export type Db = SupabaseClient<Database>;
@@ -257,10 +258,21 @@ export async function setSessionStatus(db: Db, id: string, status: Session['stat
 // ── Joueurs du Quiz (client de service) ─────────────────────────────────────
 export type NewPlayerResult = { player: SessionPlayer } | { nicknameTaken: true };
 
-export async function createPlayer(db: Db, input: { sessionId: string; nickname: string; tokenHash: string }): Promise<NewPlayerResult> {
+export type PlayerIdentity = { id: string; nickname: string; participantId: string | null; trial: boolean };
+
+export async function createPlayer(
+  db: Db,
+  input: { sessionId: string; nickname: string; profileId: string; participantId: string | null; trial: boolean },
+): Promise<NewPlayerResult> {
   const { data, error } = await db
     .from('game_session_players')
-    .insert({ session_id: input.sessionId, nickname: input.nickname, token_hash: input.tokenHash })
+    .insert({
+      session_id: input.sessionId,
+      nickname: input.nickname,
+      profile_id: input.profileId,
+      participant_id: input.participantId,
+      is_trial: input.trial,
+    })
     .select('id, session_id, nickname, score, joined_at')
     .single();
   if (error) {
@@ -270,9 +282,18 @@ export async function createPlayer(db: Db, input: { sessionId: string; nickname:
   return { player: toPlayer(data) };
 }
 
-export async function getPlayerTokenHash(db: Db, sessionId: string, playerId: string): Promise<{ nickname: string; tokenHash: string } | null> {
-  const row = check(await db.from('game_session_players').select('nickname, token_hash').eq('session_id', sessionId).eq('id', playerId).maybeSingle());
-  return row ? { nickname: row.nickname, tokenHash: row.token_hash } : null;
+/** Place déjà prise dans cette partie par ce compte (reprise après déconnexion). */
+export async function getPlayerByProfile(db: Db, sessionId: string, profileId: string): Promise<PlayerIdentity | null> {
+  const row = check(
+    await db.from('game_session_players').select('id, nickname, participant_id, is_trial').eq('session_id', sessionId).eq('profile_id', profileId).maybeSingle(),
+  );
+  return row ? { id: row.id, nickname: row.nickname, participantId: row.participant_id, trial: row.is_trial } : null;
+}
+
+/** Identités des joueurs d'une partie (client de service) : sert à enregistrer les résultats. */
+export async function listPlayerIdentities(db: Db, sessionId: string): Promise<PlayerIdentity[]> {
+  const rows = many(await db.from('game_session_players').select('id, nickname, participant_id, is_trial').eq('session_id', sessionId));
+  return rows.map((row) => ({ id: row.id, nickname: row.nickname, participantId: row.participant_id, trial: row.is_trial }));
 }
 
 export async function countPlayers(db: Db, sessionId: string): Promise<number> {
@@ -294,6 +315,13 @@ export async function listPlayers(db: Db, sessionId: string): Promise<SessionPla
 
 export async function saveFinalScores(db: Db, sessionId: string, scores: { id: string; score: number }[]): Promise<void> {
   await Promise.all(scores.map(async (s) => check(await db.from('game_session_players').update({ score: s.score }).eq('session_id', sessionId).eq('id', s.id).select('id'))));
+}
+
+// ── Résultats conservés (client de service) ────────────────────────────────
+/** Enregistre les résultats d'une partie ; rejouer l'appel ne duplique rien (clé : participant, jeu, partie, manche). */
+export async function saveGameResults(db: Db, rows: GameResultInsert[]): Promise<void> {
+  if (rows.length === 0) return;
+  check(await db.from('game_results').upsert(rows, { onConflict: 'participant_id,game_type,game_ref,play_index', ignoreDuplicates: true }));
 }
 
 // ── Configurations Undercover ───────────────────────────────────────────────

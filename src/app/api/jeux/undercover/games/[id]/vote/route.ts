@@ -1,24 +1,25 @@
 import { broadcast, undercoverChannel } from '@/lib/jeux/broadcast';
-import { error, json, limitPublic, readBody, serverError, uuidParam, type Params } from '@/lib/jeux/http';
+import { error, json, limitPublic, readBody, requirePlayer, serverError, uuidParam, type Params } from '@/lib/jeux/http';
 import { applyUndercover } from '@/lib/jeux/routes';
 import { undercoverVoteSchema } from '@/lib/jeux/schemas';
-import { hashToken } from '@/lib/jeux/tokens';
 import { submitVote, toPublicState } from '@/lib/jeux/undercover-engine';
 
 /**
- * Route publique : un joueur vote contre un autre, jeton à l'appui. Enregistré sous verrou optimiste (tout
- * le monde vote en même temps). Seul le nombre de votes est diffusé, jamais leur contenu.
+ * Joueur connecté : vote contre un autre (le compte de la session doit être celui de `voterId`). Enregistré sous
+ * verrou optimiste (tout le monde vote en même temps). Seul le nombre de votes est diffusé, jamais leur contenu.
  */
 export async function POST(request: Request, context: Params<'id'>) {
   const limited = await limitPublic('game_play');
   if (limited) return limited;
+  const guard = await requirePlayer(request);
+  if (!guard.ok) return guard.response;
   const id = await uuidParam(context, 'id');
   if (!id) return error('Partie introuvable', 404);
   const body = await readBody(request, undercoverVoteSchema);
   if (!body.ok) return body.response;
-  const { voterId, targetId, playerToken } = body.data;
+  const { voterId, targetId } = body.data;
   try {
-    const applied = await applyUndercover(id, (state) => submitVote(state, voterId, targetId, hashToken(playerToken)));
+    const applied = await applyUndercover(id, (state) => submitVote(state, voterId, targetId, guard.player.user.id));
     if (applied.kind === 'response') return applied.response.status === 404 ? applied.response : error('Vote impossible', 400);
     await broadcast(undercoverChannel(id), 'vote_submitted', {
       voteCount: Object.keys(applied.state.votes).length,

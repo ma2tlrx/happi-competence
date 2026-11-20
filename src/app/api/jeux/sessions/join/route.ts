@@ -1,27 +1,38 @@
-import { getSessionByCode } from '@/lib/jeux/data';
-import { error, json, limitPublic, readBody, serverError, serviceDb } from '@/lib/jeux/http';
+import { getPlayerByProfile, getSessionByCode } from '@/lib/jeux/data';
+import { error, json, limitPublic, readBody, requirePlayer, serverError, serviceDb } from '@/lib/jeux/http';
+import { checkNickname } from '@/lib/jeux/nickname';
 import { registerPlayer } from '@/lib/jeux/quiz-join';
-import { nicknameSchema, sessionJoinSchema } from '@/lib/jeux/schemas';
+import { sessionJoinSchema } from '@/lib/jeux/schemas';
 import { getQuizState } from '@/lib/jeux/stores';
 
 /**
- * Route publique : un joueur rejoint une partie de Quiz avec le code et un pseudo, sans compte.
- * Limitée en débit par adresse IP. La réponse contient un jeton personnel (`playerToken`) qu'il faudra
- * présenter pour répondre : il n'est affiché qu'ici. Un pseudo « CHECK_ONLY » vérifie seulement le code.
+ * Un joueur rejoint une partie de Quiz avec le code et un pseudo. RÉSERVÉ aux comptes connectés : un participant
+ * (résultats conservés) ou un animateur en mode essai (`trial: true`, aucun résultat). L'identité vient de la session
+ * (cookies) : aucun jeton. Rejouer l'appel avec le même compte reprend la même place (même `playerId`, pseudo d'origine).
+ * Limitée en débit par adresse IP. `nickname: "CHECK_ONLY"` vérifie seulement le code (sans créer de joueur).
  */
 export async function POST(request: Request) {
   const limited = await limitPublic('game_join');
   if (limited) return limited;
+  const guard = await requirePlayer(request);
+  if (!guard.ok) return guard.response;
+  const { player } = guard;
   const body = await readBody(request, sessionJoinSchema);
   if (!body.ok) return body.response;
-  const { code, nickname: rawNickname } = body.data;
+  const { code, nickname: rawNickname, trial } = body.data;
+  if (trial !== player.trial) {
+    return error(
+      player.trial ? 'Les animateurs rejoignent une partie en mode essai : cochez « partie d’essai ».' : 'Le mode essai est réservé aux animateurs.',
+      403,
+    );
+  }
   const checkOnly = rawNickname === 'CHECK_ONLY';
 
   let nickname = '';
   if (!checkOnly) {
-    const parsed = nicknameSchema.safeParse(rawNickname);
-    if (!parsed.success) return error(parsed.error.issues[0]?.message || 'Pseudo invalide.', 400);
-    nickname = parsed.data;
+    const checked = checkNickname(rawNickname);
+    if (!checked.ok) return error(checked.message, 400);
+    nickname = checked.nickname;
   }
 
   try {
@@ -32,10 +43,12 @@ export async function POST(request: Request) {
 
     const state = await getQuizState(db, session.id);
     if (!state) return error('Cette partie est terminée', 410);
-    if (state.status !== 'lobby') return error('La partie a déjà commencé', 409);
-    if (checkOnly) return json({ valid: true, sessionCode: session.code });
+    const seated = !!(await getPlayerByProfile(db, session.id, player.user.id));
+    if (state.status !== 'lobby' && !seated) return error('La partie a déjà commencé', 409);
+    if (checkOnly) return json({ valid: true, sessionCode: session.code, sessionId: session.id });
 
-    const joined = await registerPlayer(db, session, nickname);
+    const account = { userId: player.user.id, participantId: player.participantId, trial: player.trial };
+    const joined = await registerPlayer(db, session, account, nickname);
     if (!joined.ok) {
       const messages = {
         not_found: ['Cette partie est terminée', 410],
@@ -48,7 +61,7 @@ export async function POST(request: Request) {
       const [message, status] = messages[joined.code];
       return error(message, status);
     }
-    return json({ sessionId: session.id, playerId: joined.playerId, nickname: joined.nickname, sessionCode: session.code, playerToken: joined.playerToken });
+    return json({ sessionId: session.id, playerId: joined.playerId, nickname: joined.nickname, sessionCode: session.code, trial: joined.trial });
   } catch (cause) {
     return serverError('sessions/join', cause);
   }

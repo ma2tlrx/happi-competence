@@ -17,6 +17,18 @@ export function canManageGames(actor: GameActor | null | undefined): boolean {
   return actor.role === 'formateur' && actor.permissions.includes('games.manage');
 }
 
+export type PlayerActor = GameActor & { participantId: string | null };
+
+/**
+ * Qui peut jouer : un participant actif ayant sa fiche (résultats conservés), ou un animateur
+ * (formateur/administrateur autorisé) en mode essai (aucun résultat). Tout autre compte : refusé.
+ */
+export function playerKind(actor: PlayerActor | null | undefined): 'participant' | 'trial' | null {
+  if (!actor || actor.status !== 'active') return null;
+  if (actor.role === 'participant') return actor.participantId ? 'participant' : null;
+  return canManageGames(actor) ? 'trial' : null;
+}
+
 /** Un contenu appartient à son créateur ; l'administrateur peut tout voir et animer. */
 export function ownsOrAdmin(actor: GameActor, ownerId: string | null | undefined): boolean {
   return actor.role === 'admin' || (!!ownerId && ownerId === actor.id);

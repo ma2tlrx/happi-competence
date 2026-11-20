@@ -11,7 +11,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
 import { GameDataError, getSession, type Db, type Session } from './data';
-import { canManageGames, isSameOrigin, ownsOrAdmin } from './guards';
+import { canManageGames, isSameOrigin, ownsOrAdmin, playerKind } from './guards';
 import { idParamSchema } from './schemas';
 
 const NO_STORE = { 'cache-control': 'no-store' };
@@ -86,6 +86,52 @@ export async function requireManager(request: Request): Promise<{ ok: true; mana
     return { ok: false, response: error('Accès refusé : réservé aux formateurs et administrateurs autorisés.', 403) };
   }
   return { ok: true, manager: { user, db: (await createClient()) as unknown as Db } };
+}
+
+export type Player = { user: CurrentUser; participantId: string | null; trial: boolean };
+
+const SIGN_IN_TO_PLAY = 'Connectez-vous avec votre compte participant pour jouer.';
+
+/** Compte connecté, actif, authentification complète : sinon 401/403. Sans contrôle de rôle. */
+async function signedInUser(): Promise<{ ok: true; user: CurrentUser } | { ok: false; response: NextResponse }> {
+  const user = await getCurrentUser();
+  if (!user || mfaStep(user.mfa) !== null || user.awaitingAccessCode) return { ok: false, response: error(SIGN_IN_TO_PLAY, 401) };
+  if (user.status !== 'active') return { ok: false, response: error('Compte désactivé.', 403) };
+  return { ok: true, user };
+}
+
+/**
+ * Garde des routes joueur : l'identité vient de la SESSION (cookies), jamais d'un jeton ni d'un champ du corps.
+ *  - participant actif avec fiche : joue normalement (résultats conservés) ;
+ *  - formateur / administrateur autorisé : joue en mode essai (aucun résultat) ;
+ *  - tout autre compte (organisme, participant sans fiche…) : 403 ; visiteur non connecté : 401.
+ * Les requêtes qui modifient des données doivent venir du site (contrôle d'origine).
+ */
+export async function requirePlayer(request: Request): Promise<{ ok: true; player: Player } | { ok: false; response: NextResponse }> {
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    const host = request.headers.get('x-forwarded-host') ?? request.headers.get('host');
+    if (!isSameOrigin(request.headers.get('origin'), host)) return { ok: false, response: error('Origine non autorisée.', 403) };
+  }
+  const signedIn = await signedInUser();
+  if (!signedIn.ok) return signedIn;
+  const { user } = signedIn;
+  const kind = playerKind({ id: user.id, role: user.role, status: user.status, permissions: user.permissions, participantId: user.participantId });
+  if (!kind) return { ok: false, response: error('Les jeux sont réservés aux participants connectés (et aux animateurs, en mode essai).', 403) };
+  return { ok: true, player: { user, participantId: kind === 'participant' ? user.participantId : null, trial: kind === 'trial' } };
+}
+
+/**
+ * Lecture d'une partie (état, vue publique) : compte connecté qui est joueur de la partie, ou animateur
+ * propriétaire / administrateur. Renvoie le compte ; l'appelant vérifie l'appartenance avec l'état.
+ */
+export async function requireViewer(): Promise<{ ok: true; user: CurrentUser; manager: boolean } | { ok: false; response: NextResponse }> {
+  const signedIn = await signedInUser();
+  if (!signedIn.ok) return signedIn;
+  const { user } = signedIn;
+  const manager = canManageGames({ id: user.id, role: user.role, status: user.status, permissions: user.permissions });
+  const participant = user.role === 'participant' && !!user.participantId;
+  if (!manager && !participant) return { ok: false, response: error('Les jeux sont réservés aux participants connectés.', 403) };
+  return { ok: true, user, manager };
 }
 
 export function serviceDb(): Db {

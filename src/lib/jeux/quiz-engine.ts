@@ -54,18 +54,42 @@ export function newQuizState(sessionId: string, questions: QuizQuestion[], maxPl
   };
 }
 
-/** Un joueur entre dans la salle (ou y revient avec le même jeton : l'opération est idempotente). */
-export function joinLobby(state: QuizState, player: { id: string; nickname: string; tokenHash: string }) {
+/** Un joueur entre dans la salle (ou y revient avec le même compte : l'opération est idempotente). */
+export function joinLobby(
+  state: QuizState,
+  player: { id: string; nickname: string; userId: string; participantId?: string | null; trial?: boolean },
+) {
   const existing = state.players[player.id];
   if (existing) {
-    return existing.tokenHash === player.tokenHash ? ok({ rejoined: true }) : fail('forbidden');
+    return existing.userId === player.userId ? ok({ rejoined: true }) : fail('forbidden');
   }
   if (state.status !== 'lobby') return fail('already_started');
   if (Object.keys(state.players).length >= state.maxPlayers) return fail('full');
   const taken = Object.values(state.players).some((p) => p.nickname.toLowerCase() === player.nickname.toLowerCase());
   if (taken) return fail('nickname_taken');
-  state.players[player.id] = { id: player.id, nickname: player.nickname, score: 0, tokenHash: player.tokenHash };
+  state.players[player.id] = {
+    id: player.id,
+    nickname: player.nickname,
+    score: 0,
+    userId: player.userId,
+    participantId: player.participantId ?? null,
+    trial: player.trial === true,
+    answeredCount: 0,
+    correctCount: 0,
+    totalResponseMs: 0,
+  };
   return ok({ rejoined: false });
+}
+
+/** L'identifiant de joueur désigne-t-il bien le compte connecté ? (Seule garantie d'identité : plus aucun jeton.) */
+export function isPlayerOf(state: QuizState, playerId: string, userId: string): boolean {
+  const player = state.players[playerId];
+  return !!player?.userId && player.userId === userId;
+}
+
+/** Joueur de cette partie correspondant au compte (reprise après déconnexion). */
+export function findPlayerByUser(state: QuizState, userId: string) {
+  return Object.values(state.players).find((p) => p.userId === userId);
 }
 
 export function startGame(state: QuizState) {
@@ -133,7 +157,7 @@ export type AnswerOutcome = {
 };
 
 /**
- * Enregistre la réponse d'un joueur. Le jeton est vérifié par l'appelant (empreinte) ; ici on
+ * Enregistre la réponse d'un joueur. Le compte est vérifié par l'appelant (isPlayerOf) ; ici on
  * contrôle la phase, le doublon, la validité de la réponse et le temps. Quand le dernier joueur
  * répond, la question est clôturée dans la même écriture : pas de fenêtre entre les deux.
  */
@@ -153,6 +177,9 @@ export function submitAnswer(state: QuizState, playerId: string, answerId: strin
   const points = calculatePoints(responseTime, question.timeLimit, isCorrect);
   state.answers[playerId] = { answerId, responseTime, isCorrect, points };
   player.score += points;
+  player.answeredCount = (player.answeredCount ?? 0) + 1;
+  player.correctCount = (player.correctCount ?? 0) + (isCorrect ? 1 : 0);
+  player.totalResponseMs = (player.totalResponseMs ?? 0) + responseTime;
 
   const answerCount = Object.keys(state.answers).length;
   const playerCount = Object.keys(state.players).length;

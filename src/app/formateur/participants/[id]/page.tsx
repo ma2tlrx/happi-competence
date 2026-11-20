@@ -3,10 +3,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { GameResultsSection } from '@/components/jeux/results-view';
 import { OutcomesCard } from '@/components/outcomes/outcomes-card';
 import { ParticipantFile } from '@/components/passport/participant-file';
 import { NeedsAssessmentCard } from '@/components/quality/needs-assessment-card';
 import { hasPermission, requireRole } from '@/lib/auth/session';
+import { loadGameResults } from '@/lib/jeux/results-load';
 import { loadParticipantOutcomes, participantGroups } from '@/lib/outcomes/load';
 import { getPassport } from '@/lib/passport';
 import { loadNeedsAssessment } from '@/lib/quality/load';
@@ -23,10 +25,11 @@ export default async function TrainerParticipantPage({ params }: { params: Promi
   const passport = await getPassport(supabase, id);
   if (!passport) notFound();
   const groupIds = participantGroups(passport).map((group) => group.id);
-  const [, outcomes, needs, trains] = await Promise.all([
+  const [, outcomes, needs, games, trains] = await Promise.all([
     supabase.rpc('log_event', { p_action: 'participant_file.viewed', p_entity_type: 'participant', p_entity_id: id }),
     loadParticipantOutcomes(supabase, id),
     loadNeedsAssessment(supabase, id),
+    loadGameResults(supabase, id, 200),
     user.role === 'admin' || groupIds.length === 0
       ? Promise.resolve({ data: [] })
       : supabase.from('group_trainers').select('group_id').eq('trainer_id', user.id).in('group_id', groupIds),
@@ -59,6 +62,7 @@ export default async function TrainerParticipantPage({ params }: { params: Promi
         assessment={needs}
         canEdit={canEditNeeds}
       />
+      <GameResultsSection rows={games} participantName={`${passport.participant.firstName} ${passport.participant.lastName}`} />
     </>
   );
 }

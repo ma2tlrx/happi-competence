@@ -1621,33 +1621,122 @@ export type Database = {
           },
         ]
       }
+      game_results: {
+        Row: {
+          answered_count: number | null
+          avg_response_ms: number | null
+          correct_answers: number | null
+          created_at: string
+          game_ref: string
+          game_type: string
+          id: string
+          outcome: string | null
+          participant_id: string
+          play_index: number
+          played_at: string
+          player_count: number
+          question_count: number | null
+          rank: number | null
+          role: string | null
+          rounds_survived: number | null
+          score: number | null
+          title: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          answered_count?: number | null
+          avg_response_ms?: number | null
+          correct_answers?: number | null
+          created_at?: string
+          game_ref: string
+          game_type: string
+          id?: string
+          outcome?: string | null
+          participant_id: string
+          play_index?: number
+          played_at?: string
+          player_count: number
+          question_count?: number | null
+          rank?: number | null
+          role?: string | null
+          rounds_survived?: number | null
+          score?: number | null
+          title?: string | null
+        }
+        Update: {
+          answered_count?: number | null
+          avg_response_ms?: number | null
+          correct_answers?: number | null
+          created_at?: string
+          game_ref?: string
+          game_type?: string
+          id?: string
+          outcome?: string | null
+          participant_id?: string
+          play_index?: number
+          played_at?: string
+          player_count?: number
+          question_count?: number | null
+          rank?: number | null
+          role?: string | null
+          rounds_survived?: number | null
+          score?: number | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_results_participant_id_fkey"
+            columns: ["participant_id"]
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_session_players: {
         Row: {
           id: string
+          is_trial: boolean
           joined_at: string
           nickname: string
+          participant_id: string | null
+          profile_id: string | null
           score: number
           session_id: string
-          token_hash: string
         }
         ComputedFields: never
         Insert: {
           id?: string
+          is_trial?: boolean
           joined_at?: string
           nickname: string
+          participant_id?: string | null
+          profile_id?: string | null
           score?: number
           session_id: string
-          token_hash: string
         }
         Update: {
           id?: string
+          is_trial?: boolean
           joined_at?: string
           nickname?: string
+          participant_id?: string | null
+          profile_id?: string | null
           score?: number
           session_id?: string
-          token_hash?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "game_session_players_participant_id_fkey"
+            columns: ["participant_id"]
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_session_players_profile_id_fkey"
+            columns: ["profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "game_session_players_session_id_fkey"
             columns: ["session_id"]
@@ -4991,6 +5080,7 @@ export type Database = {
           value: number | null
         }[]
       }
+      purge_old_game_results: { Args: { p_retention?: string }; Returns: number }
       save_game_questions: { Args: { p_questions: Json; p_quiz_id: string }; Returns: undefined }
       submit_quality_complaint: { Args: { p_description: string; p_subject: string }; Returns: string }
       submit_satisfaction_response: {

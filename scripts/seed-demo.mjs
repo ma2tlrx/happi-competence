@@ -416,6 +416,44 @@ async function seed() {
     'Situations de sortie',
   );
 
+  // ── Résultats de jeux d'animation FICTIFS (hors bilan) : quiz et Undercover de démonstration ──
+  // Rattachés aux fiches de démonstration : supprimés avec elles (cascade) par la purge.
+  const gameRefQuiz = crypto.randomUUID();
+  const gameRefUndercover = crypto.randomUUID();
+  const quizScores = [8450, 7120, 5980, 4210];
+  const gameRoles = ['civil', 'civil', 'undercover', 'spy'];
+  const gameParticipants = membersA.slice(0, 4);
+  const demoGameRows = [
+    ...gameParticipants.map((participantId, index) => ({
+      participant_id: participantId,
+      game_type: 'quiz',
+      game_ref: gameRefQuiz,
+      play_index: 1,
+      played_at: new Date(Date.now() - 6 * 86400000).toISOString(),
+      player_count: gameParticipants.length,
+      rank: index + 1,
+      score: quizScores[index],
+      question_count: 10,
+      answered_count: 10,
+      correct_answers: 9 - index * 2,
+      avg_response_ms: 3800 + index * 1700,
+      title: 'Quiz de démonstration : le travail en équipe',
+    })),
+    ...gameParticipants.map((participantId, index) => ({
+      participant_id: participantId,
+      game_type: 'undercover',
+      game_ref: gameRefUndercover,
+      play_index: 1,
+      played_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+      player_count: gameParticipants.length,
+      role: gameRoles[index],
+      outcome: gameRoles[index] === 'civil' ? 'won' : 'lost',
+      rounds_survived: gameRoles[index] === 'civil' ? 2 : index - 2,
+      title: 'Thème : Standard',
+    })),
+  ];
+  must(await admin.from('game_results').insert(demoGameRows), 'Résultats de jeux de démonstration');
+
   writeFileSync(join(process.cwd(), '.demo-credentials.json'), `${JSON.stringify({ genere_le: new Date().toISOString(), comptes: credentials }, null, 2)}\n`, { mode: 0o600 });
   console.log(`✔ Démonstration prête : 3 organismes, 3 groupes, ${membersA.length + membersB.length + membersC.length} participants, ${credentials.length} comptes.`);
   console.log('  Identifiants : .demo-credentials.json');

@@ -78,6 +78,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         { href: '/participant/partage', label: 'Partager mon passeport', icon: Share2 },
         { href: '/participant/badges', label: 'Mes badges', icon: Award },
         { href: '/participant/evolution', label: 'Mon évolution', icon: TrendingUp },
+        { href: '/participant/jeux', label: 'Mes jeux', icon: Gamepad2 },
         { href: '/participant/satisfaction', label: 'Donnez votre avis', icon: MessageSquareHeart },
         { href: '/participant/signalements', label: 'Signaler un problème', icon: MessageSquareWarning },
         { href: '/participant/consentements', label: 'Mes consentements', icon: FileSignature },

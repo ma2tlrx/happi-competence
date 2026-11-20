@@ -41,7 +41,7 @@ const questions: QuizQuestion[] = [
 function lobby(max = 10): QuizState {
   return newQuizState('s1', questions, max);
 }
-const join = (s: QuizState, id: string, nickname = id) => joinLobby(s, { id, nickname, tokenHash: `hash-${id}` });
+const join = (s: QuizState, id: string, nickname = id) => joinLobby(s, { id, nickname, userId: `u-${id}`, participantId: `part-${id}` });
 
 function answering(): QuizState {
   const s = lobby();
@@ -65,11 +65,11 @@ describe('salle d’attente', () => {
     join(s, 'p2');
     expect(join(s, 'p3')).toEqual({ ok: false, code: 'full' });
   });
-  it('est idempotent avec le même jeton, refuse un autre jeton pour le même identifiant', () => {
+  it('est idempotent avec le même compte, refuse un autre compte pour le même identifiant', () => {
     const s = lobby();
     join(s, 'p1');
     expect(join(s, 'p1')).toMatchObject({ ok: true, result: { rejoined: true } });
-    expect(joinLobby(s, { id: 'p1', nickname: 'x', tokenHash: 'autre' })).toEqual({ ok: false, code: 'forbidden' });
+    expect(joinLobby(s, { id: 'p1', nickname: 'x', userId: 'u-autre' })).toEqual({ ok: false, code: 'forbidden' });
   });
   it('refuse une entrée une fois la partie lancée', () => {
     const s = lobby();
@@ -179,12 +179,13 @@ describe('question suivante et fin de partie', () => {
 describe('vue publique : aucune fuite des bonnes réponses', () => {
   const serialized = (s: QuizState) => JSON.stringify(publicQuizState(s));
 
-  it('ne contient ni isCorrect, ni jeton, ni empreinte, pendant les réponses', () => {
+  it('ne contient ni isCorrect, ni identifiant de compte, pendant les réponses', () => {
     const s = answering();
     const text = serialized(s);
     expect(text).not.toContain('isCorrect');
-    expect(text).not.toContain('hash-p1');
-    expect(text).not.toContain('tokenHash');
+    expect(text).not.toContain('u-p1');
+    expect(text).not.toContain('userId');
+    expect(text).not.toContain('participantId');
     expect(publicQuizState(s).correctAnswerIds).toBeNull();
     expect(publicQuizState(s).answers).toEqual([{ id: 'a1', text: 'Paris' }, { id: 'a2', text: 'Lyon' }]);
   });
@@ -195,7 +196,7 @@ describe('vue publique : aucune fuite des bonnes réponses', () => {
     expect(view.correctAnswerIds).toEqual(['a1']);
     expect(view.leaderboard).not.toBeNull();
     expect(view.stats).not.toBeNull();
-    expect(serialized(s)).not.toContain('tokenHash');
+    expect(serialized(s)).not.toContain('userId');
   });
   it('ne montre aucune question avant le départ', () => {
     const s = lobby();

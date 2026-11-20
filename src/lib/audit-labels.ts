@@ -33,6 +33,7 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   'game_session.created': 'Partie de quiz créée',
   'game_session.active': 'Partie de quiz lancée',
   'game_session.finished': 'Partie de quiz terminée',
+  'game_results.recorded': 'Résultats de jeu enregistrés',
   'game_undercover.created': 'Partie d’Undercover créée',
   'game_undercover_config.created': 'Configuration Undercover créée',
   'game_undercover_config.deleted': 'Configuration Undercover supprimée',

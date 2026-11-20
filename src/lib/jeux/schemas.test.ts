@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { canManageGames, isSameOrigin, ownsOrAdmin } from './guards';
+import { canManageGames, isSameOrigin, ownsOrAdmin, playerKind } from './guards';
 import {
   gameCodeSchema,
   nicknameSchema,
@@ -12,7 +12,6 @@ import {
   undercoverCreateSchema,
   undercoverNextPhaseSchema,
 } from './schemas';
-import { hashToken, newPlayerToken, sameHash } from './tokens';
 import { RATE_LIMITS, rateLimitMessage } from '@/lib/security/rate-limit-core';
 
 const uuid = '3f0c6a52-7a39-4f1c-9a53-5d4f7f4c2b11';
@@ -45,11 +44,10 @@ describe('code de partie', () => {
 });
 
 describe('réponse d’un joueur', () => {
-  it('exige des identifiants et un jeton bien formés', () => {
-    expect(quizAnswerSchema.safeParse({ playerId: uuid, answerId: 'a1', playerToken: 'x'.repeat(32) }).success).toBe(true);
-    expect(quizAnswerSchema.safeParse({ playerId: 'pas-un-uuid', answerId: 'a1', playerToken: 'x'.repeat(32) }).success).toBe(false);
-    expect(quizAnswerSchema.safeParse({ playerId: uuid, answerId: 'a1', playerToken: 'court' }).success).toBe(false);
-    expect(quizAnswerSchema.safeParse({ playerId: uuid, playerToken: 'x'.repeat(32) }).success).toBe(false);
+  it('exige des identifiants bien formés (aucun jeton, l’identité vient de la session)', () => {
+    expect(quizAnswerSchema.safeParse({ playerId: uuid, answerId: 'a1' }).success).toBe(true);
+    expect(quizAnswerSchema.safeParse({ playerId: 'pas-un-uuid', answerId: 'a1' }).success).toBe(false);
+    expect(quizAnswerSchema.safeParse({ playerId: uuid }).success).toBe(false);
   });
 });
 
@@ -120,20 +118,28 @@ describe('droits', () => {
   });
 });
 
-describe('jetons et limitation de débit', () => {
-  it('le jeton est aléatoire et seule son empreinte se compare', () => {
-    const a = newPlayerToken();
-    const b = newPlayerToken();
-    expect(a).not.toBe(b);
-    expect(a.length).toBeGreaterThanOrEqual(16);
-    expect(hashToken(a)).toMatch(/^[0-9a-f]{64}$/);
-    expect(sameHash(hashToken(a), hashToken(a))).toBe(true);
-    expect(sameHash(hashToken(a), hashToken(b))).toBe(false);
-    expect(sameHash(undefined, hashToken(a))).toBe(false);
-  });
+describe('limitation de débit', () => {
   it('les portées de jeu sont déclarées', () => {
     expect(RATE_LIMITS['game_join.ip'].limit).toBeGreaterThan(0);
     expect(RATE_LIMITS['game_play.ip'].limit).toBeGreaterThan(RATE_LIMITS['game_join.ip'].limit);
     expect(rateLimitMessage('game_join', 60)).toContain('1 minute');
+  });
+});
+
+describe('qui peut jouer', () => {
+  const participant = { id: 'u1', role: 'participant', status: 'active', permissions: [] as string[], participantId: 'p1' };
+  it('un participant actif avec fiche joue ; sans fiche ou désactivé, non', () => {
+    expect(playerKind(participant)).toBe('participant');
+    expect(playerKind({ ...participant, participantId: null })).toBeNull();
+    expect(playerKind({ ...participant, status: 'disabled' })).toBeNull();
+  });
+  it('un formateur ou administrateur autorisé joue en mode essai seulement', () => {
+    expect(playerKind({ id: 'u2', role: 'formateur', status: 'active', permissions: ['games.manage'], participantId: null })).toBe('trial');
+    expect(playerKind({ id: 'u3', role: 'admin', status: 'active', permissions: [], participantId: null })).toBe('trial');
+    expect(playerKind({ id: 'u2', role: 'formateur', status: 'active', permissions: [], participantId: null })).toBeNull();
+  });
+  it('organisme, visiteur anonyme : non', () => {
+    expect(playerKind({ id: 'u4', role: 'organisme', status: 'active', permissions: ['games.manage'], participantId: null })).toBeNull();
+    expect(playerKind(null)).toBeNull();
   });
 });

@@ -22,7 +22,7 @@ function twoAnswerQuestion() {
 
 async function answeringState(players: number): Promise<QuizState> {
   const state = newQuizState('s1', twoAnswerQuestion(), 50);
-  for (let i = 0; i < players; i++) joinLobby(state, { id: `p${i}`, nickname: `Joueur${i}`, tokenHash: `h${i}` });
+  for (let i = 0; i < players; i++) joinLobby(state, { id: `p${i}`, nickname: `Joueur${i}`, userId: `u${i}` });
   startGame(state);
   showQuestion(state, 0);
   revealAnswers(state, 1000);

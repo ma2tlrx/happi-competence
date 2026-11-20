@@ -1,6 +1,6 @@
 /**
  * Jeux d'animation (Quiz et Undercover) : propriété des contenus, rôles, états inaccessibles au client,
- * jetons des joueurs illisibles, journal sans texte libre, verrou optimiste sur la vraie base et
+ * identité des joueurs liée à un compte, journal sans texte libre, verrou optimiste sur la vraie base et
  * vues publiques sans fuite.
  *
  * Les routes HTTP sont couvertes par les tests unitaires de src/lib/jeux (règles, schémas, vues publiques) ;
@@ -11,7 +11,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createQuiz, createSession, deleteQuiz, getQuiz, listQuestions, listQuizzes, saveQuestions, type Db } from '@/lib/jeux/data';
 import { joinLobby, newQuizState, publicQuizState, revealAnswers, showQuestion, startGame, submitAnswer, type QuizQuestion } from '@/lib/jeux/quiz-engine';
 import { createQuizState, getQuizState, insertUndercoverGame, mutateQuiz, getUndercoverGame } from '@/lib/jeux/stores';
-import { hashToken } from '@/lib/jeux/tokens';
 import { generateCode, joinGame, newUndercoverGame, startGame as startUndercover, toPublicState } from '@/lib/jeux/undercover-engine';
 
 import { anonymous, createFixtures, destroyFixtures, service, signIn, type Client, type Fixtures } from './fixtures';
@@ -180,14 +179,21 @@ describe('états et jetons : inaccessibles au client', () => {
     }
   });
 
-  it('les jetons des joueurs ne se lisent pas, même par le propriétaire', async () => {
-    const player = await service.from('game_session_players').insert({ session_id: sessionId, nickname: 'Pseudo-test', token_hash: hashToken('jeton-secret-0123456789') }).select('id').single();
+  it('le compte d’un joueur (profil, fiche) ne se lit pas, même par le propriétaire', async () => {
+    const player = await service
+      .from('game_session_players')
+      .insert({ session_id: sessionId, nickname: 'Pseudo-test', profile_id: f.accounts.participantA.id, participant_id: f.participantA })
+      .select('id')
+      .single();
     expect(player.error).toBeNull();
-    const token = await trainerA.from('game_session_players').select('token_hash').eq('session_id', sessionId);
-    expect(token.error).not.toBeNull();
+    for (const column of ['profile_id', 'participant_id', 'is_trial']) {
+      const hidden = await trainerA.from('game_session_players').select(column).eq('session_id', sessionId);
+      expect(hidden.error, column).not.toBeNull();
+    }
+    expect((await trainerA.from('game_session_players').select('token_hash')).error).not.toBeNull();
     const visible = await trainerA.from('game_session_players').select('id, nickname, score').eq('session_id', sessionId);
     expect(visible.data).toHaveLength(1);
-    const forged = await trainerA.from('game_session_players').insert({ session_id: sessionId, nickname: 'Intrus', token_hash: hashToken('x') });
+    const forged = await trainerA.from('game_session_players').insert({ session_id: sessionId, nickname: 'Intrus', profile_id: f.accounts.trainerA.id, is_trial: true });
     expect(forged.error).not.toBeNull();
     const rewrite = await trainerA.from('game_session_players').update({ score: 99999 }).eq('session_id', sessionId);
     expect(rewrite.error).not.toBeNull();
@@ -196,8 +202,23 @@ describe('états et jetons : inaccessibles au client', () => {
   });
 
   it('un pseudo ne peut pas être pris deux fois dans la même partie (casse ignorée)', async () => {
-    const duplicate = await service.from('game_session_players').insert({ session_id: sessionId, nickname: 'PSEUDO-TEST', token_hash: hashToken('autre-jeton-0123456789') });
+    const duplicate = await service
+      .from('game_session_players')
+      .insert({ session_id: sessionId, nickname: 'PSEUDO-TEST', profile_id: f.accounts.participantB.id, participant_id: f.participantB });
     expect(duplicate.error?.code).toBe('23505');
+  });
+
+  it('un compte n’a qu’une place par partie, et un participant n’est jamais « en essai »', async () => {
+    const twice = await service
+      .from('game_session_players')
+      .insert({ session_id: sessionId, nickname: 'Autre pseudo', profile_id: f.accounts.participantA.id, participant_id: f.participantA });
+    expect(twice.error?.code).toBe('23505');
+    const inconsistent = await service
+      .from('game_session_players')
+      .insert({ session_id: sessionId, nickname: 'Incohérent', profile_id: f.accounts.participantB.id, participant_id: f.participantB, is_trial: true });
+    expect(inconsistent.error).not.toBeNull();
+    const anonymousRow = await service.from('game_session_players').insert({ session_id: sessionId, nickname: 'Sans compte' });
+    expect(anonymousRow.error).not.toBeNull();
   });
 
   it('le code d’une partie en cours est unique', async () => {
@@ -225,7 +246,7 @@ describe('états et jetons : inaccessibles au client', () => {
     quizzes.push(quiz.id);
     const session = await createSession(db, { quizId: quiz.id, ownerId: f.accounts.trainerA.id, maxPlayers: 10 });
     const state = newQuizState(session.id, questions, 10);
-    for (let i = 0; i < 4; i++) joinLobby(state, { id: `p${i}`, nickname: `J${i}`, tokenHash: hashToken(`jeton-${i}`) });
+    for (let i = 0; i < 4; i++) joinLobby(state, { id: `p${i}`, nickname: `J${i}`, userId: `u${i}` });
     startGame(state);
     showQuestion(state, 0);
     revealAnswers(state, Date.now());
@@ -257,14 +278,15 @@ describe('états et jetons : inaccessibles au client', () => {
 
   it('la vue publique d’une partie de Quiz en cours ne contient aucune bonne réponse', async () => {
     const state = newQuizState('s', questions, 10);
-    joinLobby(state, { id: 'p1', nickname: 'Ana', tokenHash: hashToken('jeton-ana-0123456789') });
+    joinLobby(state, { id: 'p1', nickname: 'Ana', userId: 'user-ana-0123456789', participantId: 'part-ana-0123' });
     startGame(state);
     showQuestion(state, 0);
     revealAnswers(state, 1);
     const text = JSON.stringify(publicQuizState(state));
     expect(text).not.toContain('isCorrect');
-    expect(text).not.toContain('tokenHash');
-    expect(text).not.toContain(hashToken('jeton-ana-0123456789'));
+    expect(text).not.toContain('user-ana-0123456789');
+    expect(text).not.toContain('part-ana-0123');
+    expect(text).not.toContain('userId');
   });
 });
 
@@ -277,11 +299,10 @@ describe('Undercover : rôles et mots côté serveur seulement', () => {
       code: generateCode(),
       hostId: crypto.randomUUID(),
       hostNickname: 'Animateur',
-      hostTokenHash: hashToken('hote-0123456789abcdef'),
       customWordPair: { civil: 'MOT-CIVIL-SECRET', undercover: 'MOT-IMPOSTEUR-SECRET' },
       now,
     });
-    for (let i = 1; i <= 4; i++) joinGame(state, { id: crypto.randomUUID(), nickname: `J${i}`, tokenHash: hashToken(`jeton-uc-${i}-0123456789`), now });
+    for (let i = 1; i <= 4; i++) joinGame(state, { id: crypto.randomUUID(), nickname: `J${i}`, userId: `user-uc-${i}-0123456789`, participantId: `part-uc-${i}`, now });
     startUndercover(state, now);
     // Le code est tiré au hasard : un doublon éventuel est rejoué.
     for (let attempt = 0; attempt < 5 && !(await insertUndercoverGame(db, f.accounts.trainerA.id, state)); attempt++) {
@@ -297,8 +318,9 @@ describe('Undercover : rôles et mots côté serveur seulement', () => {
     expect(text).not.toContain('MOT-CIVIL-SECRET');
     expect(text).not.toContain('MOT-IMPOSTEUR-SECRET');
     expect(text).not.toContain('"role"');
-    expect(text).not.toContain('jeton-uc');
-    expect(text).not.toContain('hash');
+    expect(text).not.toContain('user-uc');
+    expect(text).not.toContain('part-uc');
+    expect(text).not.toContain('userId');
 
     // Le formateur propriétaire lui-même ne lit pas l'état par l'API de la base.
     expect((await trainerA.from('game_undercover_games').select('state')).error).not.toBeNull();

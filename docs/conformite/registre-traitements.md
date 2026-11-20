@@ -85,5 +85,12 @@
 - **Base légale** : obligation légale (art. 12 à 22).
 - **Durée** : à définir **[à valider]**.
 
+### T9. Jeux d’animation (Quiz et Undercover) et résultats conservés
+- **Finalité** : animer les séances (jeux en direct menés par le formateur) et suivre l’engagement du participant dans ces jeux ; **aucun usage évaluatif** : les résultats n’entrent ni dans le bilan, ni dans le passeport, ni dans le CV de compétences, ni dans les indicateurs d’impact, ni dans les exports financeurs.
+- **Données** : `game_session_players` (pseudo de la partie, score, lien vers le compte et la fiche du joueur, indicateur « essai » : tant que la partie existe), `game_results` (une ligne par participant et par partie : date, jeu, titre du quiz ou thème, nombre de joueurs, rang, score, bonnes réponses / réponses données / temps moyen pour le Quiz ; rôle, issue, manches survécues pour Undercover). **Jamais** le pseudo ni les mots secrets dans `game_results`. États vivants des parties (`game_states`, `game_undercover_games`) : serveur seulement, 24 h (Quiz) et 4 h (Undercover). Journal : identifiants et compteurs seulement (`game_results.recorded`).
+- **Base légale** : exécution de la mission d’accompagnement pour l’animation ; intérêt légitime pour le suivi de l’engagement **[à valider par un juriste]**. Le pseudo choisi est visible des autres joueurs de la partie (filtre simple des pseudos : voir `docs/jeux.md`).
+- **Destinataires** : le participant (page « Mes jeux », export « Mes données »), ses formateurs (`private.trains_participant`), les administrateurs. **L’organisme de rattachement n’y a pas accès** (choix prudent **[à valider]**).
+- **Durée** : résultats conservés **24 mois** après la partie (proposition **[à valider]**), purge par `public.purge_old_game_results(durée)` à planifier ; suppression en cascade avec la fiche du participant ; états de partie expirés purgés par `public.purge_expired_games()`.
+
 ## Mesures de sécurité générales (art. 32)
 RLS activée (et forcée sur les tables sensibles) sur toutes les tables ; fonctions `SECURITY DEFINER` à `search_path` vide ; clé de service uniquement côté serveur ; double authentification TOTP, exigible pour les administrateurs et formateurs (`security.mfa_required_staff`, contrôlée en base par `private.mfa_satisfied`) ; limitation de débit ; journal en ajout seul ; codes et mots de passe jamais en clair ; en-têtes de sécurité (`next.config.ts`).

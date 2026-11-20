@@ -12,7 +12,7 @@ export async function POST(request: Request, context: Params<'sessionId'>) {
     if (applied.kind === 'response') return applied.response;
     const channel = quizChannel(host.session.id);
     if (applied.result.finished) {
-      await persistEnd(host.session.id, applied.result.finalScores);
+      await persistEnd(host.session, applied.state, applied.result.finalScores);
       await broadcast(channel, 'game:ended', { finalScores: applied.result.finalScores });
       return json({ ok: true, finished: true });
     }

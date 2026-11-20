@@ -4,7 +4,9 @@ import Link from 'next/link';
 
 import { AttendanceBadge, SessionStatusBadge } from '@/components/passport/session-status';
 import { Button } from '@/components/ui/button';
+import { GameResultsSummaryCard } from '@/components/jeux/results-view';
 import { Avatar, Card, CardBody, CardHeader, PageHeader } from '@/components/ui/primitives';
+import { loadGameResults } from '@/lib/jeux/results-load';
 import { formatDate } from '@/lib/utils';
 
 import { getMyPassport } from '../data';
@@ -21,7 +23,8 @@ function Item({ label, children }: { label: string; children: React.ReactNode })
 }
 
 export default async function ProfilPage() {
-  const { passport } = await getMyPassport();
+  const { passport, supabase } = await getMyPassport();
+  const games = await loadGameResults(supabase, passport.participant.id, 50);
   const { participant, group } = passport;
   return (
     <>
@@ -87,6 +90,7 @@ export default async function ProfilPage() {
             ) : null}
           </CardBody>
         </Card>
+        <GameResultsSummaryCard rows={games} href="/participant/jeux" />
       </div>
     </>
   );

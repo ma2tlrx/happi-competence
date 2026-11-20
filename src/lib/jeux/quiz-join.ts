@@ -1,17 +1,21 @@
 import 'server-only';
 
 import { broadcast, quizChannel } from './broadcast';
-import { countPlayers, createPlayer, deletePlayer, getPlayerTokenHash, type Db, type Session } from './data';
+import { countPlayers, createPlayer, deletePlayer, getPlayerByProfile, type Db, type Session } from './data';
 import { joinLobby } from './quiz-engine';
 import { mutateQuiz } from './stores';
-import { hashToken, newPlayerToken, sameHash } from './tokens';
 
 export type JoinResult =
-  | { ok: true; playerId: string; nickname: string; playerToken?: string }
+  | { ok: true; playerId: string; nickname: string; trial: boolean }
   | { ok: false; code: 'not_found' | 'already_started' | 'full' | 'nickname_taken' | 'forbidden' | 'busy' };
 
+/** Compte qui joue : identité de la session connectée, jamais un jeton. */
+export type JoiningAccount = { userId: string; participantId: string | null; trial: boolean };
+
+type Entry = JoiningAccount & { id: string; nickname: string };
+
 /** Ajoute le joueur à l'état de la salle (sous verrou optimiste) puis prévient les écrans. */
-async function enterLobby(db: Db, session: Session, player: { id: string; nickname: string; tokenHash: string }): Promise<JoinResult> {
+async function enterLobby(db: Db, session: Session, player: Entry): Promise<JoinResult> {
   const outcome = await mutateQuiz<null, 'already_started' | 'full' | 'nickname_taken' | 'forbidden'>(db, session.id, (state) => {
     const result = joinLobby(state, player);
     return result.ok ? { state, result: null } : { reject: result.code as 'already_started' | 'full' | 'nickname_taken' | 'forbidden' };
@@ -22,34 +26,48 @@ async function enterLobby(db: Db, session: Session, player: { id: string; nickna
   await broadcast(quizChannel(session.id), 'lobby:updated', {
     players: Object.values(outcome.state.players).map((p) => ({ id: p.id, nickname: p.nickname })),
   });
-  return { ok: true, playerId: player.id, nickname: player.nickname };
+  return { ok: true, playerId: player.id, nickname: player.nickname, trial: player.trial };
 }
 
 /**
- * Entrée d'un nouveau joueur : pseudo unique dans la partie (contrainte en base), jeton remis une seule
- * fois (seule son empreinte est conservée), puis inscription dans la salle. En cas de refus, le joueur
- * créé est retiré pour ne laisser aucune ligne orpheline.
+ * Retour d'un joueur qui a déjà sa place dans la partie (déconnexion, rechargement, second appareil) : c'est le COMPTE
+ * qui le prouve. L'opération est idempotente et conserve le pseudo d'origine. Sans place : `forbidden`.
  */
-export async function registerPlayer(db: Db, session: Session, nickname: string): Promise<JoinResult> {
+export async function rejoinPlayer(db: Db, session: Session, account: JoiningAccount, expectedPlayerId?: string): Promise<JoinResult> {
+  const existing = await getPlayerByProfile(db, session.id, account.userId);
+  if (!existing || (expectedPlayerId && existing.id !== expectedPlayerId)) return { ok: false, code: 'forbidden' };
+  return enterLobby(db, session, {
+    id: existing.id,
+    nickname: existing.nickname,
+    userId: account.userId,
+    participantId: existing.participantId,
+    trial: existing.trial,
+  });
+}
+
+/**
+ * Entrée d'un joueur : une seule place par compte et par partie (reprise automatique si déjà inscrit), pseudo unique
+ * dans la partie (contrainte en base), puis inscription dans la salle. En cas de refus, le joueur créé est retiré
+ * pour ne laisser aucune ligne orpheline.
+ */
+export async function registerPlayer(db: Db, session: Session, account: JoiningAccount, nickname: string): Promise<JoinResult> {
+  if (await getPlayerByProfile(db, session.id, account.userId)) return rejoinPlayer(db, session, account);
+
   // Salle pleine d'après la base : couvre les joueurs créés mais pas encore inscrits dans l'état.
   if ((await countPlayers(db, session.id)) >= session.maxPlayers) return { ok: false, code: 'full' };
-  const token = newPlayerToken();
-  const created = await createPlayer(db, { sessionId: session.id, nickname, tokenHash: hashToken(token) });
-  if ('nicknameTaken' in created) return { ok: false, code: 'nickname_taken' };
-  const entered = await enterLobby(db, session, { id: created.player.id, nickname, tokenHash: hashToken(token) });
-  if (!entered.ok) {
-    await deletePlayer(db, session.id, created.player.id);
-    return entered;
+  const created = await createPlayer(db, {
+    sessionId: session.id,
+    nickname,
+    profileId: account.userId,
+    participantId: account.participantId,
+    trial: account.trial,
+  });
+  if ('nicknameTaken' in created) {
+    // Double envoi du même compte : la place existe désormais, on la reprend plutôt que de refuser.
+    if (await getPlayerByProfile(db, session.id, account.userId)) return rejoinPlayer(db, session, account);
+    return { ok: false, code: 'nickname_taken' };
   }
-  return { ok: true, playerId: created.player.id, nickname, playerToken: token };
-}
-
-/**
- * Retour d'un joueur déjà créé (route /quiz/[id]/join du jeu d'origine) : le jeton prouve son identité ;
- * l'opération est idempotente.
- */
-export async function rejoinPlayer(db: Db, session: Session, playerId: string, playerToken: string): Promise<JoinResult> {
-  const row = await getPlayerTokenHash(db, session.id, playerId);
-  if (!row || !sameHash(row.tokenHash, hashToken(playerToken))) return { ok: false, code: 'forbidden' };
-  return enterLobby(db, session, { id: playerId, nickname: row.nickname, tokenHash: row.tokenHash });
+  const entered = await enterLobby(db, session, { id: created.player.id, nickname, ...account });
+  if (!entered.ok) await deletePlayer(db, session.id, created.player.id);
+  return entered;
 }

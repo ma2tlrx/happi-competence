@@ -4,20 +4,21 @@
  */
 import { z } from 'zod';
 
-const UUID = z.uuid({ message: 'Identifiant invalide.' });
-const NO_CONTROL = /^[^\u0000-\u001f\u007f<>]*$/;
+import { checkNickname } from './nickname';
 
-/** Pseudo : 2 à 24 caractères, espaces normalisés, ni caractère de contrôle ni chevron. */
+const UUID = z.uuid({ message: 'Identifiant invalide.' });
+
+/** Pseudo : 2 à 20 caractères, espaces normalisés, filtre simple (voir nickname.ts). */
 export const nicknameSchema = z
   .string({ message: 'Pseudo requis.' })
-  .transform((value) => value.trim().replace(/\s+/g, ' '))
-  .pipe(
-    z
-      .string()
-      .min(2, 'Le pseudo doit faire au moins 2 caractères.')
-      .max(24, 'Le pseudo ne doit pas dépasser 24 caractères.')
-      .regex(NO_CONTROL, 'Ce pseudo contient des caractères non autorisés.'),
-  );
+  .transform((value, ctx) => {
+    const checked = checkNickname(value);
+    if (!checked.ok) {
+      ctx.issues.push({ code: 'custom', message: checked.message, input: value });
+      return z.NEVER;
+    }
+    return checked.nickname;
+  });
 
 /** Code de partie : 6 caractères alphanumériques, saisis en majuscules ou non. */
 export const gameCodeSchema = z
@@ -25,7 +26,6 @@ export const gameCodeSchema = z
   .transform((value) => value.trim().toUpperCase())
   .pipe(z.string().regex(/^[A-Z0-9]{6}$/, 'Code de partie invalide.'));
 
-const playerToken = z.string({ message: 'Jeton requis.' }).min(16, 'Jeton invalide.').max(128, 'Jeton invalide.');
 const shortText = (max: number, label: string) =>
   z
     .string({ message: `${label} requis.` })
@@ -98,20 +98,17 @@ export const sessionCreateSchema = z.object({
 
 export const sessionJoinSchema = z.object({
   code: gameCodeSchema,
-  // « CHECK_ONLY » : le jeu d'origine vérifie ainsi l'existence du code sans créer de joueur.
+  // « CHECK_ONLY » : vérifie seulement l'existence du code (sans créer de joueur).
   nickname: z.string({ message: 'Pseudo requis.' }).max(64, 'Pseudo invalide.'),
+  // Mode essai (animateur) : aucun résultat enregistré.
+  trial: z.boolean().optional().default(false),
 });
 
-export const quizJoinSchema = z.object({
-  playerId: UUID,
-  playerToken,
-  nickname: z.string().max(64).optional(),
-});
+export const quizJoinSchema = z.object({ playerId: UUID });
 
 export const quizAnswerSchema = z.object({
   playerId: UUID,
   answerId: z.string().min(1).max(64),
-  playerToken,
 });
 
 export const showQuestionSchema = z.object({
@@ -143,10 +140,10 @@ export const undercoverCreateSchema = z
     message: 'Les deux mots doivent être différents.',
   });
 
-export const undercoverJoinSchema = z.object({ nickname: nicknameSchema });
-export const undercoverVoteSchema = z.object({ voterId: UUID, targetId: UUID, playerToken });
-export const undercoverRoleSchema = z.object({ playerId: UUID, playerToken });
-export const undercoverSpyGuessSchema = z.object({ spyId: UUID, playerToken, guess: shortText(60, 'Mot') });
+export const undercoverJoinSchema = z.object({ nickname: nicknameSchema, trial: z.boolean().optional().default(false) });
+export const undercoverVoteSchema = z.object({ voterId: UUID, targetId: UUID });
+export const undercoverRoleSchema = z.object({ playerId: UUID });
+export const undercoverSpyGuessSchema = z.object({ spyId: UUID, guess: shortText(60, 'Mot') });
 export const undercoverNextPhaseSchema = z.object({
   action: z.enum(['start_discussion', 'next_speaker', 'start_voting'], { message: 'Action invalide' }),
 });

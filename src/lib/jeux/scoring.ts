@@ -8,8 +8,16 @@ export type GamePlayer = {
   id: string;
   nickname: string;
   score: number;
-  /** Empreinte SHA-256 du jeton du joueur (jamais le jeton, jamais exposée). */
-  tokenHash?: string;
+  /** Compte (profil) du joueur : sert à vérifier que l'action vient bien de lui. Jamais exposé aux écrans. */
+  userId?: string;
+  /** Fiche participant ; absente pour un animateur en mode essai. */
+  participantId?: string | null;
+  /** Mode essai : aucun résultat n'est enregistré pour ce joueur. */
+  trial?: boolean;
+  /** Statistiques cumulées sur la partie (alimentent les résultats conservés). */
+  answeredCount?: number;
+  correctCount?: number;
+  totalResponseMs?: number;
 };
 
 export type GameAnswer = {
