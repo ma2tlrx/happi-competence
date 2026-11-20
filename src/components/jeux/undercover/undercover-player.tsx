@@ -1,53 +1,28 @@
 'use client';
 
-import { ArrowRight, Hourglass, LogOut, Vote } from 'lucide-react';
+import { Hourglass, LogOut, Vote } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 
 import { CodeBadge } from '@/components/jeux/shared/code-badge';
 import { GameHeading, GamePanel, GameStage } from '@/components/jeux/shared/game-shell';
 import { LiveRegion } from '@/components/jeux/shared/live-region';
 import { PlayerChip } from '@/components/jeux/shared/player-chip';
-import { useHydrated } from '@/components/public/use-motion-preference';
 import { usePolledResource } from '@/components/jeux/shared/use-polled-resource';
 import { Button } from '@/components/ui/button';
 import { Field, Input } from '@/components/ui/form';
-import {
-  NICKNAME_MAX,
-  clearIdentity,
-  clearPendingNickname,
-  nicknameError,
-  parseIdentity,
-  readIdentityRaw,
-  readPendingNickname,
-  saveIdentity,
-  subscribeIdentity,
-  undercoverApi,
-  type GameIdentity,
-  type PublicGame,
-  type UndercoverRole,
-} from '@/lib/jeux/client-undercover';
+import { undercoverApi, type PublicGame, type UndercoverRole } from '@/lib/jeux/client-undercover';
 import { activePlayers, currentSpeaker, pluralFr, voteKey } from '@/lib/jeux/undercover-view';
 
 import { EliminationResult, GameOverSummary, LobbyPlayers, SpeakingOrder, VoteProgress } from './parts';
 import { PeekCard, RoleCard } from './role-card';
 
-/** Écran du joueur (téléphone) : salon d'attente, rôle en privé, parole, vote, résultat. Page publique. */
-export function UndercoverPlayer({ gameId }: { gameId: string }) {
-  const router = useRouter();
-  const hydrated = useHydrated();
-  const raw = useSyncExternalStore(subscribeIdentity, () => readIdentityRaw(gameId), () => null);
-  const identity = useMemo(() => parseIdentity(raw), [raw]);
-  const isHost = identity?.host === true;
-
-  useEffect(() => {
-    // L'animateur dispose de son propre écran : jamais d'écran joueur (donc jamais de rôle) sur son appareil.
-    if (hydrated && isHost) router.replace(`/jeux/undercover/partie/${gameId}`);
-  }, [hydrated, isHost, gameId, router]);
-
-  if (!hydrated || isHost) return <Centered message="Chargement de la partie…" />;
-  if (!identity) return <JoinGate gameId={gameId} />;
-  return <PlayerGame key={identity.playerId} gameId={gameId} identity={identity} />;
+/**
+ * Écran du joueur (téléphone) : salon d'attente, rôle en privé, parole, vote, résultat.
+ * L'identité vient du compte connecté (cookies) : l'adresse ne porte que l'identifiant de joueur, qui n'est pas un secret.
+ */
+export function UndercoverPlayer({ gameId, playerId, trial }: { gameId: string; playerId: string; trial: boolean }) {
+  return <PlayerGame gameId={gameId} playerId={playerId} trial={trial} />;
 }
 
 function Centered({ message }: { message: string }) {
@@ -60,82 +35,18 @@ function Centered({ message }: { message: string }) {
   );
 }
 
-/** Arrivée sur la page sans identité : rejoint avec le pseudo saisi sur /jouer, ou le demande ici. */
-function JoinGate({ gameId }: { gameId: string }) {
-  const [pending] = useState(() => readPendingNickname(gameId));
-  const [nickname, setNickname] = useState('');
-  const [busy, setBusy] = useState(Boolean(pending));
-  const [error, setError] = useState<string | null>(null);
-  const started = useRef(false);
-
-  async function join(pseudo: string) {
-    const result = await undercoverApi.join(gameId, pseudo);
-    clearPendingNickname(gameId);
-    if (result.ok) {
-      saveIdentity(gameId, { playerId: result.data.playerId, token: result.data.playerToken, host: false });
-      return;
-    }
-    setBusy(false);
-    setError(
-      result.status === 409 ? 'Impossible de rejoindre : la partie a commencé, elle est complète ou ce pseudo est déjà pris.' : result.error,
-    );
-  }
-
-  useEffect(() => {
-    if (!pending || started.current) return;
-    started.current = true;
-    void join(pending);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- une seule tentative, avec le pseudo reçu de /jouer
-  }, [pending]);
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    const problem = nicknameError(nickname);
-    if (problem) {
-      setError(problem);
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    void join(nickname.trim());
-  }
-
-  if (busy && pending && !error) return <Centered message="Connexion à la partie…" />;
+/** Rappel visible : en partie d'essai, rien n'est enregistré. */
+function TrialNotice() {
   return (
-    <GameStage className="my-auto py-6">
-      <GameHeading eyebrow="Fourmi Caché" title="Rejoindre cette partie" className="mb-6" />
-      <form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-white p-5 text-ink shadow-lg">
-        <Field label="Votre pseudo" hint="Visible des autres joueurs." error={error}>
-          {({ id, describedBy, invalid }) => (
-            <Input
-              id={id}
-              value={nickname}
-              onChange={(event) => {
-                setNickname(event.target.value);
-                setError(null);
-              }}
-              aria-describedby={describedBy}
-              aria-invalid={invalid || undefined}
-              maxLength={NICKNAME_MAX}
-              autoComplete="nickname"
-              autoFocus
-              className="h-14 text-lg"
-            />
-          )}
-        </Field>
-        <Button type="submit" size="lg" loading={busy}>
-          Rejoindre
-          <ArrowRight aria-hidden />
-        </Button>
-      </form>
-      <LiveRegion message={error ?? ''} assertive />
-    </GameStage>
+    <p className="mb-4 rounded-lg border border-orange-300/50 bg-orange-500/15 px-3 py-2 text-center text-sm font-medium text-orange-100">
+      Partie d’essai : aucun résultat n’est enregistré.
+    </p>
   );
 }
 
 type RoleInfo = { startedAt: number | undefined; role: UndercoverRole; word: string | null };
 
-function PlayerGame({ gameId, identity }: { gameId: string; identity: GameIdentity }) {
+function PlayerGame({ gameId, playerId, trial }: { gameId: string; playerId: string; trial: boolean }) {
   const router = useRouter();
   const { data: game, error: pollError, setData } = usePolledResource<PublicGame>(
     () => undercoverApi.get(gameId).then((result) => (result.ok ? { ok: true as const, data: result.data.game } : result)),
@@ -148,25 +59,26 @@ function PlayerGame({ gameId, identity }: { gameId: string; identity: GameIdenti
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const me = game?.players[identity.playerId];
+  const me = game?.players[playerId];
   const status = game?.status;
   const startedAt = game?.startedAt;
   const inGame = Boolean(me);
 
-  // Le rôle n'est demandé qu'à partir du lancement, uniquement pour ce joueur, avec son jeton. Il se renouvelle à chaque nouvelle partie.
+  // Le rôle n'est demandé qu'à partir du lancement, uniquement pour ce joueur, pour son compte seulement. Il se renouvelle à chaque nouvelle partie.
   useEffect(() => {
     if (!inGame || !status || status === 'lobby') return;
     if (roleInfo && roleInfo.startedAt === startedAt) return;
     let cancelled = false;
-    undercoverApi.myRole(gameId, { playerId: identity.playerId, playerToken: identity.token }).then((result) => {
+    undercoverApi.myRole(gameId, { playerId }).then((result) => {
       if (cancelled) return;
       if (result.ok) setRoleInfo({ startedAt, role: result.data.role, word: result.data.word });
+      else if (result.status === 401 || result.status === 403) setError(result.error);
       else window.setTimeout(() => setRoleAttempt((value) => value + 1), 1500);
     });
     return () => {
       cancelled = true;
     };
-  }, [gameId, identity.playerId, identity.token, inGame, status, startedAt, roleInfo, roleAttempt]);
+  }, [gameId, playerId, inGame, status, startedAt, roleInfo, roleAttempt]);
 
   async function run(action: () => Promise<{ ok: true; game: PublicGame } | { ok: false; error: string }>) {
     setBusy(true);
@@ -178,7 +90,6 @@ function PlayerGame({ gameId, identity }: { gameId: string; identity: GameIdenti
   }
 
   function leave() {
-    clearIdentity(gameId);
     router.push('/jouer');
   }
 
@@ -215,7 +126,7 @@ function PlayerGame({ gameId, identity }: { gameId: string; identity: GameIdenti
   const hasVoted = vote?.key === key;
   const lastRound = game.roundResults[game.roundResults.length - 1];
   const candidates = activePlayers(game).filter(
-    (player) => player.id !== identity.playerId && (!game.tiebreakPlayerIds || game.tiebreakPlayerIds.includes(player.id)),
+    (player) => player.id !== playerId && (!game.tiebreakPlayerIds || game.tiebreakPlayerIds.includes(player.id)),
   );
   const totalVoters = activePlayers(game).length;
   const iAmSpy = role?.role === 'spy';
@@ -223,7 +134,7 @@ function PlayerGame({ gameId, identity }: { gameId: string; identity: GameIdenti
 
   function submitVote(targetId: string) {
     void run(async () => {
-      const result = await undercoverApi.vote(gameId, { voterId: identity.playerId, targetId, playerToken: identity.token });
+      const result = await undercoverApi.vote(gameId, { voterId: playerId, targetId });
       if (!result.ok) return { ok: false, error: result.error };
       setVote({ key, targetId });
       return { ok: true, game: result.data.game };
@@ -234,7 +145,7 @@ function PlayerGame({ gameId, identity }: { gameId: string; identity: GameIdenti
     event.preventDefault();
     if (!guess.trim()) return;
     void run(async () => {
-      const result = await undercoverApi.spyGuess(gameId, { spyId: identity.playerId, playerToken: identity.token, guess: guess.trim() });
+      const result = await undercoverApi.spyGuess(gameId, { spyId: playerId, guess: guess.trim() });
       return result.ok ? { ok: true, game: result.data.game } : { ok: false, error: result.error };
     });
   }
@@ -246,7 +157,7 @@ function PlayerGame({ gameId, identity }: { gameId: string; identity: GameIdenti
       case 'role_reveal':
         return 'La partie commence. Consultez votre rôle en privé.';
       case 'discussion':
-        return speaker?.id === identity.playerId ? `Manche ${game.currentRound}. C’est à vous de parler.` : `Manche ${game.currentRound}. C’est à ${speaker?.nickname ?? 'un joueur'} de parler.`;
+        return speaker?.id === playerId ? `Manche ${game.currentRound}. C’est à vous de parler.` : `Manche ${game.currentRound}. C’est à ${speaker?.nickname ?? 'un joueur'} de parler.`;
       case 'voting':
         return game.tiebreakPlayerIds ? 'Égalité. Nouveau vote entre les joueurs à égalité.' : 'C’est l’heure du vote.';
       case 'vote_result':
@@ -270,6 +181,7 @@ function PlayerGame({ gameId, identity }: { gameId: string; identity: GameIdenti
         </div>
         <CodeBadge code={game.code} />
       </header>
+      {trial ? <TrialNotice /> : null}
 
       {error ? (
         <p role="alert" className="mb-4 rounded-lg border border-danger/40 bg-danger-soft px-4 py-3 text-sm font-medium text-danger">
@@ -287,7 +199,7 @@ function PlayerGame({ gameId, identity }: { gameId: string; identity: GameIdenti
               {game.playerCount} / {game.maxPlayers}
             </span>
           </div>
-          <LobbyPlayers game={game} selfId={identity.playerId} />
+          <LobbyPlayers game={game} selfId={playerId} />
           <p className="flex items-center justify-center gap-2 py-3 text-white/80">
             <Hourglass className="size-4" aria-hidden />
             En attente du lancement par l’animateur…
@@ -319,12 +231,12 @@ function PlayerGame({ gameId, identity }: { gameId: string; identity: GameIdenti
               <p className="text-sm text-white/70">Joueur actuel</p>
               <p className="font-display text-2xl font-semibold text-white">
                 {speaker?.nickname ?? '—'}
-                {speaker?.id === identity.playerId ? <span className="ml-2 text-base font-normal text-orange-200">(vous)</span> : null}
+                {speaker?.id === playerId ? <span className="ml-2 text-base font-normal text-orange-200">(vous)</span> : null}
               </p>
             </GamePanel>
             <p className="mt-3 text-sm text-white/75">Décrivez votre mot en une phrase, sans le prononcer directement.</p>
           </div>
-          <SpeakingOrder game={game} selfId={identity.playerId} />
+          <SpeakingOrder game={game} selfId={playerId} />
           <p className="text-center text-sm text-white/70">L’animateur fait passer la parole au joueur suivant.</p>
         </section>
       ) : null}

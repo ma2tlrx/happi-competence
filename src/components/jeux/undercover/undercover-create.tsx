@@ -9,7 +9,7 @@ import { Checkbox, Field, Input } from '@/components/ui/form';
 import { Dialog, DialogClose, DialogContent } from '@/components/ui/overlays';
 import { Card, CardBody, CardHeader, EmptyState, Notice } from '@/components/ui/primitives';
 import { buttonClasses } from '@/components/ui/button';
-import { NICKNAME_MAX, nicknameError, saveIdentity, undercoverApi, type UndercoverConfig } from '@/lib/jeux/client-undercover';
+import { undercoverApi, type UndercoverConfig } from '@/lib/jeux/client-undercover';
 
 type LaunchInput = { civilWord: string; undercoverWord: string; includeMisterWhite: boolean };
 
@@ -19,7 +19,6 @@ export function UndercoverCreate({ defaultNickname }: { defaultNickname: string 
   const [civilWord, setCivilWord] = useState('');
   const [undercoverWord, setUndercoverWord] = useState('');
   const [includeMisterWhite, setIncludeMisterWhite] = useState(true);
-  const [nickname, setNickname] = useState(defaultNickname || 'Animateur');
   const [saveAs, setSaveAs] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
@@ -45,21 +44,14 @@ export function UndercoverCreate({ defaultNickname }: { defaultNickname: string 
   }, []);
 
   async function launch(input: LaunchInput, source: string) {
-    const problem = nicknameError(nickname);
-    if (problem) {
-      setErrors({ nickname: problem });
-      return;
-    }
     setBusy(source);
     setMessage(null);
-    const result = await undercoverApi.create({ nickname: nickname.trim(), ...input });
+    const result = await undercoverApi.create({ nickname: defaultNickname.trim().length >= 2 ? defaultNickname.trim() : undefined, ...input });
     if (!result.ok) {
       setBusy(null);
       setMessage({ ok: false, text: result.error });
       return;
     }
-    // Le jeton d'animateur reste sur cet appareil : c'est lui qui pilote la partie.
-    saveIdentity(result.data.gameId, { playerId: result.data.playerId, token: result.data.playerToken, host: true });
     router.push(`/jeux/undercover/partie/${result.data.gameId}`);
   }
 
@@ -134,11 +126,6 @@ export function UndercoverCreate({ defaultNickname }: { defaultNickname: string 
               checked={includeMisterWhite}
               onChange={(e) => setIncludeMisterWhite(e.target.checked)}
             />
-            <Field label="Votre nom d’animateur" hint="Affiché dans le salon d’attente." error={errors.nickname}>
-              {({ id, describedBy, invalid }) => (
-                <Input id={id} aria-describedby={describedBy} aria-invalid={invalid || undefined} value={nickname} onChange={(e) => setNickname(e.target.value)} maxLength={NICKNAME_MAX} />
-              )}
-            </Field>
             <Field label="Enregistrer comme configuration" optional hint="Donnez un nom pour la retrouver dans « Mes configurations ».">
               {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} value={saveAs} onChange={(e) => setSaveAs(e.target.value)} maxLength={60} placeholder="Animaux domestiques" />}
             </Field>

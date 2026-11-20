@@ -1,3 +1,5 @@
+import { call, type ApiResult } from './client-http';
+
 /**
  * Appels réseau du Quiz côté navigateur : un seul endroit, des types explicites.
  * Contrat : routes `/api/jeux/**` (chantier J1), mêmes formes que l'application d'origine.
@@ -45,9 +47,10 @@ export type QuizSession = {
   finishedAt?: string;
 };
 
-export type SessionWithQuiz = QuizSession & { quiz?: Quiz | null };
+export type SessionWithQuiz = QuizSession & { quiz?: Pick<Quiz, 'id' | 'title'> | null };
 
-export type SessionPlayer = { id: string; nickname: string; score: number };
+/** Joueur d'une partie : le score n'est lisible que par l'animateur (lecture publique : pseudo seulement). */
+export type SessionPlayer = { id: string; nickname: string; score?: number };
 
 export type GameStatus = 'lobby' | 'starting' | 'question_show' | 'answering' | 'review' | 'finished';
 
@@ -70,27 +73,38 @@ export type PublicAnswer = { id: string; text: string };
 
 export type QuestionStats = { answerCounts: Record<string, number>; totalAnswered: number };
 
-// ── Réponses des routes (à aligner avec J1) ──────────────────────────────────
+// ── Réponses des routes (contrat : docs/jeux.md) ─────────────────────────────
 export type GameStateResponse = {
   status: GameStatus;
   currentQuestionIndex: number;
   totalQuestions: number;
   players: LobbyPlayer[];
   question: PublicQuestion | null;
-  /** Renseigné uniquement pendant la phase `answering`. */
+  /** Renseigné uniquement pendant la phase `answering`, sans les bonnes réponses. */
   answers: PublicAnswer[] | null;
-  /** Horodatage (ms) de l'ouverture des réponses. */
+  /** Horodatage serveur (ms) de l'ouverture des réponses. */
   questionStartTime: number | null;
+  /** Réponses reçues (pendant `answering`). */
+  answerCount: number | null;
+  /** Seulement en `review`. */
+  correctAnswerIds: string[] | null;
+  /** En `review` et `finished`. */
+  leaderboard: LeaderboardEntry[] | null;
+  stats: QuestionStats | null;
+  finalScores: LeaderboardEntry[] | null;
 };
 
 export type SessionDetailResponse = {
   session: QuizSession;
-  quiz: Quiz | null;
+  quiz: { id: string; title: string; themeColor?: string } | null;
   players: SessionPlayer[];
   liveState: { status: GameStatus; playerCount: number; currentQuestionIndex: number; totalQuestions: number } | null;
 };
 
 export type AnswerResponse = { ok: true; isCorrect: boolean; points: number; totalScore: number };
+
+/** Réponse de `POST /api/jeux/sessions/join` (identité du joueur = compte connecté ; aucun jeton). */
+export type JoinQuizResponse = { sessionId: string; playerId: string; nickname: string; sessionCode: string; trial: boolean };
 
 // ── Événements temps réel (canal `session-<id>`) ─────────────────────────────
 export type QuizEventMap = {
@@ -106,33 +120,8 @@ export type QuizEventMap = {
 /** Résultat individuel, diffusé sur l'événement `answer:result:<playerId>`. */
 export type AnswerResultEvent = { isCorrect: boolean; points: number; totalScore: number };
 
-// ── Appel générique ──────────────────────────────────────────────────────────
-export type ApiResult<T> = { ok: true; data: T } | { ok: false; status: number; error: string };
-
-function defaultMessage(status: number) {
-  if (status === 0) return 'Connexion impossible. Vérifiez votre réseau puis réessayez.';
-  if (status === 401) return 'Votre session a expiré. Reconnectez-vous.';
-  if (status === 403) return 'Accès réservé aux formateurs et administrateurs.';
-  if (status === 404) return 'Élément introuvable.';
-  if (status === 429) return 'Trop de tentatives. Patientez un instant.';
-  return 'Une erreur est survenue. Réessayez.';
-}
-
-async function call<T>(url: string, init?: { method?: string; body?: unknown }): Promise<ApiResult<T>> {
-  try {
-    const res = await fetch(url, {
-      method: init?.method ?? 'GET',
-      headers: init?.body === undefined ? undefined : { 'Content-Type': 'application/json' },
-      body: init?.body === undefined ? undefined : JSON.stringify(init.body),
-      cache: 'no-store',
-    });
-    const json = (await res.json().catch(() => null)) as (T & { error?: string }) | null;
-    if (!res.ok) return { ok: false, status: res.status, error: json?.error || defaultMessage(res.status) };
-    return { ok: true, data: json as T };
-  } catch {
-    return { ok: false, status: 0, error: defaultMessage(0) };
-  }
-}
+// ── Appel générique : voir client-http.ts ────────────────────────────────────
+export type { ApiResult };
 
 const base = '/api/jeux';
 const enc = encodeURIComponent;
@@ -177,8 +166,11 @@ export const endQuestion = (sessionId: string) => call<{ ok: true }>(game(sessio
 export const nextQuestion = (sessionId: string) =>
   call<{ ok: true; finished: boolean }>(game(sessionId, 'next'), { method: 'POST' });
 
-/** Joueur (public). */
-export const joinGame = (sessionId: string, playerId: string, nickname: string) =>
-  call<{ ok: true }>(game(sessionId, 'join'), { method: 'POST', body: { playerId, nickname } });
+/** Rejoindre avec un code et un pseudo (compte participant connecté ; `trial` : partie d'essai d'un animateur). */
+export const joinQuiz = (code: string, nickname: string, trial = false) =>
+  call<JoinQuizResponse>(`${base}/sessions/join`, { method: 'POST', body: trial ? { code, nickname, trial: true } : { code, nickname } });
+
+/** Joueur connecté : confirme sa place dans la salle (idempotent). L'identité vient des cookies. */
+export const joinGame = (sessionId: string, playerId: string) => call<{ ok: true }>(game(sessionId, 'join'), { method: 'POST', body: { playerId } });
 export const submitAnswer = (sessionId: string, playerId: string, answerId: string) =>
   call<AnswerResponse>(game(sessionId, 'answer'), { method: 'POST', body: { playerId, answerId } });

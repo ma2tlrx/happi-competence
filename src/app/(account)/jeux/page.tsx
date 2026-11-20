@@ -15,12 +15,12 @@ export default async function GamesHubPage() {
     <>
       <PageHeader
         title="Jeux d’animation"
-        description="Animez vos séances avec des jeux en direct : les joueurs rejoignent depuis leur téléphone, sans compte, avec un simple code."
+        description="Animez vos séances avec des jeux en direct : les participants rejoignent depuis leur téléphone, connectés à leur compte HAPPI, avec un code ou un QR code."
         actions={
           <Button asChild variant="outline">
             <Link href="/jouer">
               <Smartphone aria-hidden />
-              Voir l’écran des joueurs
+              Essayer en tant que joueur
             </Link>
           </Button>
         }
@@ -73,8 +73,9 @@ export default async function GamesHubPage() {
       </Card>
 
       <Notice className="mt-6" title="Des outils d’animation, pas des évaluations">
-        Les résultats des jeux ne sont rattachés à aucun participant et n’alimentent ni les évaluations, ni les passeports, ni les statistiques d’impact. Seul le
-        pseudo choisi par les joueurs est utilisé, et les parties Undercover sont effacées au bout de 24 heures.
+        Le résultat de chaque participant (rang, score) est conservé dans son espace « Mes jeux » et sur sa fiche, hors bilan. Il n’alimente ni les évaluations, ni les
+        passeports, ni les statistiques d’impact ; le pseudo choisi n’est pas conservé. Les parties d’essai (animateurs) n’enregistrent rien, et les parties
+        Undercover en cours sont effacées au bout de quelques heures.
       </Notice>
     </>
   );

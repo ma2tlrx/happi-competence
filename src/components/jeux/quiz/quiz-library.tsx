@@ -132,7 +132,7 @@ export function QuizLibrary() {
     const res = await getSession(id);
     setLoadingPlayers(null);
     if (!res.ok) return toast.error(res.error);
-    setPlayers((prev) => ({ ...prev, [id]: [...res.data.players].sort((a, b) => b.score - a.score) }));
+    setPlayers((prev) => ({ ...prev, [id]: [...res.data.players].sort((a, b) => (b.score ?? 0) - (a.score ?? 0)) }));
   }
 
   const count = (s: SessionStatus) => sessions.filter((x) => x.status === s).length;
@@ -347,7 +347,7 @@ export function QuizLibrary() {
       <Dialog open={launching !== null} onOpenChange={(o) => !o && setLaunching(null)}>
         <DialogContent title="Lancer une partie" description={launching ? `Quiz : ${launching.title}` : undefined} size="sm">
           <form onSubmit={submitLaunch} className="space-y-4">
-            <Field label="Nombre maximum de joueurs" hint="Entre 2 et 50. Les joueurs rejoignent avec un code ou un QR code, sans compte.">
+            <Field label="Nombre maximum de joueurs" hint="Entre 2 et 50. Les participants rejoignent avec un code ou un QR code, depuis leur compte HAPPI.">
               {({ id, describedBy }) => (
                 <Input
                   id={id}

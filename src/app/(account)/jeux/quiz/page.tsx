@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 
 import { QuizLibrary } from '@/components/jeux/quiz/quiz-library';
-import { requireGamesManager } from '@/lib/jeux/quiz-access';
+import { requireGamesAccess } from '@/lib/jeux/page-access';
 
 export const metadata: Metadata = { title: 'Quiz en direct' };
 
 export default async function QuizLibraryPage() {
-  await requireGamesManager();
+  await requireGamesAccess();
   return <QuizLibrary />;
 }
