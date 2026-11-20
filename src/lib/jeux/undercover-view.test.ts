@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PublicGame, PublicPlayer } from './client-undercover';
-import { nicknameError, normalizeCode, parseIdentity } from './client-undercover';
+import { nicknameError, normalizeCode } from './client-undercover';
 import { activePlayers, activeSpeakingOrder, currentSpeaker, isLastSpeaker, pluralFr, tallyVotes, voteKey } from './undercover-view';
 
 function player(id: string, extra: Partial<PublicPlayer> = {}): PublicPlayer {
@@ -75,12 +75,5 @@ describe('saisie à l’entrée d’une partie', () => {
     expect(nicknameError('  ')).toMatch(/au moins 2/);
     expect(nicknameError('x'.repeat(21))).toMatch(/dépasser 20/);
     expect(nicknameError('Léa')).toBeNull();
-  });
-
-  it('relit une identité enregistrée et ignore une valeur illisible', () => {
-    expect(parseIdentity(JSON.stringify({ playerId: 'p', token: 't', host: true }))).toEqual({ playerId: 'p', token: 't', host: true });
-    expect(parseIdentity(JSON.stringify({ playerId: 'p', token: 't' }))?.host).toBe(false);
-    expect(parseIdentity('pas du json')).toBeNull();
-    expect(parseIdentity(null)).toBeNull();
   });
 });

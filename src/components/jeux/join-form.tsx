@@ -5,17 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Field, Input } from '@/components/ui/form';
-import {
-  CODE_LENGTH,
-  NICKNAME_MAX,
-  nicknameError,
-  normalizeCode,
-  quizAccessApi,
-  savePendingNickname,
-  saveQuizIdentity,
-  undercoverApi,
-} from '@/lib/jeux/client-undercover';
+import { Checkbox, Field, Input } from '@/components/ui/form';
+import { joinQuiz } from '@/lib/jeux/client-quiz';
+import { loginUrl } from '@/lib/jeux/client-http';
+import { CODE_LENGTH, NICKNAME_MAX, nicknameError, normalizeCode, undercoverApi } from '@/lib/jeux/client-undercover';
 
 import { GameHeading, GameStage } from './shared/game-shell';
 import { LiveRegion } from './shared/live-region';
@@ -23,14 +16,15 @@ import { LiveRegion } from './shared/live-region';
 type Target = { type: 'undercover'; gameId: string } | { type: 'quiz' };
 
 /**
- * Accès public à une partie : code (saisi ou fourni par le QR code), détection du type de jeu, puis pseudo.
- * Seul le pseudo est demandé ; la limitation du nombre d'essais est appliquée par le serveur.
+ * Accès à une partie par un compte connecté : code (saisi ou fourni par le QR code), détection du type de jeu, puis pseudo
+ * (proposé : prénom + initiale du nom). Un animateur (formateur, administrateur) joue en partie d'essai : aucun résultat enregistré.
+ * Les contrôles réels (rôle, inscription, limitation du nombre d'essais) sont faits par le serveur.
  */
-export function JoinForm({ initialCode }: { initialCode: string }) {
+export function JoinForm({ initialCode, defaultNickname, animator }: { initialCode: string; defaultNickname: string; animator: boolean }) {
   const router = useRouter();
   const [code, setCode] = useState(initialCode);
   const [target, setTarget] = useState<Target | null>(null);
-  const [nickname, setNickname] = useState('');
+  const [nickname, setNickname] = useState(defaultNickname);
   const [error, setError] = useState<{ field: 'code' | 'nickname'; message: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const autoChecked = useRef(false);
@@ -53,7 +47,16 @@ export function JoinForm({ initialCode }: { initialCode: string }) {
       setTarget({ type: 'quiz' });
       return;
     }
+    if (result.status === 401) {
+      goToLogin();
+      return;
+    }
     setError({ field: 'code', message: result.status === 409 ? 'Cette partie a déjà commencé : vous ne pouvez plus la rejoindre.' : result.error });
+  }
+
+  /** Session expirée : retour à la connexion, qui ramène ici avec le même code. */
+  function goToLogin() {
+    window.location.assign(loginUrl(`/jouer?code=${code}`));
   }
 
   // Arrivée par QR code : le code est déjà connu, on passe directement au pseudo.
@@ -61,6 +64,7 @@ export function JoinForm({ initialCode }: { initialCode: string }) {
     if (autoChecked.current || initialCode.length !== CODE_LENGTH) return;
     autoChecked.current = true;
     void checkCode(initialCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- une seule vérification, au chargement, avec le code reçu
   }, [initialCode]);
 
   function submitCode(event: FormEvent) {
@@ -86,18 +90,30 @@ export function JoinForm({ initialCode }: { initialCode: string }) {
     setBusy(true);
     setError(null);
     if (target.type === 'undercover') {
-      // L'inscription se fait depuis l'écran de la partie, qui conserve ensuite l'identité du joueur.
-      savePendingNickname(target.gameId, pseudo);
-      router.push(`/jouer/undercover/${target.gameId}`);
+      const joined = await undercoverApi.join(target.gameId, pseudo, animator);
+      if (joined.ok) {
+        router.push(`/jouer/undercover/${target.gameId}?playerId=${encodeURIComponent(joined.data.playerId)}`);
+        return;
+      }
+      setBusy(false);
+      if (joined.status === 401) goToLogin();
+      else
+        setError({
+          field: 'nickname',
+          message: joined.status === 409 ? 'Impossible de rejoindre : la partie a commencé, elle est complète ou ce pseudo est déjà pris.' : joined.error,
+        });
       return;
     }
-    const result = await quizAccessApi.join(code, pseudo);
+    const result = await joinQuiz(code, pseudo, animator);
     if (result.ok) {
-      saveQuizIdentity(result.data.playerId, result.data.nickname);
       router.push(`/jouer/quiz/${result.data.sessionId}?playerId=${encodeURIComponent(result.data.playerId)}`);
       return;
     }
     setBusy(false);
+    if (result.status === 401) {
+      goToLogin();
+      return;
+    }
     if (result.status === 404) {
       setTarget(null);
       setError({ field: 'code', message: 'Aucune partie ne correspond à ce code. Vérifiez-le auprès de l’animateur.' });
@@ -153,7 +169,7 @@ export function JoinForm({ initialCode }: { initialCode: string }) {
             </p>
             <Field
               label="Votre pseudo"
-              hint="Visible des autres joueurs. Aucune autre information n’est demandée : évitez votre nom complet."
+              hint="Visible des autres joueurs, 2 à 20 caractères. Évitez votre nom complet, un e-mail ou un numéro de téléphone."
               error={error?.field === 'nickname' ? error.message : null}
             >
               {({ id, describedBy, invalid }) => (
@@ -174,6 +190,17 @@ export function JoinForm({ initialCode }: { initialCode: string }) {
                 />
               )}
             </Field>
+            {animator ? (
+              <Checkbox
+                label="Partie d’essai"
+                description="Vous essayez le jeu en tant qu’animateur : aucun résultat n’est enregistré."
+                checked
+                disabled
+                readOnly
+              />
+            ) : (
+              <p className="text-sm text-ink-muted">Votre résultat sera conservé dans « Mes jeux », sans votre pseudo.</p>
+            )}
             <Button type="submit" size="lg" loading={busy}>
               Rejoindre la partie
               <ArrowRight aria-hidden />

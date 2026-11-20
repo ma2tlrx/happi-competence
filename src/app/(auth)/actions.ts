@@ -14,6 +14,11 @@ import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase/admin
 import { createClient } from '@/lib/supabase/server';
 import { safeInternalPath } from '@/lib/utils';
 
+/** Pages de jeu (accès par code ou QR) : le retour après connexion est autorisé quel que soit l'espace du compte. */
+function isGamePath(path: string) {
+  return path === '/jouer' || path.startsWith('/jouer?') || path.startsWith('/jouer/');
+}
+
 const email = z.string().trim().toLowerCase().email('Indiquez une adresse e-mail valide.').max(254);
 const password = z
   .string()
@@ -76,7 +81,7 @@ export async function signIn(_: ActionState, formData: FormData): Promise<Action
   // On ne suit la page demandée que si elle appartient à l'espace du compte.
   const home = homePathFor(user);
   const sameSpace = next && home.split('/')[1] === next.split('/')[1];
-  redirect(sameSpace || next === '/compte' ? next : home);
+  redirect(sameSpace || next === '/compte' || isGamePath(next) ? next : home);
 }
 
 // ── Inscription participant ──────────────────────────────────────────────────
@@ -316,7 +321,7 @@ export async function verifyMfaChallenge(_: ActionState, formData: FormData): Pr
   // getCurrentUser est mis en cache pour la requête : la session vient de passer en aal2.
   const home = homePathFor({ ...user, mfa: { ...user.mfa, aal: 'aal2', enrolled: true } });
   const sameSpace = next && home.split('/')[1] === next.split('/')[1];
-  redirect(sameSpace || next.startsWith('/compte') ? next : home);
+  redirect(sameSpace || next.startsWith('/compte') || isGamePath(next) ? next : home);
 }
 
 export async function signOut() {

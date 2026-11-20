@@ -81,3 +81,9 @@ export function suggestNickname(firstName: string, lastName: string): string {
   }
   return 'Joueur';
 }
+
+/** Message d'erreur à afficher, ou null si le pseudo est valide (adaptateur pour les écrans). */
+export function nicknameError(value: string): string | null {
+  const r = checkNickname(value);
+  return r.ok ? null : r.message;
+}

@@ -3,21 +3,21 @@
 import { ArrowLeft, Check, FastForward, Play, Trophy, Users } from 'lucide-react';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toast';
 import {
   endQuestion,
   getGameState,
+  getQuiz,
   getSession,
   nextQuestion,
   revealAnswers,
   showQuestion,
   startGame,
+  type GameStateResponse,
   type GameStatus,
-  type LeaderboardEntry,
-  type LobbyPlayer,
   type PublicAnswer,
   type PublicQuestion,
   type QuestionStats,
@@ -27,14 +27,16 @@ import { cn } from '@/lib/utils';
 import { Announcer } from './announcer';
 import { answerStyle } from './answer-style';
 import { Leaderboard } from './leaderboard';
-import { QrCodeDisplay } from './qr-code';
+import { JoinQr } from '@/components/jeux/shared/join-qr';
 import { TimerBar } from './timer-bar';
 import { useDeadlineTimer } from './use-deadline-timer';
 import { useQuizChannel } from './use-quiz-channel';
+import { usePolledResource } from '@/components/jeux/shared/use-polled-resource';
 
 /** Délais du déroulé d'origine : décompte de départ, lecture de la question avant les réponses. */
 const START_DELAY_MS = 3500;
 const READ_DELAY_MS = 3000;
+const POLL_MS = 2000;
 
 type HostQuestion = PublicQuestion & { answers?: PublicAnswer[] };
 
@@ -50,151 +52,127 @@ const view = {
  * l'application d'origine. Affichage plein écran par-dessus la coque du site (pas de menu).
  */
 export function QuizHostScreen({ sessionId }: { sessionId: string }) {
-  const [meta, setMeta] = useState<{ code: string; title: string } | null>(null);
-  const [fatal, setFatal] = useState<string | null>(null);
-  const [status, setStatus] = useState<GameStatus>('lobby');
-  const [players, setPlayers] = useState<LobbyPlayer[]>([]);
-  const [question, setQuestion] = useState<HostQuestion | null>(null);
-  const [answerCount, setAnswerCount] = useState(0);
-  const [correctIds, setCorrectIds] = useState<string[] | null>(null);
-  const [stats, setStats] = useState<QuestionStats | null>(null);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [announce, setAnnounce] = useState('');
+  const [meta, setMeta] = useState<{ code: string; title: string; quizId: string } | null>(null);
+  const [answerCache, setAnswerCache] = useState<{ index: number; answers: PublicAnswer[] } | null>(null);
   const [busy, setBusy] = useState(false);
   const [origin, setOrigin] = useState('');
 
+  // L'état du serveur fait foi : relu toutes les 2 s (la pile locale n'a pas de temps réel) et à chaque action.
+  const { data: state, error: pollError, refresh } = usePolledResource<GameStateResponse>(() => getGameState(sessionId), POLL_MS);
   const countdown = useDeadlineTimer();
   const answering = useDeadlineTimer();
-  const timeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const synced = useRef(false);
-  const questionRef = useRef<HostQuestion | null>(null);
+  const { start: startCountdown } = countdown;
+  const { start: startAnswering, stop: stopAnswering } = answering;
 
-  const later = useCallback((fn: () => void, ms: number) => {
-    timeouts.current.push(setTimeout(fn, ms));
-  }, []);
-  useEffect(() => {
-    const pending = timeouts.current;
-    return () => pending.forEach(clearTimeout);
-  }, []);
   useEffect(() => {
     // Adresse du site connue seulement dans le navigateur.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setOrigin(window.location.origin);
   }, []);
 
-  // ── actions de l'animateur ──
-  const act = useCallback(async (call: () => Promise<{ ok: boolean } & ({ error?: string } | object)>) => {
-    const res = (await call()) as { ok: boolean; error?: string };
-    if (!res.ok) toast.error(res.error ?? 'Action impossible.');
-    return res.ok;
-  }, []);
-
-  const finishQuestion = useCallback(() => {
-    // 409 attendu si tous les joueurs ont déjà répondu (le serveur a clos la question) : on l'ignore.
-    void endQuestion(sessionId);
-  }, [sessionId]);
-
-  // ── état initial et reprise après rechargement ──
-  const sync = useCallback(async () => {
-    const res = await getGameState(sessionId);
-    if (!res.ok) {
-      if (!synced.current) setFatal(res.status === 404 ? 'Cette partie est terminée ou n’existe plus.' : res.error);
-      return;
-    }
-    const s = res.data;
-    if (synced.current) {
-      // Reconnexion du canal : on ne rafraîchit que la salle, sans relancer le déroulé.
-      if (s.status === 'lobby') setPlayers(s.players);
-      return;
-    }
-    synced.current = true;
-    setStatus(s.status);
-    setPlayers(s.players);
-    if (s.question) {
-      const q = { ...s.question, answers: s.answers ?? undefined };
-      questionRef.current = q;
-      setQuestion(q);
-    }
-    if (s.status === 'starting') later(() => void showQuestion(sessionId, 0), 1000);
-    if (s.status === 'question_show') later(() => void revealAnswers(sessionId), 1000);
-    if (s.status === 'answering' && s.question && s.questionStartTime) {
-      const remaining = (s.questionStartTime + s.question.timeLimit * 1000 - Date.now()) / 1000;
-      answering.start(remaining, finishQuestion);
-    }
-    if (s.status === 'review' || s.status === 'finished') {
-      const detail = await getSession(sessionId);
-      if (detail.ok) {
-        setLeaderboard([...detail.data.players].sort((a, b) => b.score - a.score).map((p, i) => ({ rank: i + 1, id: p.id, nickname: p.nickname, score: p.score })));
-      }
-    }
-  }, [sessionId, later, answering, finishQuestion]);
-
   useEffect(() => {
     let cancelled = false;
     getSession(sessionId).then((res) => {
       if (cancelled) return;
-      if (!res.ok) return setFatal(res.status === 404 ? 'Partie introuvable.' : res.error);
-      setMeta({ code: res.data.session.code, title: res.data.quiz?.title ?? 'Quiz' });
+      if (res.ok) setMeta({ code: res.data.session.code, title: res.data.quiz?.title ?? 'Quiz', quizId: res.data.session.quizId });
     });
     return () => {
       cancelled = true;
     };
   }, [sessionId]);
 
-  // ── événements temps réel ──
+  // ── lecture de l'état ──
+  const status: GameStatus = state?.status ?? 'lobby';
+  const players = state?.players ?? [];
+  const answerCount = state?.answerCount ?? 0;
+  const correctIds = status === 'review' ? (state?.correctAnswerIds ?? []) : null;
+  const stats = status === 'review' ? state?.stats : null;
+  const leaderboard = (status === 'finished' ? (state?.finalScores ?? state?.leaderboard) : state?.leaderboard) ?? [];
+  const questionIndex = state?.question?.index ?? null;
+  const questionStart = state?.questionStartTime ?? null;
+  const timeLimit = state?.question?.timeLimit ?? 20;
+
+  // Les réponses ne sont envoyées que pendant `answering` : on les garde pour l'écran de correction.
+  if (state?.answers && state.question && answerCache?.index !== state.question.index) {
+    setAnswerCache({ index: state.question.index, answers: state.answers });
+  }
+  const question: HostQuestion | null = state?.question
+    ? { ...state.question, answers: state.answers ?? (answerCache?.index === state.question.index ? answerCache.answers : undefined) }
+    : null;
+  const quizId = meta?.quizId;
+  const needAnswers = status === 'review' && questionIndex !== null && answerCache?.index !== questionIndex;
+
+  // Reprise après rechargement pendant la correction : les réponses se relisent dans le quiz de l'animateur.
+  useEffect(() => {
+    if (!needAnswers || !quizId || questionIndex === null) return;
+    let cancelled = false;
+    getQuiz(quizId).then((res) => {
+      if (cancelled || !res.ok) return;
+      const found = [...res.data.questions].sort((x, y) => x.order - y.order)[questionIndex];
+      if (found) setAnswerCache({ index: questionIndex, answers: found.answers.map((answer) => ({ id: answer.id, text: answer.text })) });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [needAnswers, quizId, questionIndex]);
+
+  const finishQuestion = useCallback(() => {
+    // 409 attendu si tous les joueurs ont déjà répondu (le serveur a clos la question) : on l'ignore.
+    void endQuestion(sessionId).then(() => refresh());
+  }, [sessionId, refresh]);
+
+  // ── déroulé piloté depuis l'état (décompte, lecture de l'énoncé, chronomètre) ──
+  useEffect(() => {
+    if (status !== 'starting') return;
+    startCountdown(START_DELAY_MS / 1000);
+    const timer = setTimeout(() => void showQuestion(sessionId, 0).then(() => refresh()), START_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [status, sessionId, refresh, startCountdown]);
+
+  useEffect(() => {
+    if (status !== 'question_show' || questionIndex === null) return;
+    const timer = setTimeout(() => void revealAnswers(sessionId).then(() => refresh()), READ_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [status, questionIndex, sessionId, refresh]);
+
+  useEffect(() => {
+    if (status !== 'answering' || !questionStart) {
+      stopAnswering();
+      return;
+    }
+    startAnswering((questionStart + timeLimit * 1000 - Date.now()) / 1000, finishQuestion);
+  }, [status, questionIndex, questionStart, timeLimit, finishQuestion, startAnswering, stopAnswering]);
+
+  // ── annonces vocales (dérivées de l'étape de la partie) ──
+  const announce = (() => {
+    if (status === 'lobby') return `${players.length} joueur${players.length > 1 ? 's' : ''} connecté${players.length > 1 ? 's' : ''}.`;
+    if (status === 'starting') return 'La partie démarre dans quelques secondes.';
+    if (status === 'question_show' && questionIndex !== null) return `Question ${questionIndex + 1} sur ${state?.totalQuestions ?? ''} : ${question?.text ?? ''}`;
+    if (status === 'answering') return `Réponses ouvertes : ${timeLimit} secondes.`;
+    if (status === 'review') return 'Fin de la question.';
+    return 'Partie terminée. Le classement final est affiché.';
+  })();
+
+  // ── temps réel facultatif : ne sert qu'à relire l'état plus vite ──
   useQuizChannel(sessionId, {
-    onReady: () => void sync(),
-    'lobby:updated': ({ players: list }) => {
-      setPlayers(list);
-      setAnnounce(`${list.length} joueur${list.length > 1 ? 's' : ''} connecté${list.length > 1 ? 's' : ''}.`);
-    },
-    'game:starting': ({ countdown: n }) => {
-      setStatus('starting');
-      countdown.start(n);
-      setAnnounce(`La partie démarre dans ${n} secondes.`);
-      later(() => void showQuestion(sessionId, 0), START_DELAY_MS);
-    },
-    'question:show': (q) => {
-      questionRef.current = q;
-      setQuestion(q);
-      setStatus('question_show');
-      setAnswerCount(0);
-      setCorrectIds(null);
-      setStats(null);
-      setAnnounce(`Question ${q.index + 1} sur ${q.total} : ${q.text}`);
-      later(() => void revealAnswers(sessionId), READ_DELAY_MS);
-    },
-    'question:answers': ({ answers }) => {
-      setStatus('answering');
-      setQuestion((prev) => (prev ? { ...prev, answers } : prev));
-      const limit = questionRef.current?.timeLimit ?? 20;
-      answering.start(limit, finishQuestion);
-      setAnnounce(`Réponses ouvertes : ${limit} secondes.`);
-    },
-    'answer:received': ({ count }) => setAnswerCount(count),
-    'question:ended': (p) => {
-      answering.stop();
-      setStatus('review');
-      setCorrectIds(p.correctAnswerIds);
-      setLeaderboard(p.leaderboard);
-      setStats(p.stats);
-      setAnnounce(`Fin de la question. ${p.stats.totalAnswered} réponse${p.stats.totalAnswered > 1 ? 's' : ''} reçue${p.stats.totalAnswered > 1 ? 's' : ''}.`);
-    },
-    'game:ended': (p) => {
-      answering.stop();
-      setStatus('finished');
-      setLeaderboard(p.finalScores);
-      setAnnounce('Partie terminée. Le classement final est affiché.');
-    },
+    onReady: () => void refresh(),
+    'lobby:updated': () => void refresh(),
+    'answer:received': () => void refresh(),
+    'question:ended': () => void refresh(),
+    'game:ended': () => void refresh(),
   });
 
+  const fatal = pollError && !state ? (pollError.status === 404 ? 'Cette partie est terminée ou n’existe plus.' : pollError.message) : null;
+
   const run = useCallback(
-    async (call: () => Promise<{ ok: boolean }>) => {
+    async (call: () => Promise<{ ok: boolean; error?: string }>) => {
       setBusy(true);
-      await act(call);
+      const res = await call();
+      if (!res.ok) toast.error(res.error ?? 'Action impossible.');
+      await refresh();
       setBusy(false);
     },
-    [act],
+    [refresh],
   );
 
   const joinUrl = useMemo(() => (origin && meta ? `${origin}/jouer?code=${meta.code}` : ''), [origin, meta]);
@@ -238,7 +216,7 @@ export function QuizHostScreen({ sessionId }: { sessionId: string }) {
                     <p className="max-w-xl text-lg text-white/85 2xl:text-3xl">
                       Rendez-vous sur <strong className="font-semibold text-white">{origin ? origin.replace(/^https?:\/\//, '') : 'le site'}/jouer</strong> et saisissez le code, ou scannez le QR code.
                     </p>
-                    <div className="rounded-xl bg-white p-3 shadow-lg">{joinUrl ? <QrCodeDisplay url={joinUrl} size={300} /> : <div className="size-[300px]" />}</div>
+                    <div className="rounded-xl shadow-lg">{joinUrl ? <JoinQr url={joinUrl} size={300} /> : <div className="size-[300px]" />}</div>
                     <p className="font-mono text-6xl font-bold tracking-[0.2em] 2xl:text-8xl" aria-label={meta ? `Code ${meta.code.split('').join(' ')}` : undefined}>
                       {meta?.code ?? '······'}
                     </p>

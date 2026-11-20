@@ -75,6 +75,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
       label: 'Moi',
       items: [
         { href: '/participant/auto-evaluation', label: 'Mon auto-évaluation', icon: ListChecks },
+        { href: '/jouer', label: 'Rejoindre une partie', icon: Gamepad2 },
         { href: '/participant/partage', label: 'Partager mon passeport', icon: Share2 },
         { href: '/participant/badges', label: 'Mes badges', icon: Award },
         { href: '/participant/evolution', label: 'Mon évolution', icon: TrendingUp },

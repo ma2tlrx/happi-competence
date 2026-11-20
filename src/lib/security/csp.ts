@@ -9,6 +9,7 @@
  * - style-src : 'unsafe-inline' conservé. Les attributs style (animations de la vitrine,
  *   graphiques Recharts, Motion) et les balises <style> posées par Radix ne portent pas de
  *   nonce. Une injection de style est sans commune mesure avec une injection de script.
+ * - connect-src : origine Supabase en https et en wss (Realtime des jeux d'animation, avec relecture régulière en repli).
  * - frame-src 'self' : aperçu PDF du bilan (même origine) ; img-src data:/blob: : QR codes,
  *   signatures et images optimisées.
  */
@@ -36,7 +37,9 @@ function originOf(url: string | undefined) {
 
 export function buildCsp({ nonce, isDev = false, supabaseUrl }: CspOptions) {
   const supabase = originOf(supabaseUrl);
-  const connect = ["'self'", supabase, isDev ? 'ws:' : null].filter(Boolean).join(' ');
+  // Temps réel des jeux : WebSocket Supabase (même hôte, wss://). Rien ne doit en dépendre : les écrans relisent l'état régulièrement.
+  const realtime = supabase?.startsWith('https://') ? supabase.replace(/^https:/, 'wss:') : null;
+  const connect = ["'self'", supabase, realtime, isDev ? 'ws:' : null].filter(Boolean).join(' ');
   const directives = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}`,

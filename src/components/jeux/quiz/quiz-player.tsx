@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { loginUrl } from '@/lib/jeux/client-http';
 import {
   getGameState,
   getSession,
@@ -29,9 +30,11 @@ import { useQuizChannel } from './use-quiz-channel';
 
 type Phase = 'lobby' | 'starting' | 'question_show' | 'answering' | 'answered' | 'review' | 'finished' | 'closed';
 
-const NICKNAME_KEY = 'happi_nickname';
-/** Filet de sécurité si le téléphone a perdu la connexion temps réel (veille, réseau instable). */
-const POLL_MS = 4000;
+/**
+ * Relecture régulière de l'état : c'est elle qui fait fonctionner l'écran (la pile locale n'a pas de temps réel) ;
+ * le canal temps réel ne sert qu'à accélérer les changements quand il est disponible.
+ */
+const POLL_MS = 2000;
 
 const view = {
   initial: { opacity: 0, y: 10 },
@@ -40,19 +43,10 @@ const view = {
   transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const },
 };
 
-function readNickname(): string {
-  try {
-    return localStorage.getItem(NICKNAME_KEY) || '';
-  } catch {
-    return '';
-  }
-}
-
-/** Lobby puis jeu côté joueur (public, sans compte) : conçu pour un téléphone de 360 px de large. */
-export function QuizPlayer({ sessionId, playerId }: { sessionId: string; playerId: string }) {
+/** Lobby puis jeu côté joueur (participant connecté, ou animateur en essai) : conçu pour un téléphone de 360 px de large. */
+export function QuizPlayer({ sessionId, playerId, trial }: { sessionId: string; playerId: string; trial: boolean }) {
   const [phase, setPhase] = useState<Phase>('lobby');
   const [meta, setMeta] = useState<{ code: string; title: string } | null>(null);
-  const [nickname, setNickname] = useState('');
   const [players, setPlayers] = useState<LobbyPlayer[]>([]);
   const [question, setQuestion] = useState<PublicQuestion | null>(null);
   const [answers, setAnswers] = useState<PublicAnswer[]>([]);
@@ -77,9 +71,6 @@ export function QuizPlayer({ sessionId, playerId }: { sessionId: string; playerI
   // Nom et informations de la partie.
   useEffect(() => {
     let cancelled = false;
-    // Le pseudo est mémorisé par l'étape « code + pseudo » : lisible seulement dans le navigateur.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setNickname(readNickname());
     getSession(sessionId).then((res) => {
       if (cancelled) return;
       if (!res.ok) {
@@ -102,11 +93,14 @@ export function QuizPlayer({ sessionId, playerId }: { sessionId: string; playerI
   useEffect(() => {
     if (joined.current) return;
     joined.current = true;
-    void joinGame(sessionId, playerId, readNickname() || 'Joueur').then((res) => {
+    void joinGame(sessionId, playerId).then((res) => {
       // 409 : la partie a déjà commencé ou le joueur est déjà inscrit (rechargement) : on resynchronise ensuite.
-      if (!res.ok && res.status !== 409) setError(res.error);
+      if (res.ok || res.status === 409) return;
+      setError(res.error);
+      // Compte non connecté, d'un autre rôle ou non inscrit à cette partie : l'écran de jeu n'a plus de sens.
+      if (res.status === 401 || res.status === 403) go('closed');
     });
-  }, [sessionId, playerId]);
+  }, [sessionId, playerId, go]);
 
   const openAnswers = useCallback(
     (q: PublicQuestion, list: PublicAnswer[], seconds: number) => {
@@ -125,10 +119,14 @@ export function QuizPlayer({ sessionId, playerId }: { sessionId: string; playerI
     async (s: GameStateResponse) => {
       const current = phaseRef.current;
       if (current === 'closed') return;
-      if (s.status === 'lobby') {
-        setPlayers(s.players);
-        const me = s.players.find((p) => p.id === playerId);
-        if (me) setNickname((n) => n || me.nickname);
+      setPlayers(s.players);
+      if (s.status === 'lobby') return;
+      if (s.status === 'starting') {
+        if (current !== 'starting') {
+          go('starting');
+          countdown.start(3);
+          setAnnounce('La partie commence dans quelques secondes. Préparez-vous.');
+        }
         return;
       }
       if (s.status === 'question_show' && s.question && (current !== 'question_show' || questionRef.current?.index !== s.question.index)) {
@@ -150,18 +148,20 @@ export function QuizPlayer({ sessionId, playerId }: { sessionId: string; playerI
           setCorrectIds([]);
         }
         openAnswers(s.question, s.answers ?? [], remaining);
-      } else if ((s.status === 'review' || s.status === 'finished') && (current === 'answering' || current === 'answered' || current === 'lobby' || current === 'starting' || current === 'question_show')) {
-        // Résultats manqués : on reprend le classement depuis la partie.
-        const detail = await getSession(sessionId);
-        if (!detail.ok) return;
-        const board = [...detail.data.players].sort((a, b) => b.score - a.score).map((p, i) => ({ rank: i + 1, id: p.id, nickname: p.nickname, score: p.score }));
-        setLeaderboard(board);
+      } else if ((s.status === 'review' || s.status === 'finished') && current !== 'review' && current !== 'finished') {
+        // Résultats manqués (événement perdu, arrivée tardive) : classement et corrections viennent de l'état.
         timer.stop();
+        setCorrectIds(s.correctAnswerIds ?? []);
+        setLeaderboard((s.status === 'finished' ? s.finalScores : s.leaderboard) ?? s.leaderboard ?? []);
         go(s.status === 'finished' ? 'finished' : 'review');
         setAnnounce(s.status === 'finished' ? 'Partie terminée.' : 'Fin de la question.');
+      } else if (s.status === 'finished' && current === 'review') {
+        setLeaderboard(s.finalScores ?? s.leaderboard ?? []);
+        go('finished');
+        setAnnounce('Partie terminée. Voici le classement final.');
       }
     },
-    [go, openAnswers, playerId, sessionId, timer],
+    [go, openAnswers, countdown, timer],
   );
 
   const syncNow = useCallback(async () => {
@@ -239,6 +239,7 @@ export function QuizPlayer({ sessionId, playerId }: { sessionId: string; playerI
       if (phaseRef.current === 'answering') go('answered');
     } else {
       setSelectedId(null);
+      if (res.status === 401) window.location.assign(loginUrl(`/jouer/quiz/${sessionId}?playerId=${encodeURIComponent(playerId)}`));
       setError(res.error);
       setAnnounce(`Réponse non envoyée : ${res.error}`);
     }
@@ -246,7 +247,7 @@ export function QuizPlayer({ sessionId, playerId }: { sessionId: string; playerI
 
   const me = leaderboard.find((p) => p.id === playerId);
   const correctTexts = answers.filter((a) => correctIds.includes(a.id)).map((a) => a.text);
-  const displayName = nickname || players.find((p) => p.id === playerId)?.nickname || 'Joueur';
+  const displayName = players.find((p) => p.id === playerId)?.nickname || 'Joueur';
 
   return (
     <MotionConfig reducedMotion="user">
@@ -261,6 +262,12 @@ export function QuizPlayer({ sessionId, playerId }: { sessionId: string; playerI
             </span>
           ) : null}
         </header>
+
+        {trial ? (
+          <p className="mx-4 mb-2 rounded-md border border-orange-300/50 bg-orange-500/15 px-3 py-2 text-center text-sm font-medium text-orange-100">
+            Partie d’essai : aucun résultat n’est enregistré.
+          </p>
+        ) : null}
 
         {error && phase !== 'closed' ? (
           <p role="alert" className="mx-4 mb-2 rounded-md border border-orange-300/50 bg-orange-500/15 px-3 py-2 text-sm">

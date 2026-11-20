@@ -3,26 +3,17 @@
 import { ArrowRight, Ban, ChevronLeft, Play, RotateCcw, ShieldCheck, Vote } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState, useSyncExternalStore } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 
 import { CodeBadge } from '@/components/jeux/shared/code-badge';
 import { GamePanel, GameStage } from '@/components/jeux/shared/game-shell';
 import { JoinQr } from '@/components/jeux/shared/join-qr';
 import { LiveRegion } from '@/components/jeux/shared/live-region';
 import { usePolledResource } from '@/components/jeux/shared/use-polled-resource';
-import { useHydrated } from '@/components/public/use-motion-preference';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent } from '@/components/ui/overlays';
 import { Notice } from '@/components/ui/primitives';
-import {
-  clearIdentity,
-  parseIdentity,
-  readIdentityRaw,
-  subscribeIdentity,
-  undercoverApi,
-  type ApiResult,
-  type PublicGame,
-} from '@/lib/jeux/client-undercover';
+import { undercoverApi, type ApiResult, type PublicGame } from '@/lib/jeux/client-undercover';
 import { activePlayers, currentSpeaker, isLastSpeaker, pluralFr } from '@/lib/jeux/undercover-view';
 import { cn } from '@/lib/utils';
 
@@ -34,28 +25,13 @@ const noSubscription = () => () => {};
 /**
  * Écran de l'animateur, pensé pour le projecteur. Il n'affiche jamais le rôle ou le mot d'un joueur
  * avant la fin de la partie (ces informations ne quittent le serveur que pour le joueur concerné).
+ * Les commandes passent par le compte connecté : le serveur vérifie qu'il est propriétaire de la partie.
  */
 export function UndercoverHost({ gameId }: { gameId: string }) {
-  const hydrated = useHydrated();
-  const raw = useSyncExternalStore(subscribeIdentity, () => readIdentityRaw(gameId), () => null);
-  const identity = useMemo(() => parseIdentity(raw), [raw]);
-  if (!hydrated) return <p role="status" className="py-10 text-center text-white/80">Chargement de la partie…</p>;
-  if (!identity?.host) {
-    return (
-      <GameStage className="my-auto py-8">
-        <Notice variant="warning" title="Commandes indisponibles sur cet appareil">
-          Une partie ne se pilote que depuis l’appareil qui l’a créée (le jeton d’animateur y est conservé). Relancez une partie depuis le hub des jeux.
-        </Notice>
-        <Link href="/jeux/undercover" className={cn(buttonClasses({ variant: 'inverse', size: 'lg' }), 'mt-4')}>
-          Retour aux parties Undercover
-        </Link>
-      </GameStage>
-    );
-  }
-  return <HostGame gameId={gameId} hostToken={identity.token} />;
+  return <HostGame gameId={gameId} />;
 }
 
-function HostGame({ gameId, hostToken }: { gameId: string; hostToken: string }) {
+function HostGame({ gameId }: { gameId: string }) {
   const router = useRouter();
   const origin = useSyncExternalStore(noSubscription, () => window.location.origin, () => '');
   const { data: game, error: pollError, setData } = usePolledResource<PublicGame>(
@@ -77,9 +53,8 @@ function HostGame({ gameId, hostToken }: { gameId: string; hostToken: string }) 
 
   async function cancel() {
     setBusy(true);
-    const result = await undercoverApi.cancel(gameId, hostToken);
+    const result = await undercoverApi.cancel(gameId);
     if (result.ok) {
-      clearIdentity(gameId);
       router.push('/jeux/undercover');
       return;
     }
@@ -107,7 +82,7 @@ function HostGame({ gameId, hostToken }: { gameId: string; hostToken: string }) 
   const voters = activePlayers(game).length;
   const speaker = currentSpeaker(game);
   const lastRound = game.roundResults[game.roundResults.length - 1];
-  const action = (name: 'start_discussion' | 'next_speaker' | 'start_voting') => run(() => undercoverApi.nextPhase(gameId, hostToken, name));
+  const action = (name: 'start_discussion' | 'next_speaker' | 'start_voting') => run(() => undercoverApi.nextPhase(gameId, name));
 
   const announcement = (() => {
     switch (game.status) {
@@ -170,7 +145,7 @@ function HostGame({ gameId, hostToken }: { gameId: string; hostToken: string }) 
               <p className="text-base text-white/80">Il faut au moins {MIN_PLAYERS} joueurs pour démarrer (animateur non compris).</p>
             ) : null}
             <div className="flex flex-wrap gap-3">
-              <Button size="lg" loading={busy} disabled={joined < MIN_PLAYERS} onClick={() => run(() => undercoverApi.start(gameId, hostToken))}>
+              <Button size="lg" loading={busy} disabled={joined < MIN_PLAYERS} onClick={() => run(() => undercoverApi.start(gameId))}>
                 <Play aria-hidden />
                 Lancer la partie ({pluralFr(joined, 'joueur')})
               </Button>
@@ -245,7 +220,7 @@ function HostGame({ gameId, hostToken }: { gameId: string; hostToken: string }) 
           <p className="text-base text-white/75">
             {voters - game.voteCount > 0 ? `${pluralFr(voters - game.voteCount, 'joueur')} n’${voters - game.voteCount > 1 ? 'ont' : 'a'} pas encore voté.` : 'Tous les votes sont arrivés.'}
           </p>
-          <Button size="lg" loading={busy} onClick={() => run(() => undercoverApi.resolveVote(gameId, hostToken))}>
+          <Button size="lg" loading={busy} onClick={() => run(() => undercoverApi.resolveVote(gameId))}>
             Révéler le résultat
             <ArrowRight aria-hidden />
           </Button>
@@ -284,7 +259,7 @@ function HostGame({ gameId, hostToken }: { gameId: string; hostToken: string }) 
           </h1>
           <GameOverSummary game={game} scale="stage" />
           <div className="flex flex-wrap justify-center gap-3">
-            <Button size="lg" loading={busy} onClick={() => run(() => undercoverApi.replay(gameId, hostToken))}>
+            <Button size="lg" loading={busy} onClick={() => run(() => undercoverApi.replay(gameId))}>
               <RotateCcw aria-hidden />
               Rejouer avec les mêmes joueurs
             </Button>
