@@ -43,6 +43,7 @@ export async function SpaceShell({ space, user, banner, children }: { space: App
         email: user.email,
         roleLabel: ROLE_LABELS[user.role],
         isAdmin: user.role === 'admin',
+        permissions: user.permissions,
       }}
     >
       {children}

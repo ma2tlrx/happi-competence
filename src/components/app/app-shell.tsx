@@ -5,26 +5,26 @@ import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useRef, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { Avatar } from '@/components/ui/primitives';
 import { Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger } from '@/components/ui/overlays';
 import { cn } from '@/lib/utils';
 
-import { NAVIGATION, SPACE_LABELS, type AppSpace, type NavItem } from './nav-config';
+import { SPACE_LABELS, visibleNavigation, type AppSpace, type NavGroup, type NavItem } from './nav-config';
 
-export type ShellUser = { firstName: string; lastName: string; email: string; roleLabel: string; isAdmin: boolean };
+export type ShellUser = { firstName: string; lastName: string; email: string; roleLabel: string; isAdmin: boolean; permissions?: string[] };
 
 function isActive(pathname: string, item: NavItem) {
   if (item.exact) return pathname === item.href;
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
-function Sidebar({ space, onNavigate }: { space: AppSpace; onNavigate?: () => void }) {
+function Sidebar({ space, groups, onNavigate }: { space: AppSpace; groups: NavGroup[]; onNavigate?: () => void }) {
   const pathname = usePathname();
   return (
     <nav aria-label={SPACE_LABELS[space]} className="flex flex-1 flex-col gap-6 overflow-y-auto px-3 py-5">
-      {NAVIGATION[space].map((group, index) => (
+      {groups.map((group, index) => (
         <div key={group.label ?? index}>
           {group.label ? <p className="mb-1.5 px-3 text-xs font-semibold text-white/65">{group.label}</p> : null}
           <ul className="space-y-0.5">
@@ -78,7 +78,8 @@ export function AppShell({
     setDrawer(false);
   }
   const person = { first_name: user.firstName, last_name: user.lastName };
-  const mobileItems = NAVIGATION[space].flatMap((group) => group.items).filter((item) => item.mobile).slice(0, 5);
+  const groups = useMemo(() => visibleNavigation(space, user), [space, user]);
+  const mobileItems = groups.flatMap((group) => group.items).filter((item) => item.mobile).slice(0, 5);
 
   const brand = (
     <div className="flex h-16 items-center gap-2.5 px-5">
@@ -95,7 +96,7 @@ export function AppShell({
       {/* Barre latérale (ordinateur) */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-petrol-900 lg:flex">
         {brand}
-        <Sidebar space={space} />
+        <Sidebar space={space} groups={groups} />
         <div className="border-t border-white/10 p-3">
           <Link href="/compte" className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-white/5">
             <Avatar person={person} tone="light" />
@@ -134,7 +135,7 @@ export function AppShell({
                   <X className="size-5" aria-hidden />
                 </button>
               </div>
-              <Sidebar space={space} onNavigate={() => setDrawer(false)} />
+              <Sidebar space={space} groups={groups} onNavigate={() => setDrawer(false)} />
             </motion.aside>
           </>
         ) : null}

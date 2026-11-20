@@ -49,6 +49,7 @@ export function SiteFooter({ email, phones, showResults = false }: { email: stri
             <li><Link href="/connexion?espace=organisme" className="hover:text-white">Espace organisme</Link></li>
             <li><Link href="/inscription?espace=organisme" className="hover:text-white">Demander un espace organisme</Link></li>
             <li><Link href="/connexion?espace=formateur" className="hover:text-white">Espace formateur</Link></li>
+            <li><Link href="/jouer" className="text-white/60 hover:text-white">Rejoindre une partie</Link></li>
           </ul>
         </nav>
 
