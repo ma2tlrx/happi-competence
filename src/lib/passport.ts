@@ -9,12 +9,12 @@ import {
   type Aggregation,
   type FrameworkRules,
   type Highlights,
-  type Observation,
   type Rounding,
   type ScaleLevel,
   type ScoringMode,
   type SkillSummary,
 } from '@/lib/evaluation-engine';
+import { referenceMembership, selfScaleComparable, selfValuesBySkill, validatedObservationsByFramework } from '@/lib/evaluation-engine/inputs';
 import { loadValidatedMappings } from '@/lib/public-frameworks/load';
 import { mappingKey, type PublicSkillMapping } from '@/lib/public-frameworks/mappings';
 import type { Database } from '@/lib/supabase/database.types';
@@ -248,8 +248,7 @@ export async function getPassport(supabase: SupabaseClient<Database>, participan
   // Groupe de référence : le groupe actif le plus récent ; à défaut, le dernier groupe quitté par
   // abandon (le parcours suivi jusque-là reste consultable). Un retrait (erreur d'inscription) ne compte pas.
   const memberships = (membershipsResult.data ?? []).filter((membership) => membership.groups);
-  const active =
-    memberships.find((membership) => membership.status === 'active') ?? memberships.find((membership) => membership.status === 'dropped') ?? null;
+  const active = referenceMembership(memberships);
   const groupRow = active?.groups ?? null;
 
   let sessions: PassportSession[] = [];
@@ -323,35 +322,13 @@ export async function getPassport(supabase: SupabaseClient<Database>, participan
   const skillById = new Map((skillsResult.data ?? []).map((skill) => [skill.id, skill]));
   const versionById = new Map(versions.map((version) => [version.id, version]));
 
-  // Observations validées, rattachées au code stable de la compétence.
-  const observationsByFramework = new Map<string, Observation[]>();
-  for (const evaluation of evaluationsResult.data ?? []) {
-    const date = evaluation.sessions?.scheduled_date ?? evaluation.validated_at?.slice(0, 10) ?? '';
-    for (const score of evaluation.evaluation_scores) {
-      if (score.score === null) continue;
-      const skill = skillById.get(score.skill_id);
-      const version = skill ? versionById.get(skill.version_id) : null;
-      if (!skill || !version?.frameworks) continue;
-      const list = observationsByFramework.get(version.frameworks.code) ?? [];
-      list.push({
-        skillCode: skill.code,
-        score: Number(score.score),
-        sessionNumber: evaluation.sessions?.number ?? 0,
-        date,
-        evaluationId: evaluation.id,
-        comment: score.comment,
-      });
-      observationsByFramework.set(version.frameworks.code, list);
-    }
-  }
+  // Observations validées, rattachées au code stable de la compétence (construction partagée avec l'observatoire).
+  const observationsByFramework = validatedObservationsByFramework(evaluationsResult.data ?? [], skillById, versionById);
 
   // Auto-évaluations initiale et finale
   const selfAssessment = toSelfAssessment(selfResult.data);
   const finalSelfAssessment = toSelfAssessment(finalResult.data);
-  const selfBySkill = new Map<string, { value: number; text: string }>();
-  if (selfAssessment?.status === 'completed') {
-    for (const answer of selfAssessment.answers) if (answer.skillCode) selfBySkill.set(answer.skillCode, { value: answer.value, text: answer.text });
-  }
+  const selfBySkill = selfValuesBySkill(selfAssessment);
 
   const frameworks: PassportFramework[] = [...displayVersion.values()]
     .sort((a, b) => a.frameworks!.position - b.frameworks!.position)
@@ -372,7 +349,7 @@ export async function getPassport(supabase: SupabaseClient<Database>, participan
       const versionSkills = (skillsResult.data ?? []).filter((skill) => skill.version_id === version.id && skill.is_active).sort((a, b) => a.position - b.position);
       const observations = observationsByFramework.get(framework.code) ?? [];
       const summaries = summarizeProfile(versionSkills.map((skill) => skill.code), observations, rules);
-      const comparable = selfAssessment !== null && selfAssessment.scaleMin === rules.scaleMin && selfAssessment.scaleMax === rules.scaleMax;
+      const comparable = selfScaleComparable(selfAssessment, rules);
 
       const skills: PassportSkill[] = versionSkills.map((skill) => {
         const summary = summaries.get(skill.code)!;

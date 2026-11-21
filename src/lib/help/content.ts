@@ -262,6 +262,19 @@ export const HELP_GUIDES: HelpGuide[] = [
       'Téléphone perdu ? Dans « Comptes et accès », onglet « Utilisateurs », réinitialisez la double authentification de la personne, après avoir vérifié son identité par un autre moyen.',
     ],
   },
+  {
+    id: 'observatoire',
+    audience: 'admin',
+    title: 'Lire l’observatoire des compétences',
+    steps: [
+      'Ouvrez « Observatoire » : chaque ligne est une compétence, avec la répartition par niveau, la moyenne et sa marge, la progression et le regard sur soi. n compte les personnes.',
+      'Choisissez le référentiel, puis « Filtrer » (organisme, ville, cohorte, tranche d’âge…) : chaque valeur indique son nombre de personnes.',
+      'Choisissez un axe dans « Comparer par » pour voir la carte de chaleur : plus la case est foncée, plus la moyenne observée est haute.',
+      'Cliquez une compétence pour ouvrir sa fiche : courbe par session et détail selon l’axe comparé.',
+      '« Copier le lien » garde vos filtres ; « Exporter (CSV) » télécharge exactement ce qui est affiché.',
+    ],
+    tip: 'Sous 5 personnes, une case affiche « moins de 5 » : rien n’est montré ni exporté, pour que personne ne soit reconnaissable.',
+  },
 ];
 
 export const HELP_FAQ: HelpQuestion[] = [
