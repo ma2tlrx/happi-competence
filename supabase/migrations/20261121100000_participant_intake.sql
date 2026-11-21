@@ -27,7 +27,7 @@ create table if not exists public.participant_intakes (
   volunteering text check (volunteering in ('regulier', 'ponctuel', 'jamais')),
   volunteering_fields text[] not null default '{}' check (volunteering_fields <@ array[
     'sport_loisirs', 'education_formation', 'social_humanitaire', 'culture_art', 'environnement', 'sante',
-    'religion_spiritualite', 'politique_citoyennete', 'autre'
+    'associatif_citoyen', 'autre'
   ]::text[]),
   experience text check (experience in ('meme_domaine', 'autre_domaine', 'aucune')),
   experience_detail text check (char_length(experience_detail) <= 1000),

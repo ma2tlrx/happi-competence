@@ -57,16 +57,9 @@ export const VOLUNTEERING_FIELDS = {
   culture_art: 'Culture / Art',
   environnement: 'Environnement',
   sante: 'Santé',
-  religion_spiritualite: 'Religion / Spiritualité',
-  politique_citoyennete: 'Politique / Citoyenneté',
+  associatif_citoyen: 'Associatif / Citoyen',
   autre: 'Autre',
 } as const;
-
-/**
- * Domaines de bénévolat qui peuvent révéler une conviction religieuse ou une opinion politique
- * (catégories particulières, article 9 du RGPD) : jamais utilisés dans les statistiques ni les découpages.
- */
-export const SENSITIVE_VOLUNTEERING_FIELDS: readonly (keyof typeof VOLUNTEERING_FIELDS)[] = ['religion_spiritualite', 'politique_citoyennete'];
 
 export const EXPERIENCES = {
   meme_domaine: 'Oui, dans le même domaine que mes études',
