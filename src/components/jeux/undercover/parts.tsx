@@ -38,10 +38,13 @@ export function RoleBadge({ role, className }: { role: UndercoverRole; className
 
 /** Joueurs du salon d'attente. */
 export function LobbyPlayers({ game, selfId, scale = 'player' }: { game: PublicGame; selfId?: string; scale?: View }) {
-  const players = Object.values(game.players).sort((a, b) => a.joinedAt - b.joinedAt);
+  // Sur l'écran d'animation, l'animateur n'est pas compté parmi les joueurs : on ne l'affiche pas.
+  const players = Object.values(game.players)
+    .filter((player) => scale !== 'stage' || !player.isHost)
+    .sort((a, b) => a.joinedAt - b.joinedAt);
   const t = text[scale];
   return (
-    <ul className={cn('grid gap-2', scale === 'stage' && 'sm:grid-cols-2 xl:grid-cols-3')}>
+    <ul className={cn('grid gap-2', scale === 'stage' && 'grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))]')}>
       {players.map((player) => (
         <li key={player.id} className="flex min-h-14 items-center gap-3 rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2">
           <PlayerAvatar nickname={player.nickname} size={scale === 'stage' ? 'lg' : 'md'} />
@@ -197,7 +200,7 @@ export function GameOverSummary({ game, scale = 'player' }: { game: PublicGame; 
       ) : null}
       <section>
         <h3 className={cn('mb-2 font-semibold text-white/80', t.small)}>Joueurs</h3>
-        <ul className={cn('grid gap-2', scale === 'stage' && 'sm:grid-cols-2 xl:grid-cols-3')}>
+        <ul className={cn('grid gap-2', scale === 'stage' && 'grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))]')}>
           {players.map((player) => (
             <li key={player.id} className="flex min-h-12 items-center gap-3 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2">
               <PlayerAvatar nickname={player.nickname} eliminated={player.isEliminated} />

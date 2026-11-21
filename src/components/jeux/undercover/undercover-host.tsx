@@ -122,7 +122,7 @@ function HostGame({ gameId }: { gameId: string }) {
       ) : null}
 
       {game.status === 'lobby' ? (
-        <section aria-labelledby="titre-salon" className="grid gap-8 lg:grid-cols-[minmax(0,26rem)_1fr] lg:gap-14">
+        <section aria-labelledby="titre-salon" className="grid gap-8 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)] lg:gap-14">
           <div className="flex flex-col items-center gap-5 text-center">
             <h1 id="titre-salon" className="font-display text-2xl font-semibold text-white lg:text-4xl">
               Rejoignez la partie
