@@ -35,10 +35,22 @@ export const RATE_LIMITS = {
   'game_join.ip': { limit: 150, windowSeconds: 10 * 60 },
   // Actions en cours de partie (réponse, vote, rôle) : une réponse par question et par joueur.
   'game_play.ip': { limit: 1500, windowSeconds: 10 * 60 },
+  // Relance d'une personne absente (espace organisme) : un e-mail par relance, une relance par absence.
+  'absence_followup.user': { limit: 30, windowSeconds: 10 * 60 },
 } as const satisfies Record<string, RateLimitRule>;
 
 export type RateLimitAction = keyof typeof RATE_LIMITS;
-export type RateLimitScope = 'login' | 'signup' | 'password_reset' | 'contact' | 'access_code' | 'mfa' | 'verify' | 'game_join' | 'game_play';
+export type RateLimitScope =
+  | 'login'
+  | 'signup'
+  | 'password_reset'
+  | 'contact'
+  | 'access_code'
+  | 'mfa'
+  | 'verify'
+  | 'game_join'
+  | 'game_play'
+  | 'absence_followup';
 export type RateLimitSubject = 'ip' | 'email' | 'user';
 
 const SCOPE_MESSAGES: Record<RateLimitScope, string> = {
@@ -51,6 +63,7 @@ const SCOPE_MESSAGES: Record<RateLimitScope, string> = {
   verify: 'Trop de vérifications depuis cette connexion. Patientez {delai} avant de réessayer.',
   game_join: 'Trop de tentatives pour rejoindre une partie depuis cette connexion. Patientez {delai} avant de réessayer.',
   game_play: 'Trop d’actions en peu de temps depuis cette connexion. Patientez {delai} avant de réessayer.',
+  absence_followup: 'Vous avez envoyé beaucoup de relances en peu de temps. Patientez {delai} avant de réessayer.',
 };
 
 /** Délai lisible, arrondi à la minute supérieure (« 1 minute », « 15 minutes », « 1 heure »). */

@@ -83,6 +83,8 @@ export function AppShell({
   const groups = useMemo(() => visibleNavigation(space, user), [space, user]);
   const hub = hubFor(space, pathname);
   const mobileItems = groups.flatMap((group) => group.items).filter((item) => item.mobile).slice(0, 5);
+  // Une barre basse à un seul élément n'aide pas à naviguer (espace organisme) : le menu suffit.
+  const bottomBar = mobileItems.length > 1;
 
   const brand = (
     <div className="flex h-16 items-center gap-2.5 px-5">
@@ -232,7 +234,7 @@ export function AppShell({
 
       {banner}
 
-      <main id="contenu" className="px-4 pt-6 pb-28 sm:px-6 sm:pt-8 lg:px-8 lg:pb-16">
+      <main id="contenu" className={cn('px-4 pt-6 sm:px-6 sm:pt-8 lg:px-8 lg:pb-16', bottomBar ? 'pb-28' : 'pb-12')}>
         <div className="mx-auto w-full max-w-6xl">
           {hub ? <LinkTabs label={hub.title} tabs={hub.tabs} className="mb-6" /> : null}
           {children}
@@ -240,27 +242,29 @@ export function AppShell({
       </main>
 
       {/* Navigation basse (téléphone) */}
-      <nav aria-label="Navigation rapide" className="pb-safe fixed inset-x-0 bottom-0 z-20 border-t border-line bg-white/95 backdrop-blur-md sm:hidden">
-        <ul className="grid" style={{ gridTemplateColumns: `repeat(${mobileItems.length}, minmax(0, 1fr))` }}>
-          {mobileItems.map((item) => {
-            const active = isActive(pathname, item);
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  aria-current={active ? 'page' : undefined}
-                  className={cn('flex flex-col items-center gap-1 pt-2.5 pb-1 text-[0.6875rem] font-medium', active ? 'text-ink' : 'text-ink-subtle')}
-                >
-                  <span className={cn('flex h-7 w-12 items-center justify-center rounded-full transition-colors', active && 'bg-orange-100 text-orange-700')}>
-                    <item.icon className="size-5" aria-hidden />
-                  </span>
-                  <span className="max-w-full truncate px-1">{item.short ?? item.label}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+      {bottomBar ? (
+        <nav aria-label="Navigation rapide" className="pb-safe fixed inset-x-0 bottom-0 z-20 border-t border-line bg-white/95 backdrop-blur-md sm:hidden">
+          <ul className="grid" style={{ gridTemplateColumns: `repeat(${mobileItems.length}, minmax(0, 1fr))` }}>
+            {mobileItems.map((item) => {
+              const active = isActive(pathname, item);
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    aria-current={active ? 'page' : undefined}
+                    className={cn('flex flex-col items-center gap-1 pt-2.5 pb-1 text-[0.6875rem] font-medium', active ? 'text-ink' : 'text-ink-subtle')}
+                  >
+                    <span className={cn('flex h-7 w-12 items-center justify-center rounded-full transition-colors', active && 'bg-orange-100 text-orange-700')}>
+                      <item.icon className="size-5" aria-hidden />
+                    </span>
+                    <span className="max-w-full truncate px-1">{item.short ?? item.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      ) : null}
     </div>
   );
 }

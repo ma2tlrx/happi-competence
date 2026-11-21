@@ -79,6 +79,11 @@ describe('évaluation des limites', () => {
     expect(hit).not.toHaveBeenCalled();
   });
 
+  it('limite les relances d’un compte organisme : 30 par tranche de 10 minutes', () => {
+    expect(RATE_LIMITS['absence_followup.user']).toEqual({ limit: 30, windowSeconds: 600 });
+    expect(rateLimitMessage('absence_followup', 600)).toBe('Vous avez envoyé beaucoup de relances en peu de temps. Patientez 10 minutes avant de réessayer.');
+  });
+
   it('utilise des actions acceptées par la base', () => {
     for (const [action, rule] of Object.entries(RATE_LIMITS)) {
       expect(action).toMatch(/^[a-z_]+(\.[a-z_]+)*$/);

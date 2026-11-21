@@ -19,12 +19,15 @@ import { formatDate, formatDateTime } from '@/lib/utils';
 export function ParticipantFile({
   passport,
   back,
+  intro,
   canDownload = true,
   reportHref,
   canCertify = false,
 }: {
   passport: Passport;
   back?: React.ReactNode;
+  /** Contenu affiché entre l'en-tête (nom) et les rubriques de la fiche (ex. bilans validés). */
+  intro?: React.ReactNode;
   canDownload?: boolean;
   /** Lien vers l'espace « Bilan HAPPI » (équipe pédagogique uniquement). */
   reportHref?: string;
@@ -87,6 +90,8 @@ export function ParticipantFile({
           </div>
         </div>
       </header>
+
+      {intro}
 
       <Tabs defaultValue="synthese">
         <TabsList aria-label="Rubriques de la fiche">

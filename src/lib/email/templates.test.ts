@@ -63,6 +63,42 @@ describe('modèles d’e-mail', () => {
     expect(invitation.text).toContain('https://happi.example/inscription');
   });
 
+  it('rend la relance après une absence : ton chaleureux, prochaine séance, structure, sans reproche', () => {
+    const email = renderEmail(
+      'absence_followup',
+      {
+        firstName: 'Lucas',
+        organizationName: 'Mission Locale <Littoral>',
+        missedSessionNumber: 3,
+        missedDate: '2026-11-12',
+        next: { number: 4, date: '2026-11-19', startTime: '09:00:00', endTime: '12:00:00', location: 'Salle 3, Béziers' },
+        link: '/participant/parcours',
+      },
+      origin,
+    );
+    expect(email.subject).toBe('On vous attend à la prochaine séance');
+    expect(email.text).toContain('Bonjour Lucas,');
+    expect(email.text).toContain('séance 3 du jeudi 12 novembre 2026');
+    expect(email.text).toContain('Séance : Séance 4');
+    expect(email.text).toContain('Date : jeudi 19 novembre 2026');
+    expect(email.text).toContain('Horaire : de 9 h 00 à 12 h 00');
+    expect(email.text).toContain('Lieu : Salle 3, Béziers');
+    expect(email.html).toContain('Mission Locale &lt;Littoral&gt;');
+    expect(email.html).not.toContain('<Littoral>');
+    expect(email.text).toContain('https://happi.example/participant/parcours');
+    // Sans reproche : le mot « absence » n'apparaît pas, ni aucune donnée de présence ou d'évaluation.
+    expect(`${email.subject} ${email.text}`).not.toMatch(/absen|présence|évaluation/i);
+  });
+
+  it('relance sans prochaine séance : invite à faire le point, sans promettre de date', () => {
+    const email = renderEmail('absence_followup', { firstName: 'Lucas', missedSessionNumber: 6, missedDate: '2026-11-12' }, origin);
+    expect(email.subject).toBe('On pense à vous');
+    expect(email.text).toContain('faire le point');
+    expect(email.text).not.toContain('Date :');
+    expect(email.text).toContain('votre structure');
+    expect(renderEmail('absence_followup', {}, origin).text).toContain('la dernière séance');
+  });
+
   it('gère une séance sans horaire ni lieu', () => {
     const email = renderEmail('session_convocation', { sessionNumber: 1 }, origin);
     expect(email.text).toContain('Horaire : horaire à préciser');

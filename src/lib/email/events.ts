@@ -6,7 +6,7 @@ import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase/admin
 
 import { enqueueEmails, flushOutboxLater, processOutbox, SKIP_REASONS, type EnqueueInput, type ProcessSummary } from './outbox';
 import { detectProvider } from './provider';
-import { idempotencyKeys, isUpcoming, sessionChangeKind, tomorrowInParis, type SessionSnapshot } from './schedule';
+import { idempotencyKeys, isUpcoming, parisDate, sessionChangeKind, tomorrowInParis, type SessionSnapshot } from './schedule';
 import { longDate, shortTime, type SessionEmailData } from './templates';
 
 /**
@@ -323,6 +323,75 @@ export async function notifyReferralUpdate(referralId: string, actorId: string |
     );
   });
   flushOutboxLater();
+}
+
+/**
+ * Après la relance d'une personne absente par sa structure (public.relaunch_absent_participant a vérifié les
+ * droits et la règle) : e-mail et notification au participant. Ton chaleureux ; ni motif, ni présences, ni
+ * évaluation : le prénom, la structure, la séance manquée et la prochaine séance prévue. Une relance = un seul
+ * e-mail (clé d'idempotence). Renvoie si la personne peut être jointe (adresse e-mail ou compte), ou null si
+ * la file d'envoi est inaccessible.
+ */
+export async function notifyAbsenceFollowup(followupId: string, actorId: string | null): Promise<{ reachable: boolean } | null> {
+  const result = await guard('relance', async (admin) => {
+    const { data: followup } = await admin.from('absence_followups').select('id, session_id, participant_id, organization_id').eq('id', followupId).maybeSingle();
+    if (!followup) return null;
+    const [{ data: participant }, { data: missed }, { data: organization }] = await Promise.all([
+      admin.from('participants').select('id, user_id, first_name, email, status, is_demo').eq('id', followup.participant_id).maybeSingle(),
+      admin.from('sessions').select('id, group_id, number, scheduled_date, groups ( is_demo )').eq('id', followup.session_id).maybeSingle(),
+      admin.from('organizations').select('name, is_demo').eq('id', followup.organization_id).maybeSingle(),
+    ]);
+    if (!participant || !missed || participant.status === 'archived') return { reachable: false };
+    const { data: profile } = participant.user_id
+      ? await admin.from('profiles').select('email, status, is_demo').eq('id', participant.user_id).maybeSingle()
+      : { data: null };
+    // Compte désactivé : plus aucun e-mail.
+    if (profile && profile.status !== 'active') return { reachable: false };
+    const { data: upcoming } = await admin
+      .from('sessions')
+      .select('number, scheduled_date, start_time, end_time, location')
+      .eq('group_id', missed.group_id)
+      .eq('status', 'planned')
+      .gte('scheduled_date', parisDate())
+      .order('scheduled_date')
+      .order('number')
+      .limit(1);
+    const next = upcoming?.[0] ?? null;
+    const to = participant.email ?? profile?.email ?? null;
+    const at = next ? shortTime(next.start_time) : '';
+    await enqueueEmails(
+      [
+        {
+          key: idempotencyKeys.absenceFollowup(followup.id),
+          template: 'absence_followup',
+          data: {
+            firstName: participant.first_name,
+            organizationName: organization?.name ?? null,
+            missedSessionNumber: missed.number,
+            missedDate: missed.scheduled_date,
+            next: next ? { number: next.number, date: next.scheduled_date, startTime: next.start_time, endTime: next.end_time, location: next.location } : null,
+            link: PARTICIPANT_PATH,
+          },
+          to,
+          userId: participant.user_id,
+          participantId: participant.id,
+          sessionId: missed.id,
+          isDemo: participant.is_demo || Boolean(profile?.is_demo) || Boolean(missed.groups?.is_demo) || Boolean(organization?.is_demo),
+          createdBy: actorId,
+          notification: {
+            type: 'absence.followup',
+            title: next ? 'On vous attend à la prochaine séance' : 'On pense à vous',
+            body: next ? `Séance ${next.number} : ${longDate(next.scheduled_date)}${at ? ` à ${at}` : ''}.` : 'Votre formateur peut faire le point avec vous.',
+            link: PARTICIPANT_PATH,
+          },
+        },
+      ],
+      admin,
+    );
+    return { reachable: Boolean(to?.trim()) || Boolean(participant.user_id) };
+  });
+  flushOutboxLater();
+  return result;
 }
 
 /** E-mail de test envoyé immédiatement à l'administrateur (résultat renvoyé à l'interface). */
