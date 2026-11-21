@@ -57,7 +57,12 @@ test('inscription d’un participant puis auto-évaluation initiale', async ({ p
   await page.locator('input[name=terms]').check();
   await page.locator('input[name=privacy]').check();
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
-  await expect(page).toHaveURL(/\/participant\/auto-evaluation/);
+  // Le questionnaire d'accueil s'ouvre d'abord ; il peut être passé et repris plus tard.
+  await expect(page).toHaveURL(/\/bienvenue$/);
+  await expect(page.getByText('Étape 1 sur 6')).toBeVisible();
+  await page.getByRole('link', { name: 'Passer pour l’instant' }).click();
+  await expect(page.getByRole('heading', { name: 'Faisons connaissance' })).toBeVisible();
+  await page.goto('/participant/auto-evaluation');
 
   const questions = page.locator('fieldset').filter({ has: page.getByRole('radio') });
   const count = await questions.count();

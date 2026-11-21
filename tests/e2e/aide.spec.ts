@@ -10,7 +10,7 @@ test('le centre d’aide s’ouvre sans connexion, depuis le pied de page, et sa
   await expect(page).toHaveURL(/\/aide$/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Centre d’aide');
   await expect(page.getByRole('button', { name: 'Tous les espaces' })).toHaveAttribute('aria-pressed', 'true');
-  for (const title of ['Se connecter', 'Présences et émargement', 'Lire le tableau d’impact', 'Créer un code d’accès']) {
+  for (const title of ['Se connecter', 'Présences et émargement', 'Suivre mes groupes', 'Créer un code d’accès']) {
     await expect(page.getByRole('heading', { name: title })).toBeVisible();
   }
 
