@@ -1,13 +1,15 @@
 'use client';
 
-import { DoorOpen, Pencil, RotateCcw, UserMinus, UserPlus } from 'lucide-react';
-import { useActionState, useState, useTransition } from 'react';
+import { Check, ChevronsDown, CircleAlert, DoorOpen, Pencil, RotateCcw, UserMinus, UserPlus } from 'lucide-react';
+import { useActionState, useEffect, useId, useRef, useState, useTransition, type InputHTMLAttributes } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Field, FormMessage, Input, Select, SubmitButton, Textarea } from '@/components/ui/form';
 import { Dialog, DialogContent, DialogTrigger, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/overlays';
 import { toast } from '@/components/ui/toast';
 import { DROP_DETAILS_MAX, DROP_REASON_CODES, DROP_REASONS } from '@/lib/outcomes/labels';
+import { copyForward, fieldName, firstFilledIndex, initialRows, LOCATION_MAX, type PlanField, type PlanRow } from '@/lib/sessions/plan';
+import { cn } from '@/lib/utils';
 
 import { addMember, declareDropout, linkParticipantOrganization, planSessions, removeMember, restoreMember } from '../../actions';
 
@@ -190,35 +192,158 @@ export function OrganizationSelect({ participantId, groupId, value, organization
   );
 }
 
-export function PlanSessionsForm({ groupId, missing, total, defaultStart }: { groupId: string; missing: { number: number; title: string }[]; total: number; defaultStart: string | null }) {
-  const [state, action] = useActionState(planSessions.bind(null, groupId), null);
-  const suggested = (index: number) => {
-    if (!defaultStart) return '';
-    const date = new Date(`${defaultStart}T12:00:00`);
-    date.setDate(date.getDate() + index * 7);
-    return date.toISOString().slice(0, 10);
-  };
+/** Une ligne par session : titre, puis date, début, fin et lieu (colonnes au-delà de 48rem de large). */
+const PLAN_ROW = '@3xl:grid-cols-[minmax(0,1fr)_9.5rem_8rem_8rem_minmax(0,1.1fr)]';
+
+/** Champ d'une session : libellé visible sur les cartes, réservé aux lecteurs d'écran en grille (« Date de la session 3 »). */
+function PlanInput({
+  number,
+  field,
+  label,
+  error,
+  onValue,
+  className,
+  ...props
+}: { number: number; field: PlanField; label: string; error?: string; onValue: (value: string) => void } & Omit<InputHTMLAttributes<HTMLInputElement>, 'name' | 'onChange'>) {
+  const id = useId();
   return (
-    <form action={action} className="space-y-4">
+    <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
+      <label htmlFor={id} className="text-sm font-semibold text-ink @3xl:sr-only">
+        {label}
+        <span className="sr-only"> de la session {number}</span>
+      </label>
+      <Input
+        id={id}
+        name={fieldName(field, number)}
+        onChange={(event) => onValue(event.target.value)}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${id}-erreur` : undefined}
+        {...props}
+      />
+      {error ? (
+        <p id={`${id}-erreur`} className="flex items-start gap-1.5 text-sm font-medium text-danger">
+          <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * Création des sessions manquantes : chacune a sa date, son horaire et son lieu. Valeurs de départ hebdomadaires
+ * depuis le début du groupe ; « Recopier sur les suivantes » reprend la première ligne remplie, une semaine plus tard.
+ */
+export function PlanSessionsForm({ groupId, missing, defaultStart }: { groupId: string; missing: { number: number; title: string }[]; defaultStart: string | null }) {
+  const [state, action] = useActionState(planSessions.bind(null, groupId), null);
+  const [rows, setRows] = useState<PlanRow[]>(() => initialRows(missing, defaultStart));
+  const [copied, setCopied] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
+  const emblems = useRef<(HTMLSpanElement | null)[]>([]);
+  const baseId = useId();
+  const hintId = `${baseId}-aide`;
+  const errors = state?.fieldErrors ?? {};
+  const source = firstFilledIndex(rows);
+  const count = rows.length;
+
+  // Après un refus, le premier champ à corriger reçoit le focus (il peut être loin sur téléphone).
+  useEffect(() => {
+    if (state?.fieldErrors) formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+  }, [state]);
+
+  const change = (index: number, field: PlanField, value: string) => {
+    setRows((current) => current.map((row, position) => (position === index ? { ...row, [field]: value } : row)));
+    setCopied(0);
+  };
+
+  const copy = () => {
+    if (source < 0) return;
+    setRows(copyForward(rows, source));
+    setCopied(count - source - 1);
+    // Les numéros des sessions recopiées s'allument l'un après l'autre (rien en mouvement réduit).
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const orange = getComputedStyle(document.documentElement).getPropertyValue('--color-orange-500').trim();
+    emblems.current.slice(source + 1).forEach((emblem, step) =>
+      emblem?.animate([{ offset: 0, backgroundColor: orange, transform: 'scale(1.2)' }], { duration: 600, delay: step * 70, easing: 'ease-out' }),
+    );
+  };
+
+  return (
+    <form ref={formRef} action={action} className="@container space-y-4">
       <p className="text-[0.9375rem] text-ink-muted">
-        {missing.length === total ? `Créez les ${total} sessions du programme en une fois.` : 'Créez les sessions restantes.'} Les dates proposées suivent un rythme hebdomadaire et restent modifiables.
+        {count > 1 ? 'Réglez la première session, recopiez-la sur les suivantes, puis ajustez ce qui change.' : 'Il reste une session à créer.'}
       </p>
-      <ul className="grid gap-3 sm:grid-cols-2">
-        {missing.map((session, index) => (
-          <li key={session.number}>
-            <Field label={`Session ${session.number} · ${session.title}`}>
-              {({ id }) => <Input id={id} name={`date-${session.number}`} type="date" defaultValue={suggested(index)} />}
-            </Field>
-          </li>
-        ))}
-      </ul>
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Début" error={state?.fieldErrors?.startTime}>{({ id, describedBy, invalid }) => <Input id={id} name="startTime" type="time" defaultValue="09:00" aria-describedby={describedBy} aria-invalid={invalid || undefined} />}</Field>
-        <Field label="Fin" error={state?.fieldErrors?.endTime}>{({ id, describedBy, invalid }) => <Input id={id} name="endTime" type="time" defaultValue="12:00" aria-describedby={describedBy} aria-invalid={invalid || undefined} />}</Field>
-        <Field label="Lieu" optional error={state?.fieldErrors?.location}>{({ id, describedBy, invalid }) => <Input id={id} name="location" maxLength={200} aria-describedby={describedBy} aria-invalid={invalid || undefined} />}</Field>
+      <div aria-hidden className={cn('hidden gap-3 text-sm text-ink-subtle @3xl:grid', PLAN_ROW)}>
+        <span>Session</span>
+        <span>Date</span>
+        <span>Début</span>
+        <span>Fin</span>
+        <span>Lieu</span>
       </div>
+      <ol className="space-y-3 @3xl:space-y-0 @3xl:divide-y @3xl:divide-line @3xl:border-y @3xl:border-line">
+        {rows.map((row, index) => {
+          const titleId = `${baseId}-session-${row.number}`;
+          const error = (field: PlanField) => errors[fieldName(field, row.number)];
+          return (
+            <li key={row.number}>
+              <div role="group" aria-labelledby={titleId} className={cn('grid gap-3 rounded-lg bg-paper p-3 @3xl:items-start @3xl:rounded-none @3xl:bg-transparent @3xl:px-0', PLAN_ROW)}>
+                <p id={titleId} className="flex min-w-0 items-center gap-2.5 font-medium text-ink @3xl:min-h-10">
+                  <span
+                    ref={(element) => {
+                      emblems.current[index] = element;
+                    }}
+                    aria-hidden
+                    className="pixel-corners flex size-8 shrink-0 items-center justify-center bg-petrol-100 font-display text-sm font-semibold text-petrol-800"
+                  >
+                    {row.number}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="sr-only">Session {row.number} · </span>
+                    {missing[index]?.title}
+                  </span>
+                </p>
+                <div className="grid grid-cols-2 gap-3 @xl:grid-cols-[9.5rem_8rem_8rem_minmax(0,1fr)] @3xl:contents">
+                  <PlanInput number={row.number} field="date" label="Date" type="date" value={row.date} error={error('date')} onValue={(value) => change(index, 'date', value)} className="col-span-2 @xl:col-span-1" />
+                  <PlanInput number={row.number} field="start" label="Début" type="time" value={row.start} error={error('start')} onValue={(value) => change(index, 'start', value)} />
+                  <PlanInput number={row.number} field="end" label="Fin" type="time" value={row.end} error={error('end')} onValue={(value) => change(index, 'end', value)} />
+                  <PlanInput
+                    number={row.number}
+                    field="location"
+                    label="Lieu"
+                    value={row.location}
+                    maxLength={LOCATION_MAX}
+                    placeholder="Salle ou adresse"
+                    error={error('location')}
+                    onValue={(value) => change(index, 'location', value)}
+                    className="col-span-2 @xl:col-span-1"
+                  />
+                </div>
+              </div>
+              {index === source && index < count - 1 ? (
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-3 @3xl:pt-0 @3xl:pb-3 @3xl:pl-[2.625rem]">
+                  <Button size="sm" variant="outline" onClick={copy} aria-describedby={hintId}>
+                    <ChevronsDown aria-hidden />
+                    Recopier sur les suivantes
+                  </Button>
+                  <p id={hintId} className={cn('text-sm text-ink-subtle', copied > 0 && 'sr-only')}>
+                    Une semaine plus tard, mêmes horaires et même lieu.
+                  </p>
+                  <p role="status" className="flex items-center gap-1.5 text-sm font-medium text-success">
+                    {copied > 0 ? (
+                      <>
+                        <Check className="size-4 shrink-0" aria-hidden />
+                        {copied > 1 ? `Recopié sur les ${copied} sessions suivantes.` : 'Recopié sur la session suivante.'}
+                      </>
+                    ) : null}
+                  </p>
+                </div>
+              ) : null}
+            </li>
+          );
+        })}
+      </ol>
       <FormMessage state={state} />
-      <SubmitButton>Créer les sessions</SubmitButton>
+      <SubmitButton>{count > 1 ? `Créer les ${count} sessions` : 'Créer la session'}</SubmitButton>
     </form>
   );
 }

@@ -105,7 +105,8 @@ export const HELP_GUIDES: HelpGuide[] = [
     steps: [
       'Dans « Groupes », cliquez sur « Nouveau groupe » : nom, programme, organisme, dates.',
       'Ouvrez le groupe et ajoutez les participants (une fiche est créée si la personne n’en a pas).',
-      'Planifiez en une fois les séances du programme qui manquent : date de début, horaires, lieu.',
+      'Toujours dans le groupe, chaque séance a sa ligne : date, début, fin et lieu. Réglez la première, puis cliquez sur « Recopier sur les suivantes » : une semaine plus tard, mêmes horaires, même lieu.',
+      'Ajustez ce qui change d’une séance à l’autre, puis cliquez sur « Créer les 6 sessions ». Une date dans le désordre est signalée sur sa ligne.',
       'Chaque séance se modifie ensuite depuis « Sessions ».',
     ],
     tip: 'Les convocations partent par e-mail dès qu’une séance datée est planifiée. Un rappel est envoyé la veille.',

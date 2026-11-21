@@ -19,4 +19,8 @@ describe('centre d’aide', () => {
   it('retrouve le guide d’émargement par un mot de ses étapes', () => {
     expect(HELP_GUIDES.filter((guide) => matchesHelp(guideText(guide), 'contre-signer')).map((guide) => guide.id)).toContain('presences');
   });
+
+  it('le guide de planification présente l’aide « Recopier sur les suivantes »', () => {
+    expect(HELP_GUIDES.filter((guide) => matchesHelp(guideText(guide), 'recopier suivantes')).map((guide) => guide.id)).toContain('planifier');
+  });
 });

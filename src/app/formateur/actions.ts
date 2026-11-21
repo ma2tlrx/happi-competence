@@ -9,6 +9,7 @@ import { hasPermission, requireRole } from '@/lib/auth/session';
 import { notifyParticipantInvited, notifySessionChanged, notifySessionsPlanned } from '@/lib/email/events';
 import type { SessionSnapshot } from '@/lib/email/schedule';
 import { DROP_DETAILS_MAX, DROP_REASON_CODES } from '@/lib/outcomes/labels';
+import { checkPlan, readPlanRows } from '@/lib/sessions/plan';
 import { createClient } from '@/lib/supabase/server';
 
 const uuid = z.string().uuid();
@@ -185,46 +186,41 @@ export async function linkParticipantOrganization(participantId: string, organiz
 }
 
 // ── Sessions ─────────────────────────────────────────────────────────────────
-/** Crée en une fois les sessions manquantes du programme pour un groupe. */
+/**
+ * Crée en une fois les sessions manquantes du programme pour un groupe, chacune avec sa date, son horaire et son lieu
+ * (champs « date-N », « start-N », « end-N », « location-N »). Les dates suivent l'ordre des sessions, y compris
+ * celles déjà planifiées (hors annulées) ; une erreur est rattachée au champ fautif.
+ */
 export async function planSessions(groupId: string, _: ActionState, formData: FormData): Promise<ActionState> {
   const user = await requireRole('formateur', 'admin');
   if (!hasPermission(user, 'sessions.manage')) return actionError('Vous n’êtes pas autorisé à planifier des sessions.');
+  if (!uuid.safeParse(groupId).success) return actionError('Groupe introuvable.');
   const supabase = await createClient();
   const { data: group } = await supabase.from('groups').select('id, program_id').eq('id', groupId).single();
   if (!group) return actionError('Groupe introuvable.');
   const [{ data: outline }, { data: existing }] = await Promise.all([
     supabase.from('program_sessions').select('id, number').eq('program_id', group.program_id).order('number'),
-    supabase.from('sessions').select('program_session_id').eq('group_id', groupId),
+    supabase.from('sessions').select('program_session_id, number, scheduled_date, status').eq('group_id', groupId),
   ]);
   const planned = new Set((existing ?? []).map((row) => row.program_session_id));
-  const startTime = optionalTime.safeParse(formData.get('startTime') ?? '');
-  const endTime = optionalTime.safeParse(formData.get('endTime') ?? '');
-  const rawLocation = String(formData.get('location') ?? '').trim();
-  const errors: Record<string, string> = {};
-  if (!startTime.success) errors.startTime = 'Horaire invalide.';
-  if (!endTime.success) errors.endTime = 'Horaire invalide.';
-  if (startTime.success && endTime.success && startTime.data && endTime.data && endTime.data <= startTime.data) {
-    errors.endTime = 'L’heure de fin doit suivre l’heure de début.';
-  }
-  if (rawLocation.length > 200) errors.location = 'Le lieu est trop long (200 caractères au plus).';
-  if (Object.keys(errors).length) return actionError('Certains champs sont à corriger.', errors);
-  const location = rawLocation || null;
-  const rows = (outline ?? [])
-    .filter((item) => !planned.has(item.id))
-    .map((item) => {
-      const date = optionalDate.safeParse(formData.get(`date-${item.number}`) ?? '');
-      return {
-        group_id: groupId,
-        program_session_id: item.id,
-        number: item.number,
-        scheduled_date: date.success ? date.data : null,
-        start_time: startTime.success ? startTime.data : null,
-        end_time: endTime.success ? endTime.data : null,
-        location,
-        trainer_id: user.id,
-      };
-    });
-  if (rows.length === 0) return actionError('Toutes les sessions du programme sont déjà créées.');
+  const missing = (outline ?? []).filter((item) => !planned.has(item.id));
+  if (missing.length === 0) return actionError('Toutes les sessions du programme sont déjà créées.');
+  const others = (existing ?? []).filter((row) => row.status !== 'cancelled').map((row) => ({ number: row.number, date: row.scheduled_date }));
+  const check = checkPlan(readPlanRows(formData, missing.map((item) => item.number)), others);
+  if (!check.ok) return actionError('Certains champs sont à corriger.', check.errors);
+  const rows = missing.map((item, index) => {
+    const session = check.sessions[index]!;
+    return {
+      group_id: groupId,
+      program_session_id: item.id,
+      number: item.number,
+      scheduled_date: session.date,
+      start_time: session.start,
+      end_time: session.end,
+      location: session.location,
+      trainer_id: user.id,
+    };
+  });
   const { data: created, error } = await supabase.from('sessions').insert(rows).select('id');
   if (error) return actionError(databaseErrorMessage(error));
   // Convocations des membres pour les séances datées (envoyées après la réponse).

@@ -20,7 +20,7 @@ import { dropReasonLabel } from '@/lib/outcomes/labels';
 import { loadSatisfactionResults } from '@/lib/satisfaction/load';
 import { satisfactionWindow } from '@/lib/satisfaction/window';
 import { createClient } from '@/lib/supabase/server';
-import { formatDate, formatTimeRange, isUuid } from '@/lib/utils';
+import { cn, formatDate, formatTimeRange, isUuid } from '@/lib/utils';
 
 import { updateGroup } from '../../actions';
 import { GroupForm } from '../group-form';
@@ -101,6 +101,8 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   ).slice(0, 10);
   const planned = new Set((sessions.data ?? []).map((session) => session.program_session_id));
   const missing = (outline.data ?? []).filter((item) => !planned.has(item.id));
+  // Formulaire de planification affiché : la carte « Sessions » prend toute la largeur (une ligne par session).
+  const planning = missing.length > 0 && hasPermission(user, 'sessions.manage');
   const staffName = new Map((staff.data ?? []).map((person) => [person.id, `${person.first_name} ${person.last_name}`]));
   const canManage = hasPermission(user, 'groups.manage');
   const canLink = hasPermission(user, 'participants.link_organization');
@@ -360,7 +362,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
           </Card>
         ) : null}
 
-        <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+        <div className={cn('grid gap-6', !planning && 'lg:grid-cols-[1.5fr_1fr]')}>
           <Card>
             <CardHeader title="Sessions" description={`${(sessions.data ?? []).length} sur ${(outline.data ?? []).length} planifiées`} />
             <CardBody className="pt-3">
@@ -370,7 +372,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                     <li key={session.id}>
                       <Link href={`/formateur/sessions/${session.id}`} className="flex flex-wrap items-center justify-between gap-3 py-3 hover:text-petrol-700">
                         <span className="flex items-center gap-3">
-                          <span className="flex size-8 items-center justify-center rounded-md bg-petrol-50 font-display text-sm font-semibold text-petrol-800">{session.number}</span>
+                          <span className="pixel-corners flex size-8 shrink-0 items-center justify-center bg-petrol-100 font-display text-sm font-semibold text-petrol-800">{session.number}</span>
                           <span>
                             <span className="block font-medium">{(outline.data ?? []).find((item) => item.id === session.program_session_id)?.title}</span>
                             <span className="flex items-center gap-1.5 text-sm text-ink-muted">
@@ -385,9 +387,15 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                   ))}
                 </ul>
               ) : null}
-              {missing.length > 0 && hasPermission(user, 'sessions.manage') ? (
+              {planning ? (
                 <div className={(sessions.data ?? []).length > 0 ? 'mt-4 border-t border-line pt-4' : ''}>
-                  <PlanSessionsForm groupId={group.id} missing={missing} total={(outline.data ?? []).length} defaultStart={group.start_date} />
+                  {/* Nouvelles valeurs de départ si les sessions manquantes ou la date de début changent entre-temps. */}
+                  <PlanSessionsForm
+                    key={`${group.start_date}:${missing.map((item) => item.number).join('-')}`}
+                    groupId={group.id}
+                    missing={missing}
+                    defaultStart={group.start_date}
+                  />
                 </div>
               ) : null}
             </CardBody>
