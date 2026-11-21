@@ -188,18 +188,24 @@ export function ImpactView({ access, action, exportHref, showOrganization }: { a
                   />
                 ))}
               </div>
-              <OutcomesTable indicators={total} caption="Répartition des situations par moment du parcours" />
-              <p className="text-sm text-ink-subtle">
-                Une situation est attendue à son échéance (fin du groupe ou abandon, puis 3 et 6 mois après). « Non renseigné » n’est jamais compté comme une
-                situation ni comme zéro.
-              </p>
+              <details className="group rounded-md border border-line">
+                <summary className="cursor-pointer px-4 py-3 text-[0.9375rem] font-medium text-ink select-none">Voir le tableau détaillé</summary>
+                <div className="space-y-3 px-1 pb-4 sm:px-4">
+                  <OutcomesTable indicators={total} caption="Répartition des situations par moment du parcours" />
+                  <p className="px-3 text-sm text-ink-subtle sm:px-0">
+                    Une situation est attendue à son échéance (fin du groupe ou abandon, puis 3 et 6 mois après). « Non renseigné » n’est jamais compté comme une
+                    situation ni comme zéro.
+                  </p>
+                </div>
+              </details>
             </CardBody>
           </Card>
 
           <Card>
             <CardHeader title="Motifs d’abandon" description={`${total.dropped} abandon(s) sur ${total.enrolled} parcours. Liste provisoire, à valider.`} />
             <CardBody className="px-0 pb-2 sm:px-0">
-              <TableWrap label="Motifs d’abandon">
+              {total.dropped === 0 ? <p className="px-5 pb-3 text-[0.9375rem] text-ink-muted">Aucun abandon sur cette sélection.</p> : null}
+              <TableWrap label="Motifs d’abandon" className={total.dropped === 0 ? 'hidden' : undefined}>
                 <Table>
                   <thead>
                     <tr>

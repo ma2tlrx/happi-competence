@@ -11,13 +11,15 @@ import { Avatar } from '@/components/ui/primitives';
 import { Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger } from '@/components/ui/overlays';
 import { cn } from '@/lib/utils';
 
-import { SPACE_LABELS, visibleNavigation, type AppSpace, type NavGroup, type NavItem } from './nav-config';
+import { LinkTabs } from '@/components/ui/navigation';
+
+import { SPACE_LABELS, hubFor, visibleNavigation, type AppSpace, type NavGroup, type NavItem } from './nav-config';
 
 export type ShellUser = { firstName: string; lastName: string; email: string; roleLabel: string; isAdmin: boolean; permissions?: string[] };
 
 function isActive(pathname: string, item: NavItem) {
   if (item.exact) return pathname === item.href;
-  return pathname === item.href || pathname.startsWith(`${item.href}/`);
+  return [item.href, ...(item.also ?? [])].some((href) => pathname === href || pathname.startsWith(`${href}/`));
 }
 
 function Sidebar({ space, groups, onNavigate }: { space: AppSpace; groups: NavGroup[]; onNavigate?: () => void }) {
@@ -79,6 +81,7 @@ export function AppShell({
   }
   const person = { first_name: user.firstName, last_name: user.lastName };
   const groups = useMemo(() => visibleNavigation(space, user), [space, user]);
+  const hub = hubFor(space, pathname);
   const mobileItems = groups.flatMap((group) => group.items).filter((item) => item.mobile).slice(0, 5);
 
   const brand = (
@@ -230,7 +233,10 @@ export function AppShell({
       {banner}
 
       <main id="contenu" className="px-4 pt-6 pb-28 sm:px-6 sm:pt-8 lg:px-8 lg:pb-16">
-        <div className="mx-auto w-full max-w-6xl">{children}</div>
+        <div className="mx-auto w-full max-w-6xl">
+          {hub ? <LinkTabs label={hub.title} tabs={hub.tabs} className="mb-6" /> : null}
+          {children}
+        </div>
       </main>
 
       {/* Navigation basse (téléphone) */}
