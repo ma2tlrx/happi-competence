@@ -72,6 +72,8 @@ export const idempotencyKeys = {
   invitation: (participantId: string) => `invitation:${participantId}`,
   /** Un e-mail par changement de statut d'une orientation (l'horodatage distingue deux passages au même statut). */
   referral: (referralId: string, status: string, changedAt: string) => `referral:${referralId}:${status}:${changedAt}`,
+  /** Une relance (une absence, une seule fois) = un e-mail. */
+  absenceFollowup: (followupId: string) => `absence_followup:${followupId}`,
   test: (userId: string, now: Date = new Date()) => `test:${userId}:${now.getTime()}`,
 };
 

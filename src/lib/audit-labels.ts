@@ -90,6 +90,7 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   'group.member_removed': 'Participant retiré d’un groupe',
   'group.member_dropped': 'Abandon déclaré',
   'group.member_drop_updated': 'Abandon modifié',
+  'absence_followup.sent': 'Personne absente relancée par sa structure',
   'outcome.recorded': 'Situation du participant renseignée',
   'outcome.updated': 'Situation du participant modifiée',
   'outcome.deleted': 'Situation du participant supprimée',

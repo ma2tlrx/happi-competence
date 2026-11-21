@@ -56,6 +56,11 @@ describe('idempotence', () => {
     expect(idempotencyKeys.convocation('s1', 'p1')).not.toBe(idempotencyKeys.convocation('s1', 'p2'));
   });
 
+  it('une relance après une absence donne un seul e-mail', () => {
+    expect(idempotencyKeys.absenceFollowup('f1')).toBe('absence_followup:f1');
+    expect(idempotencyKeys.absenceFollowup('f1')).not.toBe(idempotencyKeys.absenceFollowup('f2'));
+  });
+
   it('ne change pas l’empreinte pour un format d’heure différent, la change pour un autre lieu', () => {
     expect(sessionFingerprint(base)).toBe(sessionFingerprint({ ...base, start_time: '09:00', end_time: '12:00' }));
     expect(sessionFingerprint(base)).not.toBe(sessionFingerprint({ ...base, location: 'Salle B' }));

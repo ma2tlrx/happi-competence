@@ -8,11 +8,8 @@ import {
   LayoutDashboard,
   LifeBuoy,
   MessageSquareHeart,
-  MessageSquareWarning,
-  Layers,
   Radar,
   Route,
-  Send,
   Settings,
   TrendingUp,
   Trophy,
@@ -76,17 +73,11 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
     },
     HELP,
   ],
+  // Espace organisme réduit à l'essentiel : les groupes (et, depuis eux, les résultats de chaque membre).
+  // Les autres pages organisme existent toujours (liens d'anciennes notifications) mais ne sont plus au menu.
   organisme: [
     {
-      items: [
-        { href: '/organisme/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, mobile: true, short: 'Accueil' },
-        { href: '/organisme/participants', label: 'Participants', icon: Users, mobile: true },
-        { href: '/organisme/sessions', label: 'Sessions', icon: CalendarDays, mobile: true, also: ['/organisme/presences'] },
-        { href: '/organisme/orientations', label: 'Orientations', icon: Send, mobile: true },
-        { href: '/organisme/programmes', label: 'Programmes', icon: Layers },
-        { href: '/organisme/impact', label: 'Résultats', icon: TrendingUp, mobile: true, also: ['/organisme/financements', '/organisme/satisfaction', '/organisme/suivis'] },
-        { href: '/organisme/signalements', label: 'Signaler un problème', icon: MessageSquareWarning },
-      ],
+      items: [{ href: '/organisme/dashboard', label: 'Mes groupes', icon: Users, mobile: true, also: ['/organisme/groupes', '/organisme/participants'] }],
     },
     HELP,
   ],
@@ -181,24 +172,8 @@ export const HUBS: Record<AppSpace, Hub[]> = {
       ],
     },
   ],
-  organisme: [
-    {
-      title: 'Résultats',
-      tabs: [
-        { href: '/organisme/impact', label: 'Impact' },
-        { href: '/organisme/suivis', label: 'Suivis' },
-        { href: '/organisme/satisfaction', label: 'Satisfaction' },
-        { href: '/organisme/financements', label: 'Financements' },
-      ],
-    },
-    {
-      title: 'Sessions',
-      tabs: [
-        { href: '/organisme/sessions', label: 'Sessions' },
-        { href: '/organisme/presences', label: 'Présences' },
-      ],
-    },
-  ],
+  // Aucun onglet dans l'espace organisme.
+  organisme: [],
   formateur: [
     {
       title: 'Suivi des parcours',

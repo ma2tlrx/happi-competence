@@ -9,6 +9,65 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      absence_followups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          organization_id: string
+          participant_id: string
+          session_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          organization_id: string
+          participant_id: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          organization_id?: string
+          participant_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "absence_followups_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "absence_followups_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "staff_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "absence_followups_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "absence_followups_participant_id_fkey"
+            columns: ["participant_id"]
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "absence_followups_session_id_fkey"
+            columns: ["session_id"]
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_settings: {
         Row: {
           is_public: boolean
@@ -5214,6 +5273,10 @@ export type Database = {
       redeem_invitation_code: {
         Args: { p_code: string; p_user_id: string }
         Returns: Json
+      }
+      relaunch_absent_participant: {
+        Args: { p_participant_id: string; p_session_id: string }
+        Returns: string
       }
       revoke_invitation_code: { Args: { p_id: string }; Returns: undefined }
       revoke_passport_share: { Args: { p_share_id: string }; Returns: undefined }

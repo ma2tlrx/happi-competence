@@ -18,6 +18,7 @@ export const EMAIL_TEMPLATES = [
   'report_available',
   'participant_invitation',
   'referral_update',
+  'absence_followup',
   'test',
 ] as const;
 export type EmailTemplate = (typeof EMAIL_TEMPLATES)[number];
@@ -30,6 +31,7 @@ export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplate, string> = {
   report_available: 'Bilan disponible',
   participant_invitation: 'Invitation',
   referral_update: 'Suivi d’orientation',
+  absence_followup: 'Relance après une absence',
   test: 'Test',
 };
 
@@ -56,6 +58,19 @@ export type InvitationEmailData = { firstName?: string | null; groupName?: strin
 export type TestEmailData = { firstName?: string | null; provider?: string | null };
 /** Suivi d'une orientation, adressé au conseiller : nom abrégé de la personne, aucun motif. */
 export type ReferralEmailData = { firstName?: string | null; personName?: string | null; statusLabel?: string | null; detail?: string | null; link?: string | null };
+/**
+ * Relance d'une personne absente, envoyée à sa demande par la structure qui l'accompagne : prénom, structure,
+ * séance manquée et prochaine séance. Ni motif, ni présences, ni évaluation.
+ */
+export type AbsenceFollowupEmailData = {
+  firstName?: string | null;
+  organizationName?: string | null;
+  missedSessionNumber?: number | null;
+  /** AAAA-MM-JJ, heure de Paris. */
+  missedDate?: string | null;
+  next?: { number: number; date?: string | null; startTime?: string | null; endTime?: string | null; location?: string | null } | null;
+  link?: string | null;
+};
 
 export type EmailDataFor<T extends EmailTemplate> = T extends 'report_available'
   ? ReportEmailData
@@ -63,9 +78,11 @@ export type EmailDataFor<T extends EmailTemplate> = T extends 'report_available'
     ? InvitationEmailData
     : T extends 'referral_update'
       ? ReferralEmailData
-      : T extends 'test'
-        ? TestEmailData
-        : SessionEmailData;
+      : T extends 'absence_followup'
+        ? AbsenceFollowupEmailData
+        : T extends 'test'
+          ? TestEmailData
+          : SessionEmailData;
 
 export type RenderedEmail = { subject: string; html: string; text: string };
 
@@ -265,6 +282,46 @@ function sessionLayout(template: 'session_convocation' | 'session_reminder' | 's
   }
 }
 
+// ── Relance après une absence ───────────────────────────────────────────────
+/** Ton chaleureux et sans reproche : « on vous attend », jamais « vous étiez absent ». */
+function absenceFollowupLayout(data: AbsenceFollowupEmailData, origin: string): Layout {
+  const organization = data.organizationName?.trim() || null;
+  const missed = data.missedSessionNumber
+    ? `Vous n’avez pas pu venir à la séance ${data.missedSessionNumber}${data.missedDate ? ` du ${longDate(data.missedDate)}` : ''}.`
+    : 'Vous n’avez pas pu venir à la dernière séance.';
+  const next = data.next ?? null;
+  const blocks: Block[] = [{ kind: 'paragraph', text: `${missed} Ce n’est pas grave : le groupe sera content de vous retrouver.` }];
+  if (next) {
+    blocks.push(
+      { kind: 'paragraph', text: 'Voici votre prochain rendez-vous :' },
+      {
+        kind: 'details',
+        rows: [
+          ['Séance', `Séance ${next.number}`],
+          ['Date', longDate(next.date)],
+          ['Horaire', timeRange(next.startTime, next.endTime)],
+          ['Lieu', next.location?.trim() || 'à préciser par votre formateur'],
+        ],
+      },
+    );
+  } else {
+    blocks.push({ kind: 'paragraph', text: 'Votre formateur peut faire le point avec vous sur la suite de votre parcours.' });
+  }
+  blocks.push(
+    { kind: 'paragraph', text: `Un empêchement ? Prévenez votre formateur ou votre conseiller${organization ? ` de ${organization}` : ''}.` },
+    { kind: 'button', label: 'Voir mon parcours', href: absoluteLink(origin, data.link ?? '/participant/parcours') },
+  );
+  const heading = next ? 'On vous attend à la prochaine séance' : 'On pense à vous';
+  return {
+    subject: heading,
+    preheader: next ? `Prochaine séance : ${longDate(next.date)}, ${timeRange(next.startTime, next.endTime)}.` : 'Votre formateur peut faire le point avec vous.',
+    heading,
+    greeting: hello(data.firstName),
+    blocks,
+    footer: `Vous recevez ce message car ${organization ?? 'votre structure'} vous accompagne dans votre parcours ${BRAND}.`,
+  };
+}
+
 // ── Point d'entrée ──────────────────────────────────────────────────────────
 export function renderEmail<T extends EmailTemplate>(template: T, data: EmailDataFor<T>, origin: string): RenderedEmail {
   const layout = buildLayout(template, data as never, origin);
@@ -329,6 +386,8 @@ function buildLayout(template: EmailTemplate, data: Record<string, unknown>, ori
         footer: `Vous recevez cet e-mail car vous avez orienté une personne vers ${BRAND}.`,
       };
     }
+    case 'absence_followup':
+      return absenceFollowupLayout(data as AbsenceFollowupEmailData, origin);
     case 'test': {
       const test = data as TestEmailData;
       return {
