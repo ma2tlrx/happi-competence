@@ -11,8 +11,8 @@ import { Questionnaire } from './questionnaire';
 
 export const metadata: Metadata = { title: 'Mon auto-évaluation' };
 
-export default async function AutoEvaluationPage({ searchParams }: { searchParams: Promise<{ bienvenue?: string }> }) {
-  const { bienvenue } = await searchParams;
+export default async function AutoEvaluationPage({ searchParams }: { searchParams: Promise<{ bienvenue?: string; etape?: string }> }) {
+  const { bienvenue, etape } = await searchParams;
   const { passport, supabase } = await getMyPassport();
   const existing = passport.selfAssessment;
 
@@ -83,8 +83,18 @@ export default async function AutoEvaluationPage({ searchParams }: { searchParam
 
   return (
     <>
+      {etape === '6' ? (
+        <div className="mb-4 max-w-md">
+          <div className="flex gap-1.5" aria-hidden>
+            {Array.from({ length: 6 }, (_, index) => (
+              <span key={index} className={index < 5 ? 'h-2 flex-1 rounded-[2px] bg-orange-500' : 'h-2 flex-1 rounded-[2px] bg-orange-200'} />
+            ))}
+          </div>
+          <p className="mt-1.5 text-sm text-ink-subtle">Étape 6 sur 6 · Auto-évaluation des compétences</p>
+        </div>
+      ) : null}
       <PageHeader
-        title={bienvenue ? 'Bienvenue ! Commençons par votre auto-évaluation' : 'Mon auto-évaluation'}
+        title={etape === '6' ? 'Dernière étape : votre auto-évaluation' : bienvenue ? 'Bienvenue ! Commençons par votre auto-évaluation' : 'Mon auto-évaluation'}
         description="Pour chaque affirmation, indiquez à quel point elle vous correspond aujourd’hui. Il n’y a ni bonne ni mauvaise réponse."
       />
       <Notice className="mb-5" title="Comment sont utilisées vos réponses ?">

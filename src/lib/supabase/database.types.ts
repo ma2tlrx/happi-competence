@@ -2469,6 +2469,93 @@ export type Database = {
           },
         ]
       }
+      participant_intakes: {
+        Row: {
+          age_band: string | null
+          ambitions: string | null
+          aptitude_communication: number | null
+          aptitude_initiative: number | null
+          aptitude_motivation: number | null
+          aptitude_punctuality: number | null
+          completed_at: string | null
+          created_at: string
+          experience: string | null
+          experience_detail: string | null
+          last_step: number
+          participant_id: string
+          residence: string | null
+          residence_detail: string | null
+          school: string | null
+          sectors: string[]
+          situation: string | null
+          study_field: string | null
+          study_level: string | null
+          two_year_plan: string | null
+          updated_at: string
+          volunteering: string | null
+          volunteering_fields: string[]
+        }
+        ComputedFields: never
+        Insert: {
+          age_band?: string | null
+          ambitions?: string | null
+          aptitude_communication?: number | null
+          aptitude_initiative?: number | null
+          aptitude_motivation?: number | null
+          aptitude_punctuality?: number | null
+          completed_at?: string | null
+          created_at?: string
+          experience?: string | null
+          experience_detail?: string | null
+          last_step?: number
+          participant_id: string
+          residence?: string | null
+          residence_detail?: string | null
+          school?: string | null
+          sectors?: string[]
+          situation?: string | null
+          study_field?: string | null
+          study_level?: string | null
+          two_year_plan?: string | null
+          updated_at?: string
+          volunteering?: string | null
+          volunteering_fields?: string[]
+        }
+        Update: {
+          age_band?: string | null
+          ambitions?: string | null
+          aptitude_communication?: number | null
+          aptitude_initiative?: number | null
+          aptitude_motivation?: number | null
+          aptitude_punctuality?: number | null
+          completed_at?: string | null
+          created_at?: string
+          experience?: string | null
+          experience_detail?: string | null
+          last_step?: number
+          participant_id?: string
+          residence?: string | null
+          residence_detail?: string | null
+          school?: string | null
+          sectors?: string[]
+          situation?: string | null
+          study_field?: string | null
+          study_level?: string | null
+          two_year_plan?: string | null
+          updated_at?: string
+          volunteering?: string | null
+          volunteering_fields?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participant_intakes_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: true
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       participant_needs_assessments: {
         Row: {
           adaptation_needed: boolean

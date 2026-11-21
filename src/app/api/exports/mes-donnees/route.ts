@@ -27,7 +27,7 @@ export async function GET() {
   let passport: Record<string, unknown> | null = null;
   if (user.participantId) {
     const id = user.participantId;
-    const [memberships, attendance, selfAssessments, evaluations, notes, reports, organizations, outcomes, entryProfiles, gameResults] = await Promise.all([
+    const [memberships, attendance, selfAssessments, evaluations, notes, reports, organizations, outcomes, entryProfiles, gameResults, intake] = await Promise.all([
       supabase.from('group_members').select('status, joined_at, left_at, drop_reason, drop_details, dropped_at, groups ( name, start_date, end_date, programs ( name ) )').eq('participant_id', id),
       supabase.from('attendance').select('status, comment, recorded_at, sessions ( number, scheduled_date )').eq('participant_id', id),
       supabase.from('self_assessments').select('kind, status, comment, started_at, completed_at, self_assessment_answers ( value, comment, questionnaire_questions ( text ) )').eq('participant_id', id),
@@ -48,6 +48,8 @@ export async function GET() {
         .select('game_type, played_at, title, player_count, rank, score, question_count, answered_count, correct_answers, avg_response_ms, role, outcome, rounds_survived')
         .eq('participant_id', id)
         .order('played_at'),
+      // Questionnaire d'accueil (« Formulaire HaPPi », étapes 1 à 5).
+      supabase.from('participant_intakes').select('*').eq('participant_id', id).maybeSingle(),
     ]);
     passport = {
       groupes: memberships.data,
@@ -60,6 +62,7 @@ export async function GET() {
       situations: outcomes.data,
       fiches_entree: entryProfiles.data,
       jeux_animation: gameResults.data,
+      questionnaire_accueil: intake.data,
     };
   }
 

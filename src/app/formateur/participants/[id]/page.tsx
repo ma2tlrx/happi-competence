@@ -3,11 +3,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { IntakeSummaryCard } from '@/components/intake/intake-summary';
 import { GameResultsSection } from '@/components/jeux/results-view';
 import { OutcomesCard } from '@/components/outcomes/outcomes-card';
 import { ParticipantFile } from '@/components/passport/participant-file';
 import { NeedsAssessmentCard } from '@/components/quality/needs-assessment-card';
 import { hasPermission, requireRole } from '@/lib/auth/session';
+import { loadIntake } from '@/lib/intake/load';
 import { loadGameResults } from '@/lib/jeux/results-load';
 import { loadParticipantOutcomes, participantGroups } from '@/lib/outcomes/load';
 import { getPassport } from '@/lib/passport';
@@ -25,7 +27,7 @@ export default async function TrainerParticipantPage({ params }: { params: Promi
   const passport = await getPassport(supabase, id);
   if (!passport) notFound();
   const groupIds = participantGroups(passport).map((group) => group.id);
-  const [, outcomes, needs, games, trains] = await Promise.all([
+  const [, outcomes, needs, games, trains, intake] = await Promise.all([
     supabase.rpc('log_event', { p_action: 'participant_file.viewed', p_entity_type: 'participant', p_entity_id: id }),
     loadParticipantOutcomes(supabase, id),
     loadNeedsAssessment(supabase, id),
@@ -33,6 +35,7 @@ export default async function TrainerParticipantPage({ params }: { params: Promi
     user.role === 'admin' || groupIds.length === 0
       ? Promise.resolve({ data: [] })
       : supabase.from('group_trainers').select('group_id').eq('trainer_id', user.id).in('group_id', groupIds),
+    loadIntake(supabase, id),
   ]);
   // L'analyse du besoin s'écrit par l'administrateur ou un formateur d'un groupe du participant (RLS).
   const canEditNeeds = user.role === 'admin' || (trains.data ?? []).length > 0;
@@ -49,6 +52,12 @@ export default async function TrainerParticipantPage({ params }: { params: Promi
           </Link>
         }
       />
+      <div className="mt-6">
+        <IntakeSummaryCard
+          intake={intake}
+          emptyText="La personne n’a pas encore rempli son questionnaire d’accueil (âge, études, expériences, projets). Il lui est proposé à la création de son compte."
+        />
+      </div>
       <OutcomesCard
         participantId={id}
         participantName={`${passport.participant.firstName} ${passport.participant.lastName}`}

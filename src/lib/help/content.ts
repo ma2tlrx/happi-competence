@@ -31,6 +31,17 @@ export const HELP_GUIDES: HelpGuide[] = [
     tip: 'Après plusieurs essais manqués, la connexion est bloquée quelques minutes pour protéger votre compte. Patientez, puis réessayez.',
   },
   {
+    id: 'questionnaire-accueil',
+    audience: 'participant',
+    title: 'Le questionnaire d’accueil',
+    steps: [
+      'Juste après la création de votre compte, un questionnaire en 5 étapes vous est proposé : informations personnelles, parcours scolaire, bénévolat et expériences, ambitions, aptitudes.',
+      'L’étape 6 est votre auto-évaluation. Comptez environ 5 minutes en tout.',
+      'Vous pouvez le passer et le reprendre plus tard depuis votre accueil, puis modifier vos réponses dans « Mon profil ».',
+    ],
+    tip: 'Seuls vous, vos formateurs et l’équipe HAPPI voient vos réponses. Votre organisme n’y a pas accès.',
+  },
+  {
     id: 'auto-evaluation',
     audience: 'participant',
     title: 'Remplir mon auto-évaluation',

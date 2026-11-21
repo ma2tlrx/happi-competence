@@ -5,7 +5,7 @@ import { decodeJwtPayload, MFA_CHALLENGE_PATH } from '@/lib/auth/mfa';
 import { buildCsp, createNonce } from '@/lib/security/csp';
 
 /** Préfixes réservés aux utilisateurs connectés. Le contrôle du rôle est fait côté serveur, dans les layouts. */
-const PROTECTED_PREFIXES = ['/jouer', '/participant', '/organisme', '/formateur', '/admin', '/compte', '/notifications', '/jeux', '/api/exports'];
+const PROTECTED_PREFIXES = ['/jouer', '/bienvenue', '/participant', '/organisme', '/formateur', '/admin', '/compte', '/notifications', '/jeux', '/api/exports'];
 /** Pages publiques dont l'adresse porte un jeton (vérification d'un passeport partagé, d'un badge). */
 const TOKEN_PREFIXES = ['/verifier', '/badges/verifier'];
 

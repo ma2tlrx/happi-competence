@@ -3,6 +3,7 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   'organization.requested': 'Demande d’espace organisme',
   'organization.status_changed': 'Statut d’organisme modifié',
   'evaluation.validated': 'Évaluation validée',
+  'participant_intake.completed': 'Questionnaire d’accueil rempli',
   'evaluation.amended': 'Évaluation modifiée',
   'invitation_code.used': 'Code d’accès utilisé',
   'invitation_code.created': 'Code d’accès créé',

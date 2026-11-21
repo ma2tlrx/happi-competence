@@ -4,8 +4,10 @@ import Link from 'next/link';
 
 import { AttendanceBadge, SessionStatusBadge } from '@/components/passport/session-status';
 import { Button } from '@/components/ui/button';
+import { IntakeSummaryCard } from '@/components/intake/intake-summary';
 import { GameResultsSummaryCard } from '@/components/jeux/results-view';
-import { Avatar, Card, CardBody, CardHeader, PageHeader } from '@/components/ui/primitives';
+import { Avatar, Card, CardBody, CardHeader, Notice, PageHeader } from '@/components/ui/primitives';
+import { loadIntake } from '@/lib/intake/load';
 import { loadGameResults } from '@/lib/jeux/results-load';
 import { formatDate } from '@/lib/utils';
 
@@ -22,9 +24,10 @@ function Item({ label, children }: { label: string; children: React.ReactNode })
   );
 }
 
-export default async function ProfilPage() {
+export default async function ProfilPage({ searchParams }: { searchParams: Promise<{ questionnaire?: string }> }) {
+  const { questionnaire } = await searchParams;
   const { passport, supabase } = await getMyPassport();
-  const games = await loadGameResults(supabase, passport.participant.id, 50);
+  const [games, intake] = await Promise.all([loadGameResults(supabase, passport.participant.id, 50), loadIntake(supabase, passport.participant.id)]);
   const { participant, group } = passport;
   return (
     <>
@@ -39,6 +42,11 @@ export default async function ProfilPage() {
           </Button>
         }
       />
+      {questionnaire === 'enregistre' ? (
+        <Notice variant="success" className="mb-6" title="Réponses enregistrées">
+          Votre questionnaire d’accueil est à jour.
+        </Notice>
+      ) : null}
       <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
         <Card>
           <CardBody className="flex items-center gap-4">
@@ -91,6 +99,18 @@ export default async function ProfilPage() {
           </CardBody>
         </Card>
         <GameResultsSummaryCard rows={games} href="/participant/jeux" />
+      </div>
+      <div className="mt-6">
+        <IntakeSummaryCard
+          intake={intake}
+          title="Mon questionnaire d’accueil"
+          emptyText="Vous n’avez pas encore rempli le questionnaire d’accueil. Il aide votre formateur à personnaliser votre accompagnement."
+          action={
+            <Link href={intake ? '/bienvenue?modifier=1' : '/bienvenue'} className="text-sm font-semibold text-petrol-700 hover:text-petrol-950">
+              {intake ? 'Modifier mes réponses' : 'Remplir le questionnaire'}
+            </Link>
+          }
+        />
       </div>
     </>
   );

@@ -169,7 +169,7 @@ export async function signUpParticipant(_: ActionState, formData: FormData): Pro
   if (result.needsConfirmation) {
     return actionSuccess('Votre compte est créé. Ouvrez le lien envoyé à votre adresse e-mail pour l’activer, puis connectez-vous.');
   }
-  redirect('/participant/auto-evaluation?bienvenue=1');
+  redirect('/bienvenue');
 }
 
 export async function signUpOrganization(_: ActionState, formData: FormData): Promise<ActionState> {

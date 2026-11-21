@@ -1,4 +1,5 @@
 import { CalendarDays, MapPin } from 'lucide-react';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
@@ -10,6 +11,7 @@ import { PendingSurveysCard } from '@/components/satisfaction/pending-card';
 import { LevelMeter } from '@/components/ui/level-meter';
 import { Card, CardBody, CardHeader, Notice } from '@/components/ui/primitives';
 import { loadParticipantEngagement } from '@/lib/engagement/load';
+import { intakeProgress, loadIntake } from '@/lib/intake/load';
 import { loadMySurveys } from '@/lib/satisfaction/load';
 import { createClient } from '@/lib/supabase/server';
 import { formatScore, formatShortDate, formatTimeRange } from '@/lib/utils';
@@ -22,7 +24,12 @@ export const metadata: Metadata = { title: 'Mon passeport' };
 export default async function ParticipantDashboard({ searchParams }: { searchParams: Promise<{ bienvenue?: string }> }) {
   const { bienvenue } = await searchParams;
   const [{ passport, supabase }, signable] = await Promise.all([getMyPassport(), loadSignableSessions()]);
-  const [surveys, { data: consents }] = await Promise.all([loadMySurveys(supabase), supabase.rpc('my_referral_consents')]);
+  const [surveys, { data: consents }, intake] = await Promise.all([
+    loadMySurveys(supabase),
+    supabase.rpc('my_referral_consents'),
+    loadIntake(supabase, passport.participant.id),
+  ]);
+  const intakeState = intakeProgress(intake);
   const engagement = await loadParticipantEngagement(supabase, passport, surveys);
   // Personne orientée par un prescripteur : elle confirme elle-même ses consentements.
   const consentsPending = (consents ?? []).some((row) => !row.participant_confirmed_at);
@@ -66,6 +73,27 @@ export default async function ParticipantDashboard({ searchParams }: { searchPar
         >
           La structure qui vous a orienté(e) a indiqué vos choix (droit à l’image, partage de vos résultats). Vérifiez-les et confirmez-les vous-même.
         </Notice>
+      ) : null}
+      {intakeState.status !== 'completed' ? (
+        <section aria-labelledby="faisons-connaissance" className="flex flex-col gap-4 rounded-xl border border-orange-200 bg-orange-50 p-5 sm:flex-row sm:items-center">
+          <Image src="/brand/happi-mascotte-3d.webp" alt="" width={56} height={92} className="hidden h-20 w-auto shrink-0 sm:block" />
+          <div className="min-w-0 flex-1">
+            <h2 id="faisons-connaissance" className="font-display text-lg font-semibold text-ink">
+              Faisons connaissance
+            </h2>
+            <p className="mt-0.5 text-[0.9375rem] text-ink-muted">
+              {intakeState.status === 'in_progress'
+                ? `Votre questionnaire d’accueil est commencé (étape ${intakeState.lastStep} sur 5). Il ne reste que quelques questions.`
+                : 'Cinq étapes rapides (âge, études, expériences, projets) pour que votre formateur personnalise votre accompagnement.'}
+            </p>
+          </div>
+          <Link
+            href="/bienvenue"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md bg-orange-500 px-5 font-semibold text-petrol-950 transition-colors hover:bg-orange-400"
+          >
+            {intakeState.status === 'in_progress' ? 'Reprendre' : 'Commencer'}
+          </Link>
+        </section>
       ) : null}
       {bienvenue && selfDone ? (
         <Notice variant="success" title="Bienvenue dans votre passeport de compétences">
