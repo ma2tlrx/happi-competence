@@ -260,6 +260,31 @@
     background-size: 18px 18px;
   }
 
+  /* Coins « pixel » (deux marches) : la forme des emblèmes de défis et des cases de l'album. */
+  .pixel-corners {
+    --px: 4px;
+    clip-path: polygon(
+      var(--px) 0,
+      calc(100% - var(--px)) 0,
+      calc(100% - var(--px)) var(--px),
+      100% var(--px),
+      100% calc(100% - var(--px)),
+      calc(100% - var(--px)) calc(100% - var(--px)),
+      calc(100% - var(--px)) 100%,
+      var(--px) 100%,
+      var(--px) calc(100% - var(--px)),
+      0 calc(100% - var(--px)),
+      0 var(--px),
+      var(--px) var(--px)
+    );
+  }
+  .pixel-corners-lg {
+    --px: 6px;
+  }
+  .pixel-corners-sm {
+    --px: 2px;
+  }
+
   .skeleton {
     border-radius: var(--radius-sm);
     background: linear-gradient(90deg, var(--color-line) 25%, #efefeb 37%, var(--color-line) 63%);

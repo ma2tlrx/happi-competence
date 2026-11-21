@@ -9,7 +9,8 @@ import type { GameResultRow } from './results';
 /**
  * Résultats de jeux d'un participant, avec la session de l'appelant : la RLS limite aux siens (participant), aux
  * participants qu'il suit (formateur) ou à tous (administrateur). L'organisme n'y a pas accès.
- * Ce module n'est appelé que par les pages « Mes jeux », la fiche participant et l'export des données personnelles :
+ * Ce module n'est appelé que par les pages « Mes jeux », la fiche participant, l'export des données personnelles et
+ * les défis du participant (src/lib/engagement/load.ts, qui ne lit que l'existence d'une partie, jamais un score) :
  * aucun bilan, passeport, CV de compétences, indicateur d'impact ni export financeur ne le lit.
  */
 export async function loadGameResults(supabase: SupabaseClient<Database>, participantId: string, limit = 200): Promise<GameResultRow[]> {

@@ -54,7 +54,7 @@ export function SkillCard({ skill, framework, showSelf }: { skill: PassportSkill
   const levelText = skill.level ? skill.levels.find((level) => level.value === skill.level!.value)?.description : null;
 
   return (
-    <article className="flex h-full flex-col rounded-lg border border-line bg-white p-5">
+    <article id={`competence-${skill.code}`} className="flex h-full scroll-mt-24 flex-col rounded-lg border border-line bg-white p-5 target:border-orange-400 target:ring-2 target:ring-orange-200">
       <div className="flex items-start justify-between gap-3">
         <h4 className="font-display text-base leading-snug font-semibold">{skill.name}</h4>
         <InfoHint label={`Comprendre la compétence ${skill.name}`}>

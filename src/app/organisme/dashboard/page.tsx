@@ -1,18 +1,20 @@
-import { CalendarDays, ClipboardCheck, Layers, Send, Users } from 'lucide-react';
+import { CalendarCheck, Flag, Layers, Send, Users, type LucideIcon } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { PixelProgress } from '@/components/engagement/visuals';
 import { PendingSurveysCard } from '@/components/satisfaction/pending-card';
 import { groupStatusBadge } from '@/components/trainer/labels';
-import { Badge, Card, CardBody, CardHeader, EmptyState, PageHeader, StatTile, Table, TableWrap, Td, Th, Tr } from '@/components/ui/primitives';
+import { Badge, Card, CardBody, CardHeader, EmptyState, PageHeader, Table, TableWrap, Td, Th, Tr } from '@/components/ui/primitives';
 import { parisDate } from '@/lib/attendance/signature';
 import { hasPermission, requireRole } from '@/lib/auth/session';
+import { completedJourneys, MILESTONE_TIERS, milestoneProgress, type MilestoneId } from '@/lib/engagement/milestones';
 import { isUpcomingSession } from '@/lib/listing-rules';
 import { getOrganizationOverview } from '@/lib/organization';
 import { referralBuckets } from '@/lib/referrals/status';
 import { loadMySurveys } from '@/lib/satisfaction/load';
 import { createClient } from '@/lib/supabase/server';
-import { formatDate, formatPercent, formatShortDate, formatTimeRange } from '@/lib/utils';
+import { cn, formatDate, formatPercent, formatShortDate, formatTimeRange, pluralize } from '@/lib/utils';
 
 export const metadata: Metadata = { title: 'Espace organisme' };
 
@@ -26,6 +28,12 @@ export default async function OrganizationDashboard() {
     canRefer ? supabase.from('referrals').select('status').limit(2000) : Promise.resolve({ data: [] as { status: string }[] }),
   ]);
   const buckets = referralBuckets((referrals.data ?? []).map((row) => row.status));
+  const milestones: { id: MilestoneId; label: string; icon: LucideIcon; value: number }[] = [
+    { id: 'personnes', label: 'personnes accompagnées', icon: Users, value: overview.stats.participants },
+    { id: 'sessions', label: 'sessions réalisées', icon: CalendarCheck, value: overview.stats.completedSessions },
+    { id: 'parcours', label: 'parcours menés à terme', icon: Flag, value: completedJourneys(overview.participants) },
+    ...(canRefer ? [{ id: 'orientations' as const, label: 'orientations acceptées', icon: Send, value: buckets.accepted }] : []),
+  ];
   const today = parisDate();
   // Séances en cours d'abord (signalées comme telles), puis les séances prévues à venir.
   const upcoming = [
@@ -35,7 +43,54 @@ export default async function OrganizationDashboard() {
 
   return (
     <>
-      <PageHeader title={user.organization!.name} description="Suivi des participants rattachés à votre structure. Les données sont consultables, non modifiables." />
+      <PageHeader title={user.organization!.name} description="Le parcours de vos participants, en un coup d’œil. Les données sont consultables, non modifiables." />
+      <section aria-labelledby="jalons-titre" className="pixel-grid mb-6 rounded-xl bg-petrol-900 p-5 text-white sm:p-7">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+          <h2 id="jalons-titre" className="font-display text-xl font-semibold text-white">
+            Les jalons de votre structure
+          </h2>
+          <p className="text-sm text-white/70">
+            Présence {formatPercent(overview.stats.attendanceRate)} (retards et départs anticipés inclus) ·{' '}
+            {pluralize(overview.stats.upcomingSessions, 'session à venir', 'sessions à venir')}
+            {overview.stats.ongoingSessions ? `, ${overview.stats.ongoingSessions} en cours` : ''}
+          </p>
+        </div>
+        <ul className={cn('mt-5 grid grid-cols-2 gap-3', milestones.length === 4 ? 'xl:grid-cols-4' : 'lg:grid-cols-3')}>
+          {milestones.map((item) => {
+            const progress = milestoneProgress(item.value, MILESTONE_TIERS[item.id]);
+            return (
+              <li key={item.id} className="rounded-lg bg-white/[0.06] p-3.5 ring-1 ring-white/10 sm:p-4">
+                <div className="flex items-center gap-3">
+                  <span
+                    aria-hidden
+                    className={cn(
+                      'pixel-corners hidden size-10 shrink-0 items-center justify-center sm:flex',
+                      progress.reached > 0 ? 'bg-orange-500 text-petrol-950' : 'bg-white/10 text-white/60',
+                    )}
+                  >
+                    <item.icon className="size-5" />
+                  </span>
+                  <p>
+                    <span className="block font-display text-2xl leading-none font-semibold text-white tabular-nums">{progress.value}</span>
+                    <span className="mt-1 block text-sm leading-snug text-white/75">{item.label}</span>
+                  </p>
+                </div>
+                <PixelProgress
+                  tone="dark"
+                  className="mt-4"
+                  current={progress.next === null ? 1 : progress.value - progress.previous}
+                  target={progress.next === null ? 1 : progress.next - progress.previous}
+                  label={progress.next === null ? `${item.label} : tous les jalons franchis` : `${item.label} : ${progress.value} sur ${progress.next}, prochain jalon`}
+                />
+                <p className="mt-2 text-sm leading-snug text-white/65">
+                  {progress.next === null ? 'Tous les jalons franchis' : `Prochain jalon : ${progress.next}`}
+                  {progress.reached > 0 ? <span className="hidden sm:inline">{` · ${progress.reached} franchi${progress.reached > 1 ? 's' : ''}`}</span> : null}
+                </p>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
       {surveys.some((survey) => !survey.answered) ? (
         <div className="mb-6">
           <PendingSurveysCard surveys={surveys} basePath="/organisme/satisfaction" />
@@ -67,19 +122,6 @@ export default async function OrganizationDashboard() {
           </CardBody>
         </Card>
       ) : null}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
-        <StatTile label="Programmes" value={overview.stats.programs} icon={Layers} />
-        <StatTile label="Participants" value={overview.stats.participants} icon={Users} />
-        <StatTile label="Sessions réalisées" value={overview.stats.completedSessions} icon={ClipboardCheck} />
-        <StatTile
-          label="Sessions à venir"
-          value={overview.stats.upcomingSessions}
-          detail={overview.stats.ongoingSessions ? `${overview.stats.ongoingSessions} en cours` : undefined}
-          icon={CalendarDays}
-        />
-        <StatTile label="Taux de présence" value={formatPercent(overview.stats.attendanceRate)} detail="Retards et départs anticipés inclus" />
-      </div>
-
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.6fr_1fr]">
         <Card>
           <CardHeader title="Avancement des programmes" action={<Link href="/organisme/programmes" className="text-sm font-semibold text-petrol-700">Détail</Link>} />
@@ -100,18 +142,19 @@ export default async function OrganizationDashboard() {
                       const status = groupStatusBadge(group.status, group.startDate);
                       return (
                         <Tr key={group.id}>
-                          <Td>
+                          <Td className="min-w-48">
                             <span className="font-semibold">{group.name}</span>
                             <span className="block text-sm text-ink-subtle">{group.programName} · {formatDate(group.startDate, 'dates à définir')}</span>
                           </Td>
                           <Td className="text-right tabular-nums">{group.participants}</Td>
                           <Td className="min-w-40">
                             <div className="flex items-center gap-3">
-                              <div className="flex flex-1 gap-1" aria-hidden>
-                                {Array.from({ length: group.totalSessions }, (_, i) => (
-                                  <span key={i} className={i < group.completedSessions ? 'h-1.5 flex-1 rounded-full bg-petrol-900' : 'h-1.5 flex-1 rounded-full bg-petrol-100'} />
-                                ))}
-                              </div>
+                              <PixelProgress
+                                current={group.completedSessions}
+                                target={group.totalSessions}
+                                label={`${group.completedSessions} sessions terminées sur ${group.totalSessions}`}
+                                className="flex-1"
+                              />
                               <span className="text-sm tabular-nums text-ink-muted">{group.completedSessions}/{group.totalSessions}</span>
                             </div>
                           </Td>

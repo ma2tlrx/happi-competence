@@ -1,11 +1,8 @@
 import {
-  Award,
   BookOpen,
   CalendarClock,
   CalendarDays,
-  ClipboardList,
   FileText,
-  FileSignature,
   Gamepad2,
   History,
   LayoutDashboard,
@@ -13,14 +10,12 @@ import {
   MessageSquareHeart,
   MessageSquareWarning,
   Layers,
-  ListChecks,
   Radar,
   Route,
   Send,
   Settings,
-  Share2,
-  Sparkles,
   TrendingUp,
+  Trophy,
   User,
   Users,
   type LucideIcon,
@@ -57,27 +52,26 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
   participant: [
     {
       items: [
-        { href: '/participant/dashboard', label: 'Vue d’ensemble', icon: LayoutDashboard, mobile: true, short: 'Accueil' },
-        { href: '/participant/competences-transversales', label: 'Compétences transversales', icon: Radar, mobile: true, short: 'Compétences' },
-        { href: '/participant/habiletes-sociocognitives', label: 'Habiletés socio-cognitives', icon: Sparkles },
+        { href: '/participant/dashboard', label: 'Accueil', icon: LayoutDashboard, mobile: true },
+        {
+          href: '/participant/competences-transversales',
+          label: 'Mes compétences',
+          icon: Radar,
+          mobile: true,
+          short: 'Compétences',
+          also: ['/participant/habiletes-sociocognitives', '/participant/auto-evaluation', '/participant/evolution'],
+        },
         { href: '/participant/parcours', label: 'Mon parcours', icon: Route, mobile: true, short: 'Parcours' },
-        { href: '/participant/bilan', label: 'Mon bilan', icon: FileText, mobile: true, short: 'Bilan' },
+        { href: '/participant/reussites', label: 'Mes réussites', icon: Trophy, mobile: true, short: 'Réussites', also: ['/participant/badges', '/participant/jeux'] },
+        { href: '/participant/bilan', label: 'Mon bilan', icon: FileText, mobile: true, short: 'Bilan', also: ['/participant/partage'] },
+        { href: '/jouer', label: 'Rejoindre une partie', icon: Gamepad2 },
       ],
     },
     {
       label: 'Moi',
       items: [
-        { href: '/participant/auto-evaluation', label: 'Mon auto-évaluation', icon: ListChecks },
-        { href: '/jouer', label: 'Rejoindre une partie', icon: Gamepad2 },
-        { href: '/participant/partage', label: 'Partager mon passeport', icon: Share2 },
-        { href: '/participant/badges', label: 'Mes badges', icon: Award },
-        { href: '/participant/evolution', label: 'Mon évolution', icon: TrendingUp },
-        { href: '/participant/jeux', label: 'Mes jeux', icon: Gamepad2 },
-        { href: '/participant/satisfaction', label: 'Donnez votre avis', icon: MessageSquareHeart },
-        { href: '/participant/signalements', label: 'Signaler un problème', icon: MessageSquareWarning },
-        { href: '/participant/consentements', label: 'Mes consentements', icon: FileSignature },
-        { href: '/participant/fiche-entree', label: 'Ma fiche d’entrée', icon: ClipboardList },
-        { href: '/participant/profil', label: 'Mon profil', icon: User },
+        { href: '/participant/profil', label: 'Mon profil', icon: User, also: ['/participant/consentements', '/participant/fiche-entree'] },
+        { href: '/participant/satisfaction', label: 'Mon avis', icon: MessageSquareHeart, also: ['/participant/signalements'] },
       ],
     },
     HELP,
@@ -146,7 +140,47 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
  */
 export type Hub = { title: string; tabs: { href: string; label: string }[] };
 export const HUBS: Record<AppSpace, Hub[]> = {
-  participant: [],
+  participant: [
+    {
+      title: 'Mes compétences',
+      tabs: [
+        { href: '/participant/competences-transversales', label: 'Transversales' },
+        { href: '/participant/habiletes-sociocognitives', label: 'Habiletés socio-cognitives' },
+        { href: '/participant/auto-evaluation', label: 'Mon auto-évaluation' },
+        { href: '/participant/evolution', label: 'Mon évolution' },
+      ],
+    },
+    {
+      title: 'Mes réussites',
+      tabs: [
+        { href: '/participant/reussites', label: 'Défis' },
+        { href: '/participant/badges', label: 'Badges' },
+        { href: '/participant/jeux', label: 'Jeux' },
+      ],
+    },
+    {
+      title: 'Mon bilan',
+      tabs: [
+        { href: '/participant/bilan', label: 'Mon bilan' },
+        { href: '/participant/partage', label: 'Partager mon passeport' },
+      ],
+    },
+    {
+      title: 'Mon profil',
+      tabs: [
+        { href: '/participant/profil', label: 'Profil' },
+        { href: '/participant/consentements', label: 'Consentements' },
+        { href: '/participant/fiche-entree', label: 'Fiche d’entrée' },
+      ],
+    },
+    {
+      title: 'Mon avis',
+      tabs: [
+        { href: '/participant/satisfaction', label: 'Donner mon avis' },
+        { href: '/participant/signalements', label: 'Signaler un problème' },
+      ],
+    },
+  ],
   organisme: [
     {
       title: 'Résultats',

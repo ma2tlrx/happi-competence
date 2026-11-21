@@ -35,7 +35,7 @@ export const HELP_GUIDES: HelpGuide[] = [
     audience: 'participant',
     title: 'Remplir mon auto-évaluation',
     steps: [
-      'Au début du programme, ouvrez « Mon auto-évaluation ».',
+      'Au début du programme, ouvrez « Mes compétences », onglet « Mon auto-évaluation ». Votre accueil vous y mène aussi.',
       'Pour chaque affirmation, indiquez à quel point elle vous correspond aujourd’hui. Il n’y a ni bonne ni mauvaise réponse.',
       'Une fois envoyée, elle est conservée telle quelle : c’est votre point de départ.',
       'À la fin du parcours, une auto-évaluation de fin de parcours s’ouvre, avec les mêmes affirmations.',
@@ -47,7 +47,7 @@ export const HELP_GUIDES: HelpGuide[] = [
     title: 'Signer la feuille de présence (émarger)',
     steps: [
       'Le jour de la séance, votre formateur note votre présence.',
-      'Un encadré « Émargement du jour » apparaît alors sur votre « Vue d’ensemble ».',
+      'Un encadré « Émargement du jour » apparaît alors sur votre « Accueil ».',
       'Cliquez sur « Signer », signez dans le cadre avec le doigt, un stylet ou la souris, puis « Valider ma signature ».',
       'Vous pouvez aussi signer sur la tablette de votre formateur, pendant la séance.',
     ],
@@ -58,17 +58,28 @@ export const HELP_GUIDES: HelpGuide[] = [
     audience: 'participant',
     title: 'Voir mon évolution',
     steps: [
-      'Ouvrez « Mon évolution » dans le menu.',
+      'Ouvrez « Mes compétences », onglet « Mon évolution ».',
       'Vous y voyez ce que vous avez déclaré au départ, ce que vos formateurs ont observé pendant les séances, et ce que vous déclarez à la fin.',
-      '« Mes compétences transversales » et « Mes habiletés socio-cognitives » détaillent chaque compétence observée.',
+      'Les onglets « Transversales » et « Habiletés socio-cognitives » détaillent chaque compétence observée.',
     ],
+  },
+  {
+    id: 'defis',
+    audience: 'participant',
+    title: 'Mes défis et ma collection de compétences',
+    steps: [
+      'Votre accueil montre votre parcours session par session : la mascotte HAPPI se pose sur votre prochaine étape.',
+      'Ouvrez « Mes réussites » : chaque défi réussi vous donne des étoiles. Certains dépendent de vous (auto-évaluation, avis), d’autres se débloquent pendant les sessions.',
+      'La collection de compétences s’allume case par case quand vos formateurs observent une compétence, quel que soit le niveau.',
+    ],
+    tip: 'Rien ne se perd : une absence ralentit un défi, elle ne le ferme jamais. Les défis et les étoiles ne comptent pas dans votre bilan.',
   },
   {
     id: 'partager',
     audience: 'participant',
     title: 'Partager mon passeport',
     steps: [
-      'Ouvrez « Partager mon passeport ».',
+      'Ouvrez « Mon bilan », onglet « Partager mon passeport ».',
       'Indiquez pour qui est le lien (par exemple le nom d’une entreprise) et sa durée : 7, 30 ou 90 jours.',
       'Cliquez sur « Créer le lien ». Copiez le lien ou téléchargez le QR code.',
       'La personne qui ouvre le lien voit votre prénom, l’initiale de votre nom et vos compétences observées. Elle ne voit pas vos coordonnées.',
@@ -81,7 +92,7 @@ export const HELP_GUIDES: HelpGuide[] = [
     title: 'Donner mon avis sur le programme',
     steps: [
       'À la fin de la dernière séance de votre groupe, une enquête « à chaud » s’ouvre. Une enquête « à froid » s’ouvre 90 jours plus tard.',
-      'Ouvrez « Donnez votre avis », puis « Répondre ».',
+      'Ouvrez « Mon avis », puis « Répondre ».',
       'Répondez aux questions obligatoires, puis « Envoyer mon avis ».',
     ],
     tip: 'Une seule réponse par enquête, non modifiable. Les formateurs et votre structure ne voient que des résultats regroupés, jamais votre nom.',
@@ -144,7 +155,7 @@ export const HELP_GUIDES: HelpGuide[] = [
       'Une personne quitte le parcours : dans la fiche du groupe, cliquez sur « Abandon » sur sa ligne. Indiquez le motif, des précisions et la date.',
       'Elle ne figure plus sur les feuilles de présence, mais reste dans l’historique et les statistiques.',
       '« Retirer » est réservé à une erreur d’inscription.',
-      'Le menu « Suivis » liste les situations à saisir : la sortie (à la fin du groupe ou à l’abandon), puis les suivis à 3 et 6 mois.',
+      '« Suivi des parcours », onglet « Suivis », liste les situations à saisir : la sortie (à la fin du groupe ou à l’abandon), puis les suivis à 3 et 6 mois.',
       'Cliquez sur « Saisir » : situation, date de l’observation, précisions, puis « Enregistrer ».',
     ],
     tip: 'Un suivi passe « en retard » 30 jours après son échéance. Les catégories de situations sont provisoires.',
@@ -159,7 +170,7 @@ export const HELP_GUIDES: HelpGuide[] = [
       'Recherchez par nom, ou filtrez par groupe et par programme.',
       'Chaque fiche présente l’auto-évaluation, les évaluations validées et le bilan.',
       '« Export CSV » télécharge la liste affichée, avec les filtres en cours.',
-      '« Sessions » et « Présences » montrent les séances et les fiches de présence de vos participants.',
+      '« Sessions » (onglets « Sessions » et « Présences ») montre les séances et les fiches de présence de vos participants.',
     ],
     tip: 'Les données sont consultables, non modifiables. Vous ne voyez que les personnes rattachées à votre structure.',
   },
@@ -168,11 +179,11 @@ export const HELP_GUIDES: HelpGuide[] = [
     audience: 'organisme',
     title: 'Lire le tableau d’impact',
     steps: [
-      'Ouvrez « Impact » : abandons, assiduité, progression observée et situations de sortie.',
+      'Ouvrez « Résultats », onglet « Impact » : abandons, assiduité, progression observée et situations de sortie.',
       'Chaque taux est donné avec son effectif (n). Un taux sur peu de personnes reste fragile.',
       'Filtrez par période ou par programme, puis « Appliquer ».',
       'Téléchargez les indicateurs ou le détail par participant en CSV.',
-      '« Suivis » permet de saisir la situation de vos participants à la sortie, à 3 et à 6 mois.',
+      'L’onglet « Suivis » permet de saisir la situation de vos participants à la sortie, à 3 et à 6 mois.',
     ],
   },
   {
@@ -180,7 +191,7 @@ export const HELP_GUIDES: HelpGuide[] = [
     audience: 'organisme',
     title: 'Satisfaction',
     steps: [
-      'Ouvrez « Satisfaction ».',
+      'Ouvrez « Résultats », onglet « Satisfaction ».',
       'En haut : votre avis de prescripteur, à la fin du programme puis trois mois après. Cliquez sur « Répondre ».',
       'En bas : les résultats regroupés des participants de vos groupes.',
     ],
@@ -192,9 +203,9 @@ export const HELP_GUIDES: HelpGuide[] = [
     audience: 'admin',
     title: 'Gérer les comptes',
     steps: [
-      '« Utilisateurs » liste tous les comptes, leurs rôles et leur statut.',
-      '« Organismes » permet de valider les demandes d’espace organisme.',
-      '« Formateurs » et « Participants » donnent le détail par rôle.',
+      '« Comptes et accès », onglet « Utilisateurs », liste tous les comptes, leurs rôles et leur statut.',
+      'L’onglet « Organismes » permet de valider les demandes d’espace organisme.',
+      'Les onglets « Formateurs » et « Participants » donnent le détail par rôle.',
     ],
   },
   {
@@ -202,7 +213,7 @@ export const HELP_GUIDES: HelpGuide[] = [
     audience: 'admin',
     title: 'Créer un code d’accès',
     steps: [
-      'Ouvrez « Codes d’accès », indiquez un libellé et le type de compte, puis « Générer un code ».',
+      'Ouvrez « Comptes et accès », onglet « Codes d’accès », indiquez un libellé et le type de compte, puis « Générer un code ».',
       'Transmettez le code par un canal sûr. La personne l’utilise sur la page « Activer un accès professionnel » (lien « Activer mon accès avec un code »).',
       'Chaque code ne sert qu’une fois.',
     ],
@@ -213,7 +224,7 @@ export const HELP_GUIDES: HelpGuide[] = [
     audience: 'admin',
     title: 'Utiliser la démonstration',
     steps: [
-      'Ouvrez « Démonstration », puis créez le jeu de données (comptez 20 à 60 secondes).',
+      'Ouvrez « Paramètres », onglet « Démonstration », puis créez le jeu de données (comptez 20 à 60 secondes).',
       'Tous les comptes et données sont fictifs et marqués « démo ».',
       'Ouvrez les espaces formateur, organisme et participant pour les présenter.',
       'Supprimez tout en un clic quand vous avez terminé.',
@@ -224,7 +235,7 @@ export const HELP_GUIDES: HelpGuide[] = [
     audience: 'admin',
     title: 'Suivre les e-mails',
     steps: [
-      'Ouvrez « E-mails » : convocations, rappels la veille, modifications de séance, bilans disponibles et invitations.',
+      'Ouvrez « Paramètres », onglet « E-mails » : convocations, rappels la veille, modifications de séance, bilans disponibles et invitations.',
       'Chaque message passe par une file d’envoi : il n’est jamais envoyé deux fois.',
       'Consultez les messages envoyés et ceux qui n’ont pas pu partir.',
     ],
@@ -236,7 +247,7 @@ export const HELP_GUIDES: HelpGuide[] = [
     steps: [
       'Chaque personne l’active dans « Mon compte », puis « Sécurité » : elle scanne le QR code avec une application d’authentification et saisit le premier code.',
       'Dans « Paramètres », vous pouvez l’exiger pour les administrateurs et les formateurs.',
-      'Téléphone perdu ? Dans « Utilisateurs », réinitialisez la double authentification de la personne, après avoir vérifié son identité par un autre moyen.',
+      'Téléphone perdu ? Dans « Comptes et accès », onglet « Utilisateurs », réinitialisez la double authentification de la personne, après avoir vérifié son identité par un autre moyen.',
     ],
   },
 ];
