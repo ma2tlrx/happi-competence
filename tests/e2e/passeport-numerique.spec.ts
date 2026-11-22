@@ -91,18 +91,17 @@ test('l’application n’est servie ni aux visiteurs, ni aux organismes, et san
   expect(ok.headers()['x-frame-options']).toBe('SAMEORIGIN');
 });
 
-test('l’application occupe tout l’écran et ramène à l’espace HAPPI quand on la quitte', async ({ page }) => {
+test('l’application s’affiche en grand dans la page, menu conservé, et ramène à l’espace HAPPI quand on la quitte', async ({ page }) => {
   await signUp(page, 'Passeport Numérique');
   await expect(page).toHaveURL(/\/participant\/passeport-numerique$/);
   const frame = page.locator('iframe[title="Le Passeport Numérique"]');
   await expect(frame).toBeVisible();
   const box = await frame.boundingBox();
   const viewport = page.viewportSize()!;
-  expect(box).toMatchObject({ x: 0, y: 0 });
-  expect(Math.round(box!.width)).toBe(viewport.width);
-  expect(Math.round(box!.height)).toBe(viewport.height);
-  // Ni menu ni barre de la plateforme au-dessus de l'application.
-  expect(await page.evaluate(() => [document.elementFromPoint(40, 100)?.tagName, document.elementFromPoint(window.innerWidth - 10, 20)?.tagName])).toEqual(['IFRAME', 'IFRAME']);
+  // Grand cadre : presque toute la hauteur de la fenêtre et au moins 40 rem de haut, mais pas en plein écran.
+  expect(box!.height).toBeGreaterThanOrEqual(640);
+  expect(box!.width).toBeGreaterThan(viewport.width * 0.6);
+  expect(box!.x).toBeGreaterThan(0);
 
   const app = page.frameLocator('iframe[title="Le Passeport Numérique"]');
   await app.locator('[data-a=cAge][data-v="26 à 39 ans"]').click();

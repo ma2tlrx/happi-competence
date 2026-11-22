@@ -1,7 +1,7 @@
 import { ArrowRight, MonitorSmartphone } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
-import { PasseportLauncher } from './launcher';
 import { PASSEPORT_FACTS } from '@/lib/passeport-numerique/meta';
 
 /** Accueil d'un participant inscrit au Passeport Numérique : un seul geste, reprendre ses exercices. */
@@ -14,14 +14,14 @@ export function PasseportNumeriqueHome({ firstName }: { firstName: string }) {
             <p className="text-white/65">Bonjour {firstName},</p>
             <h1 className="mt-1 font-display text-[1.75rem] leading-tight font-semibold tracking-[-0.02em] text-white sm:text-[2.125rem]">Votre Passeport Numérique</h1>
             <p className="mt-3 text-white/75">Découvrez le numérique pas à pas, à votre rythme. Votre progression est gardée : vous reprenez toujours là où vous vous êtes arrêté(e).</p>
-            <PasseportLauncher
+            <Link
               href="/participant/passeport-numerique"
               className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-orange-500 px-6 text-lg font-semibold text-petrol-950 transition-colors hover:bg-orange-400"
             >
               <MonitorSmartphone className="size-5" aria-hidden />
               Continuer mes exercices
               <ArrowRight className="size-5" aria-hidden />
-            </PasseportLauncher>
+            </Link>
           </div>
           <Image src="/brand/happi-mascotte-3d.webp" alt="" width={120} height={200} className="hidden h-40 w-auto shrink-0 sm:block" priority />
         </div>

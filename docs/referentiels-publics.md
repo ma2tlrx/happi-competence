@@ -110,3 +110,17 @@ aucun niveau ni score modifié.
   participant les a incluses dans le lien).
 - Export CSV des résultats d'un participant pour un conseiller : `/api/exports/resultats/[participantId]` (bouton « Résultats (CSV) »
   de la fiche ; organisme avec la permission d'export, formateur du groupe, administrateur, participant lui-même — mêmes droits que le PDF).
+
+## Import du ROME — arborescence des métiers (22 novembre 2026)
+
+Fichier fourni par HAPPI : « Arborescence principale du ROME » (France Travail, 19-10-2026) : 14 grands domaines,
+110 domaines professionnels, 1 923 fiches, 16 253 appellations. **Ce fichier ne contient ni compétences ni
+savoir-être** : il décrit les métiers. Il n'est donc pas la liste « savoir-être professionnels ROME 4.0 » prévue plus haut.
+
+- Importé comme référentiel externe `rome_metiers`, une ligne par **fiche** (code ROME, ex. `A1101`). Le fichier ne donne pas
+  d'intitulé de fiche : le libellé est composé du code et des deux premières appellations ; la définition donne le domaine, le
+  domaine professionnel et toutes les appellations. Aucun intitulé n'est inventé.
+- Licence non lue dans le fichier : indiquée comme « à vérifier » dans l'import.
+- Les correspondances avec les compétences transversales HAPPI se font dans « Correspondances ROME et ESCO » : elles naissent
+  « proposées », l'administrateur les valide (choix pédagogique, aucune correspondance automatique).
+- Fait en local ; en production, relancer la commande d'import (clé de service requise) avec le même fichier converti.

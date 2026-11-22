@@ -7,9 +7,8 @@ import { useEffect } from 'react';
 const EXITS = new Set(['/participant/dashboard', '/formateur/programmes?programme=passeport-numerique']);
 
 /**
- * L'application du Passeport Numérique, en plein écran : le cadre couvre tout l'écran (sans menu ni barre de la
- * plateforme), dans les limites de la fenêtre. Le plein écran du navigateur est demandé par le bouton de lancement
- * (voir PasseportLauncher) ; ici on le quitte proprement quand la personne sort de l'application.
+ * L'application du Passeport Numérique, dans la page de la plateforme (menu conservé), avec un grand cadre :
+ * toute la largeur disponible et presque toute la hauteur de la fenêtre.
  * Le contenu (et le rôle de la personne) est préparé par la route /passeport-numerique/app ; ce cadre n'ajoute
  * aucune autorisation.
  */
@@ -22,7 +21,6 @@ export function PasseportNumeriqueFrame({ title = 'Le Passeport Numérique' }: {
       if (event.origin !== window.location.origin) return;
       const data = event.data as { type?: unknown; to?: unknown } | null;
       if (data?.type !== 'pn:exit' || typeof data.to !== 'string' || !EXITS.has(data.to)) return;
-      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
       router.push(data.to);
     }
     window.addEventListener('message', onMessage);
@@ -33,8 +31,8 @@ export function PasseportNumeriqueFrame({ title = 'Le Passeport Numérique' }: {
     <iframe
       title={title}
       src="/passeport-numerique/app"
-      allow="clipboard-write; fullscreen"
-      className="fixed inset-0 z-[80] h-dvh w-screen border-0 bg-paper"
+      allow="clipboard-write"
+      className="block h-[calc(100dvh-9rem)] min-h-[40rem] w-full rounded-xl border border-line bg-paper shadow-sm sm:h-[calc(100dvh-7rem)]"
     />
   );
 }
