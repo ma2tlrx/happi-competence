@@ -68,6 +68,8 @@ test('inscription d’un participant puis auto-évaluation initiale', async ({ p
   await page.goto('/participant/auto-evaluation');
 
   const questions = page.locator('fieldset').filter({ has: page.getByRole('radio') });
+  // La page se charge en continu (écran de chargement) : attendre la première question avant de compter.
+  await expect(questions.first()).toBeVisible();
   const count = await questions.count();
   expect(count).toBeGreaterThan(5);
   for (let index = 0; index < count; index += 1) {

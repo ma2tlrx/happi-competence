@@ -28,7 +28,7 @@ Trois agents ont appliqué chacun un skill au projet (lecture seule), puis les c
 - Non traité (choix assumé) : la vue `staff_directory` (noms et rôles de l'équipe lisibles par un compte connecté, voulu pour les certificats).
 
 **Performance React / Next.js** (`react-best-practices`) :
-- écrans de chargement (`loading.tsx`) pour les quatre espaces : retour visuel immédiat au clic, la coque reste en place ;
+- écrans de chargement (`loading.tsx`) pour les espaces participant et formateur (pas organisme ni admin : avec un chargement en continu, une page introuvable répond 200 au lieu de 404) : retour visuel immédiat au clic, la coque reste en place ;
 - correspondances publiques chargées dès le début du passeport (au lieu de la 4e vague de requêtes) ;
 - lecteur pédagogique : seule la version en cours du support est lue (plus tout l'historique) ;
 - défis : simple test d'existence d'une partie jouée au lieu de lire 14 colonnes ;
