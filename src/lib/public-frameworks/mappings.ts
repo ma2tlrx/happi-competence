@@ -48,7 +48,12 @@ export function shortSourceMention(source: ExternalSource) {
   return `${source.name} ${source.version}`;
 }
 
+/** Référentiel de métiers (fiches ROME) : le lien dit « où la compétence sert », pas « même compétence dite autrement ». */
+export const METIER_SOURCE_CODE = 'rome_metiers';
+export const isMetierMapping = (mapping: PublicSkillMapping) => mapping.source.code === METIER_SOURCE_CODE;
+
 export function mappingLine(mapping: PublicSkillMapping) {
+  if (isMetierMapping(mapping)) return `Métier ROME « ${mapping.label} » — ${shortSourceMention(mapping.source)}`;
   return `« ${mapping.label} » (${LINK_TYPES[mapping.linkType].label.toLowerCase()}) — ${shortSourceMention(mapping.source)}`;
 }
 
