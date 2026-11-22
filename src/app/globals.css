@@ -260,29 +260,15 @@
     background-size: 18px 18px;
   }
 
-  /* Coins « pixel » (deux marches) : la forme des emblèmes de défis et des cases de l'album. */
+  /* Ancien effet « coins pixel » (crantés) remplacé par de simples coins arrondis, à la demande du propriétaire. */
   .pixel-corners {
-    --px: 4px;
-    clip-path: polygon(
-      var(--px) 0,
-      calc(100% - var(--px)) 0,
-      calc(100% - var(--px)) var(--px),
-      100% var(--px),
-      100% calc(100% - var(--px)),
-      calc(100% - var(--px)) calc(100% - var(--px)),
-      calc(100% - var(--px)) 100%,
-      var(--px) 100%,
-      var(--px) calc(100% - var(--px)),
-      0 calc(100% - var(--px)),
-      0 var(--px),
-      var(--px) var(--px)
-    );
+    border-radius: 10px;
   }
   .pixel-corners-lg {
-    --px: 6px;
+    border-radius: 14px;
   }
   .pixel-corners-sm {
-    --px: 2px;
+    border-radius: 6px;
   }
 
   .skeleton {
