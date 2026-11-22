@@ -136,3 +136,23 @@ codes 6D101 à 6D116, avec leur définition. Ce sont les 16 savoir-être attendu
 - Aucune correspondance proposée automatiquement (aucun libellé identique à ceux de HAPPI) : à construire dans
   « Correspondances ROME et ESCO », une à une, par un administrateur. Seules les correspondances validées sont visibles des participants.
 - Fait en local ; en production, relancer la commande d'import (clé de service requise).
+
+## Passerelle HAPPI ↔ ROME 4.0 savoir-être (22 novembre 2026)
+
+Étude : les 34 compétences HAPPI (18 transversales sur l'échelle 1 à 5, 16 habiletés socio-cognitives sur 1 à 4, descripteurs
+de niveau et critères d'observation) confrontées aux 16 savoir-être ROME (définition officielle du fichier 26M10).
+Fichier rejouable : `supabase/data/rome-propositions.sql`. **30 correspondances « proposées »** (5 équivalentes, 13 proches,
+12 partielles) sont en base, avec leur justification ; **aucune n'est validée** : un administrateur identifié les examine
+dans Administration › Référentiels › Correspondances (seul moyen de les rendre visibles des participants).
+
+- **Transversales** : 16 de 18 reliées (équivalences : esprit d'équipe, leadership, force de proposition, curiosité, autonomie).
+  Sans correspondance ROME : *Compréhension*, *Analyse des problèmes* (compétences cognitives, hors savoir-être ROME).
+- **Socio-cognitives** : 8 de 16 reliées (auto-régulation, auto-organisation, auto-mobilisation, sensibilité sociale,
+  adaptation relationnelle, coopération, planification, flexibilité mentale). Les 8 autres (auto-évaluation, raisonnement logique,
+  arbitrage, traitement de l'information, synthèse, conceptualisation, projection, approche globale) sont cognitives : pas de
+  savoir-être ROME équivalent.
+- **Côté ROME sans équivalent HAPPI** : *sens des responsabilités* (6D104) et *sens du service* (6D116).
+- **Barèmes** : la passerelle ne convertit aucun niveau. Les savoir-être ROME n'ont pas d'échelle de maîtrise ; une correspondance
+  dit « de quoi on parle », jamais « quel score ». Aucune note, aucun barème ni aucun résultat n'est modifié.
+- **Métiers** : la relation compétence ↔ fiches métiers n'est pas proposée automatiquement (le fichier donne, pour chaque
+  savoir-être, la liste des fiches qui le mobilisent, mais presque tous concernent des centaines de fiches : peu informatif).
