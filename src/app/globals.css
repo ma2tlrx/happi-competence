@@ -436,3 +436,10 @@
     animation: none;
   }
 }
+
+/* Passeport Numérique sur téléphone : l'application a sa propre barre basse ; celle de la plateforme est masquée sur cette page. */
+@media (max-width: 639.98px) {
+  html.pn-immersive nav[aria-label='Navigation rapide'] {
+    display: none;
+  }
+}

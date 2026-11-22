@@ -137,3 +137,18 @@ html { min-height: 100dvh; }
 .bnav { padding-bottom: env(safe-area-inset-bottom); }
 .lostbtn { bottom: calc(max(16px, 2vw) + env(safe-area-inset-bottom)); right: max(16px, 2vw, env(safe-area-inset-right)); }
 .wrap { padding-bottom: calc(140px + env(safe-area-inset-bottom)); }
+
+/* ── Téléphone : tout visible sans défilement horizontal ─────────────────────
+   Les onglets de l'espace animateur passent à la ligne (au lieu d'un défilement de côté
+   qui cachait « Bilan » et « Réglages »), titres un peu réduits ; le texte courant garde sa grande taille. */
+@media (max-width: 600px) {
+  .atabs { flex-wrap: wrap; overflow-x: visible; }
+  .atabs .btn { flex: 1 1 auto !important; min-height: 46px; padding: 8px 12px; font-size: 16px; }
+  .band { padding: 22px 16px; }
+}
+@media (max-width: 420px) {
+  h1 { font-size: 30px; }
+  h2 { font-size: 25px; }
+  h3 { font-size: 22px; }
+  .top .btn { padding-left: 10px; padding-right: 10px; }
+}
