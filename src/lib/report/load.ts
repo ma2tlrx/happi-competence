@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { loadCareerPaths } from '@/lib/career-paths/load';
 import { getPassport } from '@/lib/passport';
 import type { ServerClient } from '@/lib/supabase/server';
 
@@ -29,7 +30,10 @@ export async function computeReportData(supabase: ServerClient, participantId: s
       supports.set(session.number, content?.current_version_id ? (markdownByVersion.get(content.current_version_id) ?? null) : null);
     }
   }
-  return buildReportData(passport, supports);
+  const data = buildReportData(passport, supports);
+  // Pistes métiers (recommandations ROME) : figées avec le reste du bilan ; absentes si la lecture échoue.
+  data.careerPaths = await loadCareerPaths(supabase, participantId, data);
+  return data;
 }
 
 export type StoredReport = {

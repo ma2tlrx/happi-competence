@@ -5,11 +5,12 @@ import { renderToBuffer } from '@react-pdf/renderer';
 import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
+import { CAREER_PATHS_FIXTURE, CAREER_PATHS_UNAVAILABLE_FIXTURE } from '@/lib/career-paths/fixtures';
 import { buildReportData } from '@/lib/report/build';
 import { reportOptionsSchema } from '@/lib/report/content';
 import { fixtureContent, fixturePassport, SUPPORT_SESSION_1 } from '@/lib/report/fixtures';
 
-import { ReportDocument } from './report-document';
+import { CareerPathsSection, ReportDocument } from './report-document';
 
 const out = process.env.REPORT_PDF_OUT;
 const supports = new Map([[1, SUPPORT_SESSION_1], [2, SUPPORT_SESSION_1]]);
@@ -93,4 +94,46 @@ describe('rendu PDF du bilan', () => {
     expect(pages(withEasy)).toBe(pages(without) + 1);
     if (out) writeFileSync(join(out, 'bilan-facile-a-lire.pdf'), withEasy);
   }, 60_000);
+
+  describe('pistes à explorer', () => {
+    const base = () => {
+      const data = buildReportData(scenarios.complet.passport, supports, new Date('2026-07-01T10:00:00Z'));
+      return {
+        data,
+        content: fixtureContent(data),
+        options: reportOptionsSchema.parse({}),
+        meta: { version: 1, status: 'final' as 'draft' | 'final', finalizedAt: '2026-07-02T10:00:00Z', contentSource: 'ai' as const },
+      };
+    };
+    const render = (props: ReturnType<typeof base>) => renderToBuffer(createElement(ReportDocument, props) as never);
+
+    it.each([
+      ['pistes disponibles, bilan validé', CAREER_PATHS_FIXTURE, 'final'],
+      ['pistes disponibles, brouillon', CAREER_PATHS_FIXTURE, 'draft'],
+      ['pistes indisponibles, bilan validé', CAREER_PATHS_UNAVAILABLE_FIXTURE, 'final'],
+      ['pistes indisponibles, brouillon', CAREER_PATHS_UNAVAILABLE_FIXTURE, 'draft'],
+      ['ancien bilan sans pistes', undefined, 'final'],
+    ] as const)('produit un PDF valide : %s', async (name, careerPaths, status) => {
+      const props = base();
+      const buffer = await render({ ...props, data: { ...props.data, careerPaths }, meta: { ...props.meta, status } });
+      expect(buffer.subarray(0, 4).toString()).toBe('%PDF');
+      if (out) writeFileSync(join(out, `bilan-pistes-${name.replace(/[^a-z]+/gi, '-')}.pdf`), buffer);
+    }, 60_000);
+
+    it('produit un PDF valide quand la section est masquée', async () => {
+      const props = base();
+      const buffer = await render({ ...props, data: { ...props.data, careerPaths: CAREER_PATHS_FIXTURE }, options: reportOptionsSchema.parse({ hiddenSections: ['careerPaths', 'recommendations'] }) });
+      expect(buffer.subarray(0, 4).toString()).toBe('%PDF');
+    }, 60_000);
+
+    it('omet la section sans matière dans le bilan remis, l’explique dans l’aperçu', () => {
+      const section = (careerPaths: typeof CAREER_PATHS_FIXTURE | null | undefined, review: boolean, hidden = false) =>
+        CareerPathsSection({ careerPaths, hidden, review, number: '07', spaced: false });
+      expect(section(CAREER_PATHS_UNAVAILABLE_FIXTURE, false)).toBeNull();
+      expect(section(CAREER_PATHS_UNAVAILABLE_FIXTURE, true)).not.toBeNull();
+      expect(section(CAREER_PATHS_FIXTURE, false)).not.toBeNull();
+      expect(section(CAREER_PATHS_FIXTURE, true, true)).toBeNull();
+      expect(section(undefined, true)).toBeNull();
+    });
+  });
 });

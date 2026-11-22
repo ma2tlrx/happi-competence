@@ -35,7 +35,7 @@ remet au participant et à la structure qui l’accompagne.
 | Jeux et activités | titres du support pédagogique publié de chaque session suivie | « au programme » : le déroulé prévu, pas une trace de partie |
 | Référentiels, échelles, définitions, descriptions de niveaux | versions publiées des référentiels | version enregistrée dans le bilan |
 
-## Règles (version `bilan-1.0`, `src/lib/report/build.ts`)
+## Règles (version `bilan-1.1`, `src/lib/report/build.ts`)
 
 - **Valeur retenue** : celle du moteur d’évaluation existant, selon la règle de la
   version du référentiel (aujourd’hui « dernière observation » pour les deux
@@ -60,6 +60,9 @@ remet au participant et à la structure qui l’accompagne.
 - **Suffisance des données** : `none` sans observation, `limited` avec moins de deux
   sessions évaluées ou un référentiel sous le seuil, `sufficient` sinon.
 - **Données manquantes** listées en clair dans l’interface et dans le bilan.
+
+- **Pistes à explorer** (depuis `bilan-1.1`) : trois pistes de métiers ROME, calculées sans IA ; règles dans
+  `docs/pistes-metiers.md`. Absentes des bilans antérieurs.
 
 Toute modification de ces règles doit incrémenter `REPORT_ENGINE_VERSION`
 (`src/lib/report/model.ts`) ; les bilans existants gardent leurs valeurs.
@@ -112,6 +115,7 @@ Toute modification de ces règles doit incrémenter `REPORT_ENGINE_VERSION`
     commentaires) ;
   - fiches détaillées ;
   - recommandations ;
+  - pistes à explorer (métiers ROME, si disponibles) ;
   - synthèse ;
   - méthodologie et limites.
 - Une section sans matière est omise plutôt que remplie ; aucune fiche n’est

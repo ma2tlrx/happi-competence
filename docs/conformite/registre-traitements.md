@@ -100,5 +100,13 @@
 - **Destinataires** : la personne (profil, export « Mes données »), ses formateurs (`private.trains_participant`), les administrateurs. **L’organisme de rattachement n’y a pas accès.**
 - **Durée** : celle de la fiche participant (suppression en cascade).
 
+### T11. Pistes métiers du bilan (recommandations ROME)
+- **Finalité** : proposer, dans le bilan, trois pistes de métiers **à explorer** avec un conseiller (recommandations, jamais une décision ni une évaluation). Profilage au sens de l'art. 4 du RGPD, **sans décision automatisée** (art. 22) : le formateur relit le bilan, peut masquer la section, et le valide.
+- **Données utilisées** (calcul sous les droits du formateur, à la création du bilan) : points d'appui déjà dégagés par le moteur d'évaluation (compétences observées), correspondances HAPPI ↔ savoir-être ROME validées par un administrateur, référentiel ROME (données publiques), **secteurs déclarés** au questionnaire d'accueil (T10). Aucune donnée sensible, aucun axe FSE+, ni âge, ni ville, ni situation.
+- **Données conservées dans le bilan** : domaines et fiches ROME proposés, savoir-être et compétences HAPPI qui les justifient, origine de la piste (« dans un secteur que vous visez » / « une ouverture » / « d'après vos points d'appui »). **Ni le code ni le libellé des secteurs déclarés ne sont conservés**, car le bilan validé est lisible par l'organisme alors que le questionnaire ne l'est pas. **Point résiduel à arbitrer [juriste / DPO]** : l'étiquette « dans un secteur que vous visez » laisse deviner qu'un secteur proche a été déclaré.
+- **Destinataires** : ceux du bilan (formateurs du participant et administrateurs ; participant et organisme rattaché une fois le bilan validé).
+- **Information de la personne** : la section explique comment les pistes sont calculées, cite la source et précise qu'elles ne modifient aucun niveau. **À ajouter dans la notice d'information [à valider]**.
+- **Durée** : celle du bilan.
+
 ## Mesures de sécurité générales (art. 32)
 RLS activée (et forcée sur les tables sensibles) sur toutes les tables ; fonctions `SECURITY DEFINER` à `search_path` vide ; clé de service uniquement côté serveur ; double authentification TOTP, exigible pour les administrateurs et formateurs (`security.mfa_required_staff`, contrôlée en base par `private.mfa_satisfied`) ; limitation de débit ; journal en ajout seul ; codes et mots de passe jamais en clair ; en-têtes de sécurité (`next.config.ts`).

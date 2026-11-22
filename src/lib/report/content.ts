@@ -90,6 +90,7 @@ export const REPORT_SECTIONS = {
   sociocognitive: 'Habiletés socio-cognitives en détail',
   feedback: 'Commentaires des formateurs par session',
   recommendations: 'Recommandations',
+  careerPaths: 'Pistes à explorer',
 } as const;
 export type ReportSection = keyof typeof REPORT_SECTIONS;
 

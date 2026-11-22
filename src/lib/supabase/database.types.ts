@@ -4731,6 +4731,33 @@ export type Database = {
           },
         ]
       }
+      rome_domains: {
+        Row: { code: string; label: string; parent_code: string | null }
+        ComputedFields: never
+        Insert: { code: string; label: string; parent_code?: string | null }
+        Update: { code?: string; label?: string; parent_code?: string | null }
+        Relationships: [
+          { foreignKeyName: "rome_domains_parent_code_fkey"; columns: ["parent_code"]; isOneToOne: false; referencedRelation: "rome_domains"; referencedColumns: ["code"] },
+        ]
+      }
+      rome_fiche_savoir_etre: {
+        Row: { fiche_code: string; savoir_etre_code: string }
+        ComputedFields: never
+        Insert: { fiche_code: string; savoir_etre_code: string }
+        Update: { fiche_code?: string; savoir_etre_code?: string }
+        Relationships: [
+          { foreignKeyName: "rome_fiche_savoir_etre_fiche_code_fkey"; columns: ["fiche_code"]; isOneToOne: false; referencedRelation: "rome_fiches"; referencedColumns: ["code"] },
+        ]
+      }
+      rome_fiches: {
+        Row: { appellations: string[]; code: string; subdomain_code: string }
+        ComputedFields: never
+        Insert: { appellations?: string[]; code: string; subdomain_code: string }
+        Update: { appellations?: string[]; code?: string; subdomain_code?: string }
+        Relationships: [
+          { foreignKeyName: "rome_fiches_subdomain_code_fkey"; columns: ["subdomain_code"]; isOneToOne: false; referencedRelation: "rome_domains"; referencedColumns: ["code"] },
+        ]
+      }
       skill_mappings: {
         Row: {
           created_at: string

@@ -4,7 +4,9 @@ import { Document, Image, Page, Text, View } from '@react-pdf/renderer';
 import type { Style } from '@react-pdf/stylesheet';
 import type { ReactNode } from 'react';
 
+import type { CareerPath, CareerPaths } from '@/lib/career-paths/model';
 import { writingMention } from '@/lib/report/ai-disclosure';
+import { ANCHORS_LABEL, anchorLine, basisLabel, careerPathsLead, CAREER_PATHS_TITLE, careerPathsView, EXAMPLES_LABEL, ficheLabel, sourceLine } from '@/lib/report/career-paths-copy';
 import { EASY_READ_MENTION, easyReadWritingMention, type EasyReadContent } from '@/lib/report/easy-read';
 import { BEHAVIOUR_THEMES, PRIORITIES, type ReportContent, type ReportOptions, type ReportSection } from '@/lib/report/content';
 import type { ReportData, ReportFramework, ReportSkill } from '@/lib/report/model';
@@ -557,6 +559,67 @@ export function Recommendations({ data, content, number }: { data: ReportData; c
   );
 }
 
+// ── 6 bis. Pistes à explorer (ROME) ──────────────────────────────────────────
+function CareerPathBlock({ path }: { path: CareerPath }) {
+  const opening = path.basis === 'opening';
+  return (
+    // Un bloc ne se coupe jamais entre deux pages. Pas de numéro : les pistes ne sont pas classées.
+    <View style={{ borderTopWidth: 1, borderTopColor: C.petrol, paddingTop: 10, marginBottom: 14, flexDirection: 'row' }} wrap={false}>
+      <View style={{ width: 170, paddingRight: 14 }}>
+        <Text style={s.small}>{path.domain.label}</Text>
+        <Text style={[s.h3, { fontSize: 12, marginTop: 2 }]}>{path.subdomain.label}</Text>
+        <Text style={[s.chip, { marginTop: 6, backgroundColor: opening ? C.orange100 : C.petrol50, color: opening ? C.orange700 : C.petrol }]}>{basisLabel(path)}</Text>
+        <Text style={[s.small, { marginTop: 6, color: C.subtle }]}>{ficheLabel(path.ficheCode)}</Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        {path.examples.length ? (
+          <>
+            <Text style={[s.small, { fontWeight: 700, color: C.ink }]}>{EXAMPLES_LABEL}</Text>
+            <Text style={{ marginBottom: 6 }}>{path.examples.join(' ; ')}</Text>
+          </>
+        ) : null}
+        <Text style={[s.small, { fontWeight: 700, color: C.ink, marginBottom: 2 }]}>{ANCHORS_LABEL}</Text>
+        <Bullets items={path.anchors.map(anchorLine)} />
+      </View>
+    </View>
+  );
+}
+
+/** Section omise (null) quand il n'y a rien à montrer ; `review` : aperçu formateur, qui explique l'absence de piste. */
+export function CareerPathsSection({
+  careerPaths,
+  hidden,
+  review,
+  number,
+  spaced,
+}: {
+  careerPaths: CareerPaths | null | undefined;
+  hidden: boolean;
+  review: boolean;
+  number: string;
+  spaced?: boolean;
+}) {
+  const view = careerPathsView(careerPaths, { hidden, review });
+  if (view.kind === 'none' || !careerPaths) return null;
+  return (
+    <View style={spaced ? { marginTop: 28 } : undefined}>
+      <SectionOpener number={`${number} · MÉTIERS`} title={CAREER_PATHS_TITLE} lead={view.kind === 'paths' ? careerPathsLead(view.paths.length) : undefined} />
+      {view.kind === 'unavailable' ? (
+        <View style={s.box} wrap={false}>
+          <Text>{view.message}</Text>
+        </View>
+      ) : (
+        <>
+          {view.paths.map((path) => (
+            <CareerPathBlock key={`${path.subdomain.code}-${path.ficheCode}`} path={path} />
+          ))}
+          <Text style={[s.small, { marginTop: 4 }]}>{sourceLine(careerPaths.source)}</Text>
+        </>
+      )}
+    </View>
+  );
+}
+
 // ── 7. Synthèse finale ───────────────────────────────────────────────────────
 export function Conclusion({ content, number, spaced }: { content: ReportContent | null; number: string; spaced?: boolean }) {
   return (
@@ -675,6 +738,9 @@ export function ReportDocument({ data, content, options, meta, root = process.cw
     Boolean(content?.behaviour.summary || content?.behaviour.themes.length || hbs?.observedCount || data.feedback.length || options.extraObservations);
   const showCt = Boolean(ct && ct.observedCount > 0 && !hidden.has('transversal'));
   const showHbs = Boolean(hbs && hbs.observedCount > 0 && !hidden.has('sociocognitive'));
+  // Pistes métiers : le brouillon (aperçu formateur) explique leur absence, le bilan validé l'omet.
+  const careerPathsReview = meta.status === 'draft';
+  const showCareerPaths = careerPathsView(data.careerPaths, { hidden: hidden.has('careerPaths'), review: careerPathsReview }).kind !== 'none';
   let index = 2;
   const next = () => String(++index).padStart(2, '0');
   const numbers = {
@@ -682,6 +748,7 @@ export function ReportDocument({ data, content, options, meta, root = process.cw
     transversal: showCt ? next() : '',
     sociocognitive: showHbs ? next() : '',
     recommendations: hidden.has('recommendations') ? '' : next(),
+    careerPaths: showCareerPaths ? next() : '',
     conclusion: next(),
     methodology: next(),
     easyRead: easyRead ? next() : '',
@@ -721,7 +788,14 @@ export function ReportDocument({ data, content, options, meta, root = process.cw
       ) : null}
       <Frame data={data} meta={meta}>
         {hidden.has('recommendations') ? null : <Recommendations data={data} content={content} number={numbers.recommendations} />}
-        <Conclusion content={content} number={numbers.conclusion} spaced={!hidden.has('recommendations')} />
+        <CareerPathsSection
+          careerPaths={data.careerPaths}
+          hidden={hidden.has('careerPaths')}
+          review={careerPathsReview}
+          number={numbers.careerPaths}
+          spaced={!hidden.has('recommendations')}
+        />
+        <Conclusion content={content} number={numbers.conclusion} spaced={!hidden.has('recommendations') || showCareerPaths} />
       </Frame>
       <Frame data={data} meta={meta}>
         <Methodology data={data} content={content} meta={meta} number={numbers.methodology} />

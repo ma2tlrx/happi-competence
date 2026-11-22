@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition, type ReactNode } from 'react';
 
 import { createReport, deleteDraft, finalizeReport, regenerateContent, saveReport } from '@/app/formateur/participants/[id]/bilan/actions';
+import { CareerPathsPanel } from '@/components/report/career-paths-panel';
 import { Button } from '@/components/ui/button';
 import { Checkbox, Field, Input, Select, Textarea } from '@/components/ui/form';
 import { Badge, Card, CardBody, CardHeader, EmptyState, Notice } from '@/components/ui/primitives';
@@ -195,6 +196,12 @@ export function ReportWorkspace({
                   />
                 </Card>
               ) : null}
+
+              <CareerPathsPanel
+                careerPaths={selected.data.careerPaths}
+                hidden={selected.options.hiddenSections.includes('careerPaths')}
+                review={selected.status === 'draft'}
+              />
 
               {selected.status === 'draft' ? (
                 <ContentEditor

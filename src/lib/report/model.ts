@@ -5,8 +5,10 @@
  * la rédaction (IA ou formateur) ne fait qu'interpréter ces valeurs.
  */
 
+import type { CareerPaths } from '@/lib/career-paths/model';
+
 /** Version des règles de construction du bilan. À incrémenter si une règle ci-dessous change. */
-export const REPORT_ENGINE_VERSION = 'bilan-1.0';
+export const REPORT_ENGINE_VERSION = 'bilan-1.1';
 
 /** Statut d'observation d'une compétence (règle documentée dans docs/bilans.md). */
 export type ReportSkillStatus = 'not_observed' | 'single' | 'repeated';
@@ -117,4 +119,9 @@ export type ReportData = {
   sufficiency: 'none' | 'limited' | 'sufficient';
   /** Données manquantes, en clair, affichées dans l'interface et dans le bilan. */
   missing: string[];
+  /**
+   * Pistes métiers (ROME), calculées à la création du bilan (règles : docs/pistes-metiers.md).
+   * Absentes des bilans antérieurs à `bilan-1.1` : ne rien afficher dans ce cas.
+   */
+  careerPaths?: CareerPaths | null;
 };
