@@ -124,3 +124,15 @@ savoir-être** : il décrit les métiers. Il n'est donc pas la liste « savoir-�
 - Les correspondances avec les compétences transversales HAPPI se font dans « Correspondances ROME et ESCO » : elles naissent
   « proposées », l'administrateur les valide (choix pédagogique, aucune correspondance automatique).
 - Fait en local ; en production, relancer la commande d'import (clé de service requise) avec le même fichier converti.
+
+## Import des savoir-être ROME 4.0 (22 novembre 2026)
+
+Fichier fourni par HAPPI : « arborescence simplifiée des compétences » (France Travail, version 26M10 du ROME 4.0, 19 582 compétences,
+6 domaines, 32 enjeux, 84 objectifs, 506 macro-compétences). Feuille « REF - Macro » : 16 macro-compétences de type
+« Savoir-être professionnel » (domaine « Savoir-être professionnels », objectif « Agir et interagir en contexte professionnel »),
+codes 6D101 à 6D116, avec leur définition. Ce sont les 16 savoir-être attendus (l'écoute, l'esprit d'équipe, la force de proposition…).
+
+- Importés comme référentiel externe `rome_savoir_etre` (code macro, libellé et définition du fichier, sans rien ajouter).
+- Aucune correspondance proposée automatiquement (aucun libellé identique à ceux de HAPPI) : à construire dans
+  « Correspondances ROME et ESCO », une à une, par un administrateur. Seules les correspondances validées sont visibles des participants.
+- Fait en local ; en production, relancer la commande d'import (clé de service requise).
