@@ -7,11 +7,14 @@ import { ChallengeCelebration } from '@/components/engagement/celebration';
 import { ChallengeRow, NextStepCard, StarTotal } from '@/components/engagement/challenges';
 import { JourneyMap } from '@/components/engagement/journey-map';
 import { SkillCollection } from '@/components/engagement/skill-collection';
+import { PasseportNumeriqueHome } from '@/components/passeport-numerique/participant-home';
 import { PendingSurveysCard } from '@/components/satisfaction/pending-card';
 import { LevelMeter } from '@/components/ui/level-meter';
 import { Card, CardBody, CardHeader, Notice } from '@/components/ui/primitives';
 import { loadParticipantEngagement } from '@/lib/engagement/load';
 import { intakeProgress, loadIntake } from '@/lib/intake/load';
+import { requireRole } from '@/lib/auth/session';
+import { getParticipantProgramKind } from '@/lib/programmes/load';
 import { loadMySurveys } from '@/lib/satisfaction/load';
 import { createClient } from '@/lib/supabase/server';
 import { formatScore, formatShortDate, formatTimeRange } from '@/lib/utils';
@@ -23,6 +26,11 @@ export const metadata: Metadata = { title: 'Mon passeport' };
 
 export default async function ParticipantDashboard({ searchParams }: { searchParams: Promise<{ bienvenue?: string }> }) {
   const { bienvenue } = await searchParams;
+  // Inscrit au Passeport Numérique : un accueil à part (pas de parcours HAPPI, ni de compétences à évaluer).
+  const current = await requireRole('participant');
+  if (current.participantId && (await getParticipantProgramKind(current.participantId)) === 'passeport_numerique') {
+    return <PasseportNumeriqueHome firstName={current.firstName} />;
+  }
   const [{ passport, supabase }, signable] = await Promise.all([getMyPassport(), loadSignableSessions()]);
   const [surveys, { data: consents }, intake] = await Promise.all([
     loadMySurveys(supabase),

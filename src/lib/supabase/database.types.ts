@@ -2964,6 +2964,7 @@ export type Database = {
           is_demo: boolean
           last_name: string
           organization_id: string | null
+          program_kind: string
           phone: string | null
           status: string
           updated_at: string
@@ -2979,6 +2980,7 @@ export type Database = {
           is_demo?: boolean
           last_name: string
           organization_id?: string | null
+          program_kind?: string
           phone?: string | null
           status?: string
           updated_at?: string
@@ -2993,6 +2995,7 @@ export type Database = {
           is_demo?: boolean
           last_name?: string
           organization_id?: string | null
+          program_kind?: string
           phone?: string | null
           status?: string
           updated_at?: string
@@ -3420,6 +3423,7 @@ export type Database = {
           id: string
           is_demo: boolean
           is_public: boolean
+          kind: string
           max_group_size: number
           min_group_size: number
           name: string
@@ -3436,6 +3440,7 @@ export type Database = {
           id?: string
           is_demo?: boolean
           is_public?: boolean
+          kind?: string
           max_group_size?: number
           min_group_size?: number
           name: string
@@ -3451,6 +3456,7 @@ export type Database = {
           id?: string
           is_demo?: boolean
           is_public?: boolean
+          kind?: string
           max_group_size?: number
           min_group_size?: number
           name?: string

@@ -5,7 +5,7 @@ import { decodeJwtPayload, MFA_CHALLENGE_PATH } from '@/lib/auth/mfa';
 import { buildCsp, createNonce } from '@/lib/security/csp';
 
 /** Préfixes réservés aux utilisateurs connectés. Le contrôle du rôle est fait côté serveur, dans les layouts. */
-const PROTECTED_PREFIXES = ['/jouer', '/bienvenue', '/participant', '/organisme', '/formateur', '/admin', '/compte', '/notifications', '/jeux', '/api/exports'];
+const PROTECTED_PREFIXES = ['/jouer', '/bienvenue', '/passeport-numerique/app', '/participant', '/organisme', '/formateur', '/admin', '/compte', '/notifications', '/jeux', '/api/exports'];
 /** Pages publiques dont l'adresse porte un jeton (vérification d'un passeport partagé, d'un badge). */
 const TOKEN_PREFIXES = ['/verifier', '/badges/verifier'];
 
@@ -23,7 +23,8 @@ function protectToken(response: NextResponse) {
  * ses propres scripts. Les routes /api gardent la CSP fixe de next.config.ts.
  */
 export async function proxy(request: NextRequest) {
-  if (request.nextUrl.pathname.startsWith('/api/')) return guard(request, () => NextResponse.next({ request }));
+  // Routes /api, et application du Passeport Numérique : leur propre politique de sécurité est posée par la route.
+  if (request.nextUrl.pathname.startsWith('/api/') || request.nextUrl.pathname === '/passeport-numerique/app') return guard(request, () => NextResponse.next({ request }));
   const nonce = createNonce();
   const csp = buildCsp({ nonce, isDev: process.env.NODE_ENV === 'development', supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL });
   // Les en-têtes sont recopiés au moment de l'appel : ils incluent les cookies de session rafraîchis.

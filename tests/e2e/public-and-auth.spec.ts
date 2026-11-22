@@ -49,6 +49,9 @@ test('un participant ne peut pas ouvrir les autres espaces', async ({ page }) =>
 test('inscription d’un participant puis auto-évaluation initiale', async ({ page }) => {
   const email = `inscription.${unique()}@demo.happi.test`;
   await page.goto('/inscription?espace=participant');
+  // Première étape : le programme (HAPPI Compétence), puis le formulaire du compte.
+  await expect(page.getByRole('heading', { name: 'Pour quel programme vous inscrivez-vous ?' })).toBeVisible();
+  await page.getByRole('main').getByRole('link', { name: /^HAPPI Compétence/ }).click();
   await page.locator('input[name=firstName]').fill('Camille');
   await page.locator('input[name=lastName]').fill('Essai');
   await page.getByLabel('Adresse e-mail').fill(email);

@@ -178,12 +178,13 @@ export function SignInForm({ next }: { next?: string }) {
   );
 }
 
-export function ParticipantSignUpForm() {
+export function ParticipantSignUpForm({ programKind }: { programKind: string }) {
   const [state, action] = useActionState(signUpParticipant, null);
   const errors = state?.fieldErrors ?? {};
   if (state?.ok) return <SuccessPanel state={state} />;
   return (
     <form action={action} className="space-y-5" noValidate>
+      <input type="hidden" name="programKind" value={programKind} />
       <div className="grid gap-5 sm:grid-cols-2">
         <TextField name="firstName" label="Prénom" autoComplete="given-name" errors={errors} />
         <TextField name="lastName" label="Nom" autoComplete="family-name" errors={errors} />

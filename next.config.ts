@@ -33,6 +33,9 @@ const apiHeaders = [
   },
 ];
 
+// L'application du Passeport Numérique s'affiche dans un cadre de la plateforme ; sa politique de sécurité est posée par la route.
+const passeportHeaders = [...baseHeaders, { key: 'X-Frame-Options', value: 'SAMEORIGIN' }];
+
 // L'aperçu du bilan s'affiche dans la page de l'application elle-même (cadre de même origine uniquement).
 const reportPreviewHeaders = [
   ...baseHeaders,
@@ -60,6 +63,8 @@ const nextConfig: NextConfig = {
   // Polices et logos lus sur le disque par les routes qui produisent des PDF.
   outputFileTracingIncludes: {
     '/api/exports/**': ['./public/fonts/report/**/*', './public/brand/**/*'],
+    // Application du Passeport Numérique : fichier d'origine lu sur le disque par la route.
+    '/passeport-numerique/app': ['./private/passeport-numerique/**/*'],
   },
   // Anciennes adresses du site WordPress : redirection permanente (301) pour garder le référencement
   // et les liens déjà diffusés. Les pages du thème de démonstration (boutique, blog d'exemple,
@@ -79,7 +84,8 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      { source: '/((?!api/).*)', headers: securityHeaders },
+      { source: '/((?!api/|passeport-numerique/app$).*)', headers: securityHeaders },
+      { source: '/passeport-numerique/app', headers: passeportHeaders },
       { source: '/api/((?!exports/bilan/).*)', headers: apiHeaders },
       { source: '/api/exports/bilan/:path*', headers: reportPreviewHeaders },
       // En dernier : remplace la Referrer-Policy générale pour ces pages.

@@ -17,6 +17,9 @@ const eslintConfig = defineConfig([
     '.claude/**',
     'video/**',
     'graphify-out/**',
+    // Fichiers tiers livrés tels quels (bibliothèque PDF) et application d'origine du Passeport Numérique.
+    'public/passeport-numerique/**',
+    'private/**',
   ]),
 ]);
 

@@ -7,6 +7,7 @@ import {
   History,
   LayoutDashboard,
   LifeBuoy,
+  MonitorSmartphone,
   MessageSquareHeart,
   Radar,
   Route,
@@ -31,6 +32,8 @@ export type NavItem = {
   also?: string[];
   exact?: boolean;
   short?: string;
+  /** Entrée réservée aux participants de ce programme (par défaut : tous les programmes). */
+  programKind?: 'happi_competence' | 'passeport_numerique';
   /** Entrée visible seulement avec cette permission (l'administrateur les a toutes). Le contrôle réel reste côté serveur. */
   permission?: PermissionCode;
 };
@@ -51,24 +54,26 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
     {
       items: [
         { href: '/participant/dashboard', label: 'Accueil', icon: LayoutDashboard, mobile: true },
+        { href: '/participant/passeport-numerique', label: 'Passeport Numérique', icon: MonitorSmartphone, mobile: true, short: 'Exercices', programKind: 'passeport_numerique' },
         {
           href: '/participant/competences-transversales',
           label: 'Mes compétences',
           icon: Radar,
           mobile: true,
+          programKind: 'happi_competence',
           short: 'Compétences',
           also: ['/participant/habiletes-sociocognitives', '/participant/auto-evaluation', '/participant/evolution'],
         },
-        { href: '/participant/parcours', label: 'Mon parcours', icon: Route, mobile: true, short: 'Parcours' },
-        { href: '/participant/reussites', label: 'Mes réussites', icon: Trophy, mobile: true, short: 'Réussites', also: ['/participant/badges', '/participant/jeux'] },
-        { href: '/participant/bilan', label: 'Mon bilan', icon: FileText, mobile: true, short: 'Bilan', also: ['/participant/partage'] },
+        { href: '/participant/parcours', label: 'Mon parcours', icon: Route, mobile: true, short: 'Parcours', programKind: 'happi_competence' },
+        { href: '/participant/reussites', label: 'Mes réussites', icon: Trophy, mobile: true, short: 'Réussites', also: ['/participant/badges', '/participant/jeux'], programKind: 'happi_competence' },
+        { href: '/participant/bilan', label: 'Mon bilan', icon: FileText, mobile: true, short: 'Bilan', also: ['/participant/partage'], programKind: 'happi_competence' },
         { href: '/jouer', label: 'Rejoindre une partie', icon: Gamepad2 },
       ],
     },
     {
       label: 'Moi',
       items: [
-        { href: '/participant/profil', label: 'Mon profil', icon: User, also: ['/participant/consentements', '/participant/fiche-entree'] },
+        { href: '/participant/profil', label: 'Mon profil', icon: User, mobile: true, short: 'Profil', also: ['/participant/consentements', '/participant/fiche-entree'] },
         { href: '/participant/satisfaction', label: 'Mon avis', icon: MessageSquareHeart, also: ['/participant/signalements'] },
       ],
     },
@@ -244,7 +249,9 @@ export function hubFor(space: AppSpace, pathname: string): Hub | null {
 }
 
 /** Navigation d'un espace, sans les entrées dont la permission manque à l'utilisateur. */
-export function visibleNavigation(space: AppSpace, access: { isAdmin: boolean; permissions?: readonly string[] }): NavGroup[] {
-  const allowed = (item: NavItem) => !item.permission || access.isAdmin || (access.permissions ?? []).includes(item.permission);
+export function visibleNavigation(space: AppSpace, access: { isAdmin: boolean; permissions?: readonly string[]; programKind?: string }): NavGroup[] {
+  const allowed = (item: NavItem) =>
+    (!item.permission || access.isAdmin || (access.permissions ?? []).includes(item.permission)) &&
+    (!item.programKind || space !== 'participant' || item.programKind === (access.programKind ?? 'happi_competence'));
   return NAVIGATION[space].map((group) => ({ ...group, items: group.items.filter(allowed) })).filter((group) => group.items.length > 0);
 }

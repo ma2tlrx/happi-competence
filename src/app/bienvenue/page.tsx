@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 
 import { requireRole } from '@/lib/auth/session';
 import { intakeProgress, loadIntake } from '@/lib/intake/load';
+import { getParticipantProgramKind } from '@/lib/programmes/load';
 import { createClient } from '@/lib/supabase/server';
 
 import { IntakeWizard, type IntakeValues } from './wizard';
@@ -14,6 +15,8 @@ export default async function BienvenuePage({ searchParams }: { searchParams: Pr
   const { modifier } = await searchParams;
   const user = await requireRole('participant');
   if (!user.participantId) redirect('/compte');
+  // Passeport Numérique : son questionnaire est celui de l'application (consentement, puis questions de départ).
+  if ((await getParticipantProgramKind(user.participantId)) === 'passeport_numerique') redirect('/participant/passeport-numerique');
   const supabase = await createClient();
   const [intake, { data: participant }, { data: self }] = await Promise.all([
     loadIntake(supabase, user.participantId),

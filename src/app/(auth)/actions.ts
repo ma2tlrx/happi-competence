@@ -9,6 +9,7 @@ import { actionError, actionSuccess, validationError, type ActionState } from '@
 import { MFA_CHALLENGE_PATH, mfaStep, normalizeTotpCode } from '@/lib/auth/mfa';
 import { ORGANIZATION_TYPES } from '@/lib/auth/roles';
 import { getCurrentUser, homePathFor } from '@/lib/auth/session';
+import { PROGRAM_KINDS } from '@/lib/programmes/kind';
 import { rateLimit, requestIp } from '@/lib/security/rate-limit';
 import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
@@ -102,7 +103,14 @@ function withPasswordConfirmation<T extends z.ZodRawShape>(shape: T) {
     );
 }
 
-const participantSchema = withPasswordConfirmation({ firstName: name('prénom'), lastName: name('nom'), email, ...consentSchema });
+const participantSchema = withPasswordConfirmation({
+  firstName: name('prénom'),
+  lastName: name('nom'),
+  email,
+  // Programme choisi à l'étape précédente de l'inscription (obligatoire).
+  programKind: z.enum(PROGRAM_KINDS, { message: 'Choisissez votre programme.' }),
+  ...consentSchema,
+});
 
 const organizationSchema = withPasswordConfirmation({
   firstName: name('prénom'),
@@ -162,6 +170,7 @@ export async function signUpParticipant(_: ActionState, formData: FormData): Pro
     account_type: 'participant',
     first_name: parsed.data.firstName,
     last_name: parsed.data.lastName,
+    program_kind: parsed.data.programKind,
     terms_accepted: true,
     privacy_consent: true,
   });

@@ -15,7 +15,7 @@ import { LinkTabs } from '@/components/ui/navigation';
 
 import { SPACE_LABELS, hubFor, visibleNavigation, type AppSpace, type NavGroup, type NavItem } from './nav-config';
 
-export type ShellUser = { firstName: string; lastName: string; email: string; roleLabel: string; isAdmin: boolean; permissions?: string[] };
+export type ShellUser = { firstName: string; lastName: string; email: string; roleLabel: string; isAdmin: boolean; permissions?: string[]; /** Programme d'un participant (menu adapté). */ programKind?: string };
 
 function isActive(pathname: string, item: NavItem) {
   if (item.exact) return pathname === item.href;
