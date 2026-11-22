@@ -199,6 +199,8 @@ function toSelfAssessment(row: SelfAssessmentRow | null | undefined): SelfAssess
  * passe le client de service, après validation du lien par la base (src/lib/passport-share/server.ts).
  */
 export async function getPassport(supabase: SupabaseClient<Database>, participantId: string): Promise<Passport | null> {
+  // Correspondances publiques validées : données de référence, sans lien avec le participant ; parties dès le début.
+  const mappingsPromise = loadValidatedMappings(supabase);
   // Toutes les lectures qui ne dépendent que de l'identifiant partent ensemble.
   const [participantResult, membershipsResult, attendanceResult, evaluationsResult, selfResult, staffResult, finalResult] = await Promise.all([
     supabase
@@ -308,7 +310,7 @@ export async function getPassport(supabase: SupabaseClient<Database>, participan
     supabase.from('skills').select('id, version_id, code, name, description, position, category_id, is_active, skill_level_descriptors ( level_value, description )').in('version_id', [...versionIds]),
     supabase.from('skill_categories').select('id, version_id, code, name, description, position').in('version_id', [...versionIds]),
     supabase.from('scale_levels').select('version_id, value, label, description').in('version_id', [...versionIds]),
-    loadValidatedMappings(supabase),
+    mappingsPromise,
   ]);
 
   // Une version par référentiel pour l'affichage : la plus récente utilisée.

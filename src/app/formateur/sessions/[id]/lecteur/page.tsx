@@ -23,10 +23,11 @@ export default async function LecteurPage({ params }: { params: Promise<{ id: st
 
   const { data: content } = await supabase
     .from('pedagogical_contents')
-    .select('current_version_id, pedagogical_content_versions!pedagogical_content_versions_content_id_fkey ( id, markdown, is_provisional, version_number )')
+    // Seule la version en cours (et non tout l'historique des supports importés).
+    .select('current_version_id, current:pedagogical_content_versions!pedagogical_contents_current_version_fkey ( id, markdown, is_provisional, version_number )')
     .eq('program_session_id', session.program_session_id)
     .maybeSingle();
-  const version = content?.pedagogical_content_versions.find((item) => item.id === content.current_version_id) ?? null;
+  const version = content?.current ?? null;
 
   if (!hasPermission(user, 'content.read') || !version) {
     return (

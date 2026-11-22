@@ -3,7 +3,7 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { finalStatusOf } from '@/lib/evolution';
-import { loadGameResults } from '@/lib/jeux/results-load';
+import { hasPlayedGame } from '@/lib/jeux/results-load';
 import type { Passport } from '@/lib/passport';
 import type { PendingSurvey } from '@/lib/satisfaction/load';
 import type { Database } from '@/lib/supabase/database.types';
@@ -20,7 +20,8 @@ export async function loadParticipantEngagement(supabase: SupabaseClient<Databas
   const participantId = passport.participant.id;
   const [shares, games] = await Promise.all([
     supabase.from('passport_shares').select('id', { count: 'exact', head: true }).eq('participant_id', participantId),
-    loadGameResults(supabase, participantId, 1),
+    // Existence d'une partie jouée seulement (aucun score n'entre dans les défis).
+    hasPlayedGame(supabase, participantId),
   ]);
   const collection = buildCollection(passport.frameworks);
   const total = passport.group?.sessionsCount ?? 6;
@@ -38,7 +39,7 @@ export async function loadParticipantEngagement(supabase: SupabaseClient<Databas
     surveysAvailable: surveys.length,
     surveysAnswered: surveys.filter((survey) => survey.answered).length,
     sharesCreated: shares.count ?? 0,
-    gamesPlayed: games.length,
+    gamesPlayed: games ? 1 : 0,
   };
   const challenges = buildChallenges(facts);
   return {

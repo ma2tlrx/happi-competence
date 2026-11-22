@@ -55,7 +55,7 @@ export function SearchInput({ placeholder = 'Rechercher', param = 'q', className
         placeholder={placeholder}
         aria-label={placeholder}
         className={cn(
-          'h-10 w-full rounded-md border border-line-strong bg-white pr-9 pl-9 text-[0.9375rem] text-ink placeholder:text-ink-subtle/70 hover:border-petrol-400',
+          'h-10 w-full rounded-md border border-petrol-500 bg-white pr-9 pl-9 text-[0.9375rem] text-ink placeholder:text-ink-subtle hover:border-petrol-700',
           'focus-visible:border-petrol-600 focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-orange-500 [&::-webkit-search-cancel-button]:hidden',
           pending && 'opacity-70',
         )}

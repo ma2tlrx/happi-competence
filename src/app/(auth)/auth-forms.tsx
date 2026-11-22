@@ -150,6 +150,16 @@ function SuccessPanel({ state }: { state: ActionState }) {
   );
 }
 
+/** Après un refus du serveur, le focus va sur le premier champ à corriger (WCAG 3.3.1 ; skill accessibilité). */
+function useFocusFirstError(state: { ok: boolean } | null) {
+  const form = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (!state || state.ok) return;
+    form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+  }, [state]);
+  return form;
+}
+
 export function SignInForm({ next }: { next?: string }) {
   const [state, action] = useActionState(signIn, null);
   const errors = state?.fieldErrors ?? {};
@@ -181,9 +191,10 @@ export function SignInForm({ next }: { next?: string }) {
 export function ParticipantSignUpForm({ programKind }: { programKind: string }) {
   const [state, action] = useActionState(signUpParticipant, null);
   const errors = state?.fieldErrors ?? {};
+  const form = useFocusFirstError(state);
   if (state?.ok) return <SuccessPanel state={state} />;
   return (
-    <form action={action} className="space-y-5" noValidate>
+    <form ref={form} action={action} className="space-y-5" noValidate>
       <input type="hidden" name="programKind" value={programKind} />
       <div className="grid gap-5 sm:grid-cols-2">
         <TextField name="firstName" label="Prénom" autoComplete="given-name" errors={errors} />
@@ -209,9 +220,10 @@ export function ParticipantSignUpForm({ programKind }: { programKind: string }) 
 export function OrganizationSignUpForm() {
   const [state, action] = useActionState(signUpOrganization, null);
   const errors = state?.fieldErrors ?? {};
+  const form = useFocusFirstError(state);
   if (state?.ok) return <SuccessPanel state={state} />;
   return (
-    <form action={action} className="space-y-5" noValidate>
+    <form ref={form} action={action} className="space-y-5" noValidate>
       <fieldset className="space-y-5">
         <legend className="mb-3 text-sm font-semibold text-ink-muted">Votre structure</legend>
         <TextField name="organizationName" label="Nom de la structure" autoComplete="organization" errors={errors} />
@@ -254,9 +266,10 @@ export function OrganizationSignUpForm() {
 export function AccessCodeSignUpForm() {
   const [state, action] = useActionState(signUpWithAccessCode, null);
   const errors = state?.fieldErrors ?? {};
+  const form = useFocusFirstError(state);
   if (state?.ok) return <SuccessPanel state={state} />;
   return (
-    <form action={action} className="space-y-5" noValidate>
+    <form ref={form} action={action} className="space-y-5" noValidate>
       <TextField name="code" label="Code d’accès" autoComplete="off" errors={errors} hint="Le code à usage unique transmis par l’administrateur HAPPI (HAPPI-XXXXX-…)." />
       <div className="grid gap-5 sm:grid-cols-2">
         <TextField name="firstName" label="Prénom" autoComplete="given-name" errors={errors} />

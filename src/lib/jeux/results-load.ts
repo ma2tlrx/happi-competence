@@ -22,3 +22,9 @@ export async function loadGameResults(supabase: SupabaseClient<Database>, partic
     .limit(limit);
   return data ?? [];
 }
+
+/** A-t-il joué au moins une partie ? Pour les défis seulement : aucune colonne lue, ni score ni rang (RLS de l'appelant). */
+export async function hasPlayedGame(supabase: SupabaseClient<Database>, participantId: string): Promise<boolean> {
+  const { count } = await supabase.from('game_results').select('id', { count: 'exact', head: true }).eq('participant_id', participantId);
+  return (count ?? 0) > 0;
+}

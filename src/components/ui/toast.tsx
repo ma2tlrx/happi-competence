@@ -19,7 +19,8 @@ function push(kind: ToastKind, message: string) {
   const id = nextId++;
   items = [...items.slice(-3), { id, kind, message }];
   emit();
-  window.setTimeout(() => dismiss(id), kind === 'error' ? 7000 : 4000);
+  // Les erreurs restent jusqu'à ce que la personne les ferme (WCAG 2.2.1) ; les autres messages disparaissent après 6 s.
+  if (kind !== 'error') window.setTimeout(() => dismiss(id), 6000);
 }
 
 function dismiss(id: number) {

@@ -130,6 +130,8 @@
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     scroll-padding-top: 5.5rem;
+    /* Barre de navigation basse (téléphone) : l'élément qui reçoit le focus n'est jamais caché dessous (WCAG 2.4.11). */
+    scroll-padding-bottom: 6rem;
   }
 
   body {

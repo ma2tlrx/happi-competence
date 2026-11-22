@@ -93,7 +93,7 @@ export function Questionnaire({
                         {selected ? <Check className="size-4" strokeWidth={3} aria-hidden /> : null}
                         {level.value}
                       </span>
-                      <span className={cn('hidden text-xs leading-tight sm:block', selected ? 'text-white/80' : 'text-ink-muted')}>{level.label}</span>
+                      <span className={cn('sr-only text-xs leading-tight sm:not-sr-only sm:block', selected ? 'text-white/80' : 'text-ink-muted')}>{level.label}</span>
                     </label>
                   );
                 })}

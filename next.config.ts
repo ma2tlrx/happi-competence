@@ -60,6 +60,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Le moteur PDF et le client SMTP s'exécutent côté serveur uniquement et ne doivent pas être empaquetés.
   serverExternalPackages: ['@react-pdf/renderer', 'nodemailer'],
+  // radix-ui est un fichier « baril » (~60 paquets réexportés) absent de la liste optimisée par défaut.
+  experimental: { optimizePackageImports: ['radix-ui'] },
   // Polices et logos lus sur le disque par les routes qui produisent des PDF.
   outputFileTracingIncludes: {
     '/api/exports/**': ['./public/fonts/report/**/*', './public/brand/**/*'],

@@ -10,8 +10,8 @@ import { cn } from '@/lib/utils';
 import { Button, type ButtonSize, type ButtonVariant } from './button';
 
 const controlBase =
-  'w-full rounded-md border border-line-strong bg-white px-3 text-[0.9375rem] text-ink transition-colors ' +
-  'placeholder:text-ink-subtle/70 hover:border-petrol-400 ' +
+  'w-full rounded-md border border-petrol-500 bg-white px-3 text-[0.9375rem] text-ink transition-colors ' +
+  'placeholder:text-ink-subtle hover:border-petrol-700 ' +
   'focus-visible:border-petrol-600 focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-orange-500 ' +
   'disabled:cursor-not-allowed disabled:bg-paper disabled:text-ink-subtle ' +
   'aria-invalid:border-danger';
@@ -102,8 +102,9 @@ export function Checkbox({ label, description, error, className, id, ...props }:
           <input
             id={inputId}
             type="checkbox"
-            className="peer absolute inset-0 size-5 cursor-pointer appearance-none rounded-xs border border-line-strong bg-white transition-colors checked:border-petrol-900 checked:bg-petrol-900 hover:border-petrol-500 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-danger"
+            className="peer absolute inset-0 size-5 cursor-pointer appearance-none rounded-xs border border-petrol-500 bg-white transition-colors checked:border-petrol-900 checked:bg-petrol-900 hover:border-petrol-700 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-danger"
             aria-invalid={error ? true : undefined}
+            aria-describedby={error ? `${inputId}-erreur` : undefined}
             {...props}
           />
           <Check className="pointer-events-none relative size-3.5 text-white opacity-0 transition-opacity peer-checked:opacity-100" strokeWidth={3} aria-hidden />
@@ -114,7 +115,7 @@ export function Checkbox({ label, description, error, className, id, ...props }:
         </span>
       </label>
       {error ? (
-        <p className="ml-8 flex items-start gap-1.5 text-sm font-medium text-danger">
+        <p id={`${inputId}-erreur`} className="ml-8 flex items-start gap-1.5 text-sm font-medium text-danger">
           <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
           {error}
         </p>

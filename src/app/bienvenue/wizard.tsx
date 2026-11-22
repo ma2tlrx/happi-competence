@@ -133,7 +133,7 @@ function ChoiceCards({
             <input type="radio" name={name} value={code} checked={value === code} onChange={() => onChange(code)} className="sr-only" required={required} />
             <span
               aria-hidden
-              className={cn('flex size-5 shrink-0 items-center justify-center rounded-full border-2', value === code ? 'border-orange-500 bg-orange-500' : 'border-line-strong bg-white')}
+              className={cn('flex size-5 shrink-0 items-center justify-center rounded-full border-2', value === code ? 'border-orange-500 bg-orange-500' : 'border-petrol-500 bg-white')}
             >
               {value === code ? <span className="size-2 rounded-full bg-white" /> : null}
             </span>
@@ -168,7 +168,7 @@ function MultiChoiceCards({
 }) {
   const toggle = (code: string) => onChange(value.includes(code) ? value.filter((item) => item !== code) : [...value, code]);
   return (
-    <fieldset>
+    <fieldset aria-describedby={error ? `${name}-erreur` : undefined}>
       <legend className="mb-1 text-[0.9375rem] font-semibold text-ink">
         {legend}
         <span className="ml-1.5 text-sm font-normal text-ink-subtle">facultatif</span>
@@ -187,7 +187,7 @@ function MultiChoiceCards({
               )}
             >
               <input type="checkbox" name={name} value={code} checked={on} onChange={() => toggle(code)} className="sr-only" />
-              <span aria-hidden className={cn('flex size-5 shrink-0 items-center justify-center rounded-[5px] border-2', on ? 'border-orange-500 bg-orange-500 text-white' : 'border-line-strong bg-white')}>
+              <span aria-hidden className={cn('flex size-5 shrink-0 items-center justify-center rounded-[5px] border-2', on ? 'border-orange-500 bg-orange-500 text-white' : 'border-petrol-500 bg-white')}>
                 {on ? <Check className="size-3.5" strokeWidth={3} /> : null}
               </span>
               {label}
@@ -219,7 +219,7 @@ function RatingRow({ name, label, value, onChange }: { name: string; label: stri
             className={cn(
               'flex h-12 cursor-pointer items-center justify-center rounded-lg border-2 font-display text-lg font-semibold transition-colors',
               'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-orange-500',
-              value === level ? 'border-orange-500 bg-orange-500 text-white' : 'border-line bg-white text-ink-subtle hover:border-petrol-300',
+              value === level ? 'border-orange-500 bg-orange-500 text-petrol-950' : 'border-line bg-white text-ink-subtle hover:border-petrol-300',
             )}
           >
             <input type="radio" name={name} value={level} checked={value === level} onChange={() => onChange(level)} className="sr-only" aria-label={`${label} : ${level} sur 5`} />
