@@ -21,7 +21,7 @@ export type RateLimitRule = {
 export const RATE_LIMITS = {
   'login.ip': { limit: 30, windowSeconds: 15 * 60 },
   'login.email': { limit: 8, windowSeconds: 15 * 60 },
-  'signup.ip': { limit: 10, windowSeconds: 60 * 60 },
+  'signup.ip': { limit: 60, windowSeconds: 60 * 60 },
   'password_reset.ip': { limit: 10, windowSeconds: 60 * 60 },
   'password_reset.email': { limit: 3, windowSeconds: 60 * 60 },
   'contact.ip': { limit: 5, windowSeconds: 60 * 60 },
