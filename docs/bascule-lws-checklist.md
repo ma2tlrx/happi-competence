@@ -32,7 +32,7 @@ Légende : 👤 à faire par vous (accès LWS) · 🤖 déjà prêt dans le dép
 
 Le paquet est prêt et **testé sur Node 22.23.4** (la version proposée par LWS) : toutes les pages publiques répondent, en-têtes de sécurité présents.
 
-1. [ ] 🤖 Fichier à téléverser : `dist/lws/happi-competence-lws-<commit>.zip` (régénéré avec `npm run package:lws`, voir `docs/hebergement-lws.md` §1). Me demander la dernière version avant le jour J.
+1. [ ] 🤖 Fichier à téléverser : `dist/lws/happi-competence-lws-<commit>.zip` (régénéré avec `npm run package:lws`, voir `docs/hebergement-lws.md` §1). Paquet du 22 novembre 2026 : `dist/lws/happi-competence-lws-4cecf32892a7.zip` (non versionné : à régénérer en local avec `npm run package:lws` ; me demander de le refaire si le code change).
 2. [ ] 👤 cPanel › **Setup Node.js App** › Create : version 22.x, mode *production*, racine `happi-competence`, URL = sous-domaine choisi (ex. `app.votre-domaine.fr`), fichier de démarrage `app.js`.
 3. [ ] 👤 Téléverser et extraire le zip dans la racine de l’application (Gestionnaire de fichiers).
 4. [ ] 👤 Variables d’environnement (liste complète dans `docs/hebergement-lws.md` §2 et `.env.example`) : saisies **uniquement dans cPanel**, jamais dans le dépôt :
@@ -50,13 +50,26 @@ Les e-mails de l’application (rappels, partage) ne doivent **pas** partir de l
 
 - [ ] 👤 Créer le compte, authentifier le domaine (SPF/DKIM dans la zone DNS LWS : Brevo fournit les valeurs).
 - [ ] 👤 Variables : `EMAIL_PROVIDER=brevo`, `BREVO_API_KEY`, `EMAIL_FROM`.
-- [ ] 👤 Supabase › Authentication › SMTP : même fournisseur, pour les e-mails de connexion.
+- [ ] 👤 Supabase › Authentication › SMTP : même fournisseur, pour les e-mails de confirmation et de connexion (voir E).
 
-## E. Base de données Supabase (indépendant de LWS, à faire dès que possible)
+## E. Base de données Supabase (état au 22 novembre 2026)
 
-- [ ] 👤 Supabase › SQL Editor : coller le fichier des **11 migrations** (me demander le fichier à jour) et exécuter **une seule fois**.
-- [ ] 👤 Authentication : activer le TOTP (MFA), longueur minimale du mot de passe 10.
+- [x] 🤖 Toutes les migrations sont appliquées sur la base en ligne (dernière : `20261122090000_program_kinds`) ; 93 tables avec RLS forcée.
+- [x] 🤖 Référentiels ROME importés en ligne : 1 923 fiches métiers et 16 savoir-être (licence à vérifier, correspondances à valider dans Administration › Référentiels › Correspondances).
+- [ ] 👤 **Supabase › Authentication › Emails › SMTP** : activer le SMTP personnalisé (Brevo : hôte `smtp-relay.brevo.com`, port 587, identifiants SMTP de Brevo, expéditeur sur le domaine authentifié). **Sans cela, aucun participant ne reçoit son e-mail de confirmation** (limite actuelle : 2 e-mails par heure pour tout le projet).
+- [ ] 👤 Supabase › Authentication › Rate Limits : relever « emails sent » (ex. 100 par heure) une fois le SMTP actif.
+- [ ] 👤 Supabase › Authentication › URL Configuration : *Site URL* = l'adresse définitive (https), *Redirect URLs* = la même adresse + `/**` (retirer l'aperçu Vercel).
+- [ ] 👤 Optionnel : CAPTCHA (Turnstile) et contrôle des mots de passe compromis (offre payante).
+- [ ] 👤 Supprimer le jeton d'accès Supabase (Account › Access Tokens) créé pour les opérations de la session.
 - [ ] 👤 Faire pivoter la clé OpenRouter collée plus tôt dans la conversation.
+
+## E bis. Test final avant un atelier (compter 20 min)
+
+1. [ ] 👤 Créer un compte participant sur l'adresse définitive avec une adresse de test : l'e-mail de confirmation doit arriver (boîte de réception, pas les indésirables) et le lien doit ramener sur l'adresse définitive.
+2. [ ] 👤 Même chose avec le choix « Passeport Numérique » : l'application s'ouvre dans la page, sans demander de code.
+3. [ ] 👤 Côté formateur : créer un groupe, planifier des sessions (une date et un horaire par session), rattacher la personne de test.
+4. [ ] 👤 Ouvrir `…/api/health` : réponse `ok`.
+5. [ ] 🤖 Me prévenir : je rejoue les contrôles de configuration (lecture seule) et le parcours d'inscription.
 
 ## F. Retour arrière
 
