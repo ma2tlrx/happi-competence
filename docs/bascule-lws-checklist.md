@@ -32,7 +32,7 @@ Légende : 👤 à faire par vous (accès LWS) · 🤖 déjà prêt dans le dép
 
 Le paquet est prêt et **testé sur Node 22.23.4** (la version proposée par LWS) : toutes les pages publiques répondent, en-têtes de sécurité présents.
 
-1. [ ] 🤖 Fichier à téléverser : `dist/lws/happi-competence-lws-<commit>.zip` (régénéré avec `npm run package:lws`, voir `docs/hebergement-lws.md` §1). Paquet du 22 novembre 2026 : `dist/lws/happi-competence-lws-4cecf32892a7.zip` (non versionné : à régénérer en local avec `npm run package:lws` ; me demander de le refaire si le code change).
+1. [ ] 🤖 Fichier à téléverser : `dist/lws/happi-competence-lws-<commit>.zip` (régénéré avec `npm run package:lws`, voir `docs/hebergement-lws.md` §1). Paquet du 22 novembre 2026 : `dist/lws/happi-competence-lws-adf95ffba46f.zip` (non versionné : à régénérer en local avec `npm run package:lws` ; me demander de le refaire si le code change).
 2. [ ] 👤 cPanel › **Setup Node.js App** › Create : version 22.x, mode *production*, racine `happi-competence`, URL = sous-domaine choisi (ex. `app.votre-domaine.fr`), fichier de démarrage `app.js`.
 3. [ ] 👤 Téléverser et extraire le zip dans la racine de l’application (Gestionnaire de fichiers).
 4. [ ] 👤 Variables d’environnement (liste complète dans `docs/hebergement-lws.md` §2 et `.env.example`) : saisies **uniquement dans cPanel**, jamais dans le dépôt :
@@ -56,6 +56,8 @@ Les e-mails de l’application (rappels, partage) ne doivent **pas** partir de l
 
 - [x] 🤖 Toutes les migrations sont appliquées sur la base en ligne (dernière : `20261122090000_program_kinds`) ; 93 tables avec RLS forcée.
 - [x] 🤖 Référentiels ROME importés en ligne : 1 923 fiches métiers et 16 savoir-être (licence à vérifier, correspondances à valider dans Administration › Référentiels › Correspondances).
+- [ ] 👤🤖 **Pistes métiers** : appliquer en ligne la migration `20261123090000_rome_reference.sql` puis le SQL du référentiel (`scripts/rome/build-reference-sql.py`, voir `docs/pistes-metiers.md`). Sans cela, les bilans se génèrent normalement, sans la section « Pistes à explorer ».
+- [ ] 👤 **Valider les correspondances ROME** (Administration › Référentiels › Correspondances) : tant qu'aucune n'est validée, aucune piste n'est proposée.
 - [ ] 👤 **Supabase › Authentication › Emails › SMTP** : activer le SMTP personnalisé (Brevo : hôte `smtp-relay.brevo.com`, port 587, identifiants SMTP de Brevo, expéditeur sur le domaine authentifié). **Sans cela, aucun participant ne reçoit son e-mail de confirmation** (limite actuelle : 2 e-mails par heure pour tout le projet).
 - [ ] 👤 Supabase › Authentication › Rate Limits : relever « emails sent » (ex. 100 par heure) une fois le SMTP actif.
 - [ ] 👤 Supabase › Authentication › URL Configuration : *Site URL* = l'adresse définitive (https), *Redirect URLs* = la même adresse + `/**` (retirer l'aperçu Vercel).
