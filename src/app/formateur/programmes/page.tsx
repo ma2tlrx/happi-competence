@@ -2,6 +2,7 @@ import { ArrowRight, BookOpen, Check, MonitorSmartphone } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { PasseportLauncher } from '@/components/passeport-numerique/launcher';
 import { Button } from '@/components/ui/button';
 import { Badge, Card, CardBody, CardHeader, EmptyState, PageHeader, ProvisionalBadge } from '@/components/ui/primitives';
 import { requireRole } from '@/lib/auth/session';
@@ -75,10 +76,10 @@ export default async function TrainerProgramsPage({ searchParams }: { searchPara
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <Button asChild size="lg">
-                <Link href="/formateur/programmes/passeport-numerique">
+                <PasseportLauncher href="/formateur/programmes/passeport-numerique">
                   Ouvrir l’espace animateur
                   <ArrowRight aria-hidden />
-                </Link>
+                </PasseportLauncher>
               </Button>
             </div>
             <p className="rounded-lg bg-orange-50 p-3.5 text-sm text-ink-muted">

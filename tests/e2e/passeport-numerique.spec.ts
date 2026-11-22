@@ -90,3 +90,28 @@ test('l’application n’est servie ni aux visiteurs, ni aux organismes, et san
   expect(ok.headers()['content-security-policy']).toContain("connect-src 'self' blob:");
   expect(ok.headers()['x-frame-options']).toBe('SAMEORIGIN');
 });
+
+test('l’application occupe tout l’écran et ramène à l’espace HAPPI quand on la quitte', async ({ page }) => {
+  await signUp(page, 'Passeport Numérique');
+  await expect(page).toHaveURL(/\/participant\/passeport-numerique$/);
+  const frame = page.locator('iframe[title="Le Passeport Numérique"]');
+  await expect(frame).toBeVisible();
+  const box = await frame.boundingBox();
+  const viewport = page.viewportSize()!;
+  expect(box).toMatchObject({ x: 0, y: 0 });
+  expect(Math.round(box!.width)).toBe(viewport.width);
+  expect(Math.round(box!.height)).toBe(viewport.height);
+  // Ni menu ni barre de la plateforme au-dessus de l'application.
+  expect(await page.evaluate(() => [document.elementFromPoint(40, 100)?.tagName, document.elementFromPoint(window.innerWidth - 10, 20)?.tagName])).toEqual(['IFRAME', 'IFRAME']);
+
+  const app = page.frameLocator('iframe[title="Le Passeport Numérique"]');
+  await app.locator('[data-a=cAge][data-v="26 à 39 ans"]').click();
+  await app.locator('[data-a=cOk]').click();
+  await app.locator('[data-a=iSkip]').click();
+  await app.locator('[data-a=dev][data-v=phone]').click();
+  await app.locator('[data-a=envdone]').click();
+  await app.locator('[data-a=evSkip]').click();
+  await expect(app.getByRole('heading', { name: /Le passeport de Camille/ })).toBeVisible();
+  await app.getByRole('button', { name: 'Retour à mon espace HAPPI' }).click();
+  await expect(page).toHaveURL(/\/participant\/dashboard$/);
+});

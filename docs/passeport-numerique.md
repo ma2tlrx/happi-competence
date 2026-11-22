@@ -27,6 +27,16 @@ Adaptations faites à chaque requête (fichier d'origine **non modifié**, livr�
 2. **Compte** : pour un participant, la création de compte de l'application (prénom, nom, code à quatre chiffres) est remplacée par son compte HAPPI. Les textes du consentement et de la notice qui parlent du code secret sont adaptés.
 3. **Données rangées par compte** : la clé de stockage du navigateur contient un identifiant opaque du compte ; deux personnes qui se servent du même appareil ne voient pas les données l'une de l'autre.
 4. Polices et bibliothèque PDF locales.
+5. **Charte graphique HAPPI** (voir ci-dessous) : feuille de thème `public/passeport-numerique/theme.css` chargée après celle d'origine, couleurs et polices ramenées à la marque, logo et mascotte officiels.
+6. **Sorties vers la plateforme** : « Retour à mon espace HAPPI » (participant) et « Fermer » (animateur) passent par un message au cadre de la plateforme, qui quitte le plein écran puis navigue vers une page autorisée (liste fermée).
+
+## Charte graphique et affichage
+
+- **Couleurs** : encre pétrole `#102C32`, orange `#EA632E` (actions, mondes validés), blanc, papier `#F5F5F2`, trait `#E5E5E0`. Texte orange sur fond clair : `#B8431A` (contraste ≥ 4,5:1). Mode sombre cohérent (pétrole `#0A1E22`). Les écrans simulés des exercices (boîte mail, messagerie, banque, etc.) gardent volontairement le look des applications qu'ils imitent.
+- **Polices** : Poppins (titres) et DM Sans (texte), comme le reste de l'application ; Roboto seulement pour les écrans simulés. Tailles de texte et de boutons d'origine conservées (public peu à l'aise avec le numérique) : l'ancienne police Atkinson Hyperlegible, conçue pour la basse vision, est remplacée à votre demande par la police de la marque.
+- **Formes** : cartes à 14 px, boutons à 10 px, fond pétrole à motif « pixel » discret, logo HAPPI officiel, mascotte officielle dans les bulles du guide. Le dessin vectoriel de fourmi d'origine n'est conservé que là où un dessin est indispensable (tampons du passeport, fichiers PDF).
+- **Plein écran** : l'application couvre toute la fenêtre (sans menu ni barre de la plateforme). Le clic sur « Continuer mes exercices » ou « Ouvrir l'espace animateur » demande aussi le plein écran du navigateur ; là où il n'est pas permis (iPhone), la page occupe tout l'écran quand même. Échap quitte le plein écran.
+- **Responsive** : testé sur téléphone (390 px), tablette (820 px) et ordinateur ; barre de navigation basse et bouton d'aide sur téléphone, grille de mondes à 1 à 4 colonnes, marges des encoches (`safe-area`).
 
 ## Limites connues (à décider avec vous)
 

@@ -12,5 +12,5 @@ export default async function ParticipantPasseportNumeriquePage() {
   const user = await requireRole('participant');
   if (!user.participantId) redirect('/compte');
   if ((await getParticipantProgramKind(user.participantId)) !== 'passeport_numerique') redirect('/participant/dashboard');
-  return <PasseportNumeriqueFrame flush />;
+  return <PasseportNumeriqueFrame />;
 }

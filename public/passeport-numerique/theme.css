@@ -1,0 +1,139 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   Charte graphique HAPPI appliquée au Passeport Numérique.
+   Chargée APRÈS la feuille de style d'origine (private/passeport-numerique/index.html) : elle ne touche
+   que l'habillage de l'application (couleurs, polices, formes). Les écrans simulés des exercices
+   (boîte mail, messagerie, banque, etc.) gardent volontairement le look des applications qu'ils imitent.
+   Palette : encre pétrole #102C32, orange #EA632E, blanc, papier #F5F5F2, trait #E5E5E0.
+   Tailles de texte et de boutons de l'application d'origine conservées (public peu à l'aise avec le numérique).
+   ════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg: light-dark(#f5f5f2, #0a1e22);
+  --card: light-dark(#ffffff, #102c32);
+  --ink: light-dark(#102c32, #f5f5f2);
+  --mute: light-dark(#4b6166, #a5c3c9);
+  --deep: light-dark(#102c32, #0a1e22);
+  --pri: light-dark(#ea632e, #f0733f);
+  --priInk: #0a1e22;
+  --sun: #ea632e;
+  --sunInk: #0a1e22;
+  --line: light-dark(#e5e5e0, #21505a);
+  --ok: light-dark(#1b7a39, #62d68d);
+  --no: light-dark(#b42318, #ff8f86);
+  --soft: light-dark(#f1f6f7, #173a41);
+  --hint: #ea632e;
+  /* orange lisible en texte sur fond clair (contraste ≥ 4,5:1) ou sombre */
+  --link: light-dark(#b8431a, #f4a17e);
+  --petrol-700: #21505a;
+  --petrol-400: #76a3ac;
+  --r-card: 14px;
+  --r-btn: 10px;
+}
+
+body {
+  font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: #f9cdb9; color: #0a1e22; }
+h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; }
+
+/* ── Boutons ─────────────────────────────────────────────────────────────── */
+.btn {
+  border-radius: var(--r-btn);
+  border-width: 2px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+.btn:not(.alt):not(.on):hover { background: color-mix(in srgb, var(--pri) 88%, white); }
+.btn.alt { background: var(--card); color: var(--ink); border-color: var(--line); }
+.btn.alt:hover { border-color: var(--petrol-400); }
+.btn.on { background: var(--deep); color: #fff; border-color: var(--deep); }
+.btn.sun { background: var(--sun); color: var(--sunInk); }
+.btn.big:not(.alt) { box-shadow: none; }
+.btn:focus-visible, .tile:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible,
+.row:focus-visible, .app:focus-visible, .exi:focus-visible { outline: 3px solid #ea632e; outline-offset: 3px; }
+.top .btn:focus-visible, .band .btn:focus-visible { outline-color: #f9cdb9; }
+.lostbtn { border-radius: var(--r-btn); box-shadow: 0 8px 24px rgb(10 30 34 / 0.28); }
+
+/* ── En-tête et bandeaux (petrole, motif « pixel » discret) ─────────────── */
+.top {
+  background-color: var(--deep);
+  border-bottom: 3px solid #ea632e;
+}
+.top .btn { background: var(--petrol-700); color: #fff; border-color: transparent; }
+.top .btn:hover { background: #2f6873; }
+.top .who { font-family: Poppins, "DM Sans", system-ui, sans-serif; font-weight: 600; }
+.band {
+  background-color: var(--deep);
+  background-image: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.07) 1px, transparent 0);
+  background-size: 18px 18px;
+  color: #f5f5f2;
+}
+.hero p { color: #cadce0; }
+.pill { background: var(--petrol-700); border-radius: 99px; font-weight: 600; }
+.pill.low { background: #ea632e; color: #0a1e22; }
+.alertbar { background: #ea632e; color: #0a1e22; }
+
+/* ── Logo et mascotte officiels ─────────────────────────────────────────── */
+.logo { height: 34px; width: auto; border-radius: 0; background: none; padding: 0; }
+.logo.big { height: 56px; padding: 0; margin-bottom: 20px; }
+.top .logo { height: 30px; }
+img.ant { flex: none; object-fit: contain; filter: drop-shadow(0 6px 8px rgb(0 0 0 / 0.25)); }
+
+/* ── Cartes, mondes, exercices ──────────────────────────────────────────── */
+.card { border: 1px solid var(--line); border-radius: var(--r-card); }
+.tile {
+  border: 2px solid var(--line);
+  border-radius: var(--r-card);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.tile:not(.lock):hover { border-color: var(--petrol-400); transform: translateY(-2px); }
+.tile.done { border-color: #ea632e; background: color-mix(in srgb, #ea632e 6%, var(--card)); }
+.tile b { font-family: Poppins, "DM Sans", system-ui, sans-serif; font-weight: 600; letter-spacing: -0.01em; }
+.tile.lock { border-style: dashed; opacity: 0.6; }
+.prog { height: 14px; border-radius: 4px; background: var(--soft); }
+.prog i { border-radius: 4px; background: #ea632e; }
+.exi { border: 2px solid var(--line); border-radius: 12px; transition: border-color 0.15s ease; }
+.exi:hover { border-color: var(--petrol-400); }
+.exi .ck { border-radius: 8px; border-width: 2px; }
+.exi.ok { border-color: color-mix(in srgb, var(--ok) 55%, var(--line)); }
+.play, .scr, .gbox { border-radius: var(--r-card); background: var(--card); border: 2px solid var(--line); }
+.scr { border-width: 2px; }
+.gtarget { border-radius: 12px; border-width: 3px; }
+.tg { background: #f6b73c; border-color: #c4830c; box-shadow: 0 6px 0 rgb(10 30 34 / 0.15); }  /* cible « jaune », comme le dit la consigne */
+.ctx { border-radius: 12px; border-width: 2px; }
+.notice { border-radius: 12px; border-left: 4px solid #ea632e; background: var(--soft); }
+.notice a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.notice.warn { background: color-mix(in srgb, #ea632e 10%, var(--card)); border: 1px solid #f4a17e; border-left: 4px solid #ea632e; }
+.bubble { border-radius: 14px 14px 14px 4px; box-shadow: 0 6px 0 rgb(10 30 34 / 0.15); }
+.chip { border-color: var(--petrol-400); background: var(--soft); color: var(--ink); border-radius: 10px; }
+.toast { border-radius: 12px; background: #102c32; border-left: 4px solid #ea632e; }
+.ov { background: rgb(10 30 34 / 0.72); }
+.dlg { border-radius: var(--r-card); }
+.bigcode { font-family: Poppins, "DM Sans", system-ui, sans-serif; }
+
+/* ── Saisie ─────────────────────────────────────────────────────────────── */
+.inp { border: 2px solid var(--line); border-radius: var(--r-btn); }
+.inp:focus { border-color: #ea632e; outline: none; box-shadow: 0 0 0 3px rgb(234 99 46 / 0.25); }
+
+/* ── Défis chrono (mauve d'origine remplacé par le pétrole) ─────────────── */
+.defiban { border: 2px dashed var(--petrol-400); border-radius: var(--r-card); }
+.defiban .pill { background: var(--soft); color: var(--ink); }
+
+/* ── Espace animateur : tableaux et pastilles ───────────────────────────── */
+th { font-family: Poppins, "DM Sans", system-ui, sans-serif; font-weight: 600; font-size: 16px; color: var(--mute); }
+.spill.ok { background: #e3f3e8; color: #14532d; }
+.spill.wait { background: #fef3ee; color: #8a2f10; }
+.spill.loc { background: #e3edef; color: #173a41; }
+
+/* ── Navigation basse (téléphone) ───────────────────────────────────────── */
+.bnav button.help { background: #ea632e; color: #0a1e22; }
+
+/* ── Plein écran et encoches (téléphones) ───────────────────────────────── */
+html { min-height: 100dvh; }
+.top { padding-top: max(10px, env(safe-area-inset-top)); padding-left: max(3vw, 12px, env(safe-area-inset-left)); padding-right: max(3vw, 12px, env(safe-area-inset-right)); }
+.bnav { padding-bottom: env(safe-area-inset-bottom); }
+.lostbtn { bottom: calc(max(16px, 2vw) + env(safe-area-inset-bottom)); right: max(16px, 2vw, env(safe-area-inset-right)); }
+.wrap { padding-bottom: calc(140px + env(safe-area-inset-bottom)); }

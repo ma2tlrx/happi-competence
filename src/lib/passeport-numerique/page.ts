@@ -42,6 +42,39 @@ function replaceAllExactly(html: string, search: string, replacement: string, ex
   return html.split(search).join(replacement);
 }
 
+/** Applique une transformation à toute la page sauf au dictionnaire de traductions (texte seulement, aucune couleur). */
+function outsideTranslations(html: string, transform: (part: string) => string): string {
+  const start = html.indexOf('<script type="application/json" id="i18n">');
+  const end = html.indexOf('</script>', start) + '</script>'.length;
+  return transform(html.slice(0, start)) + html.slice(start, end) + transform(html.slice(end));
+}
+
+/**
+ * Charte graphique HAPPI : couleurs de l'application d'origine ramenées à la palette HAPPI (pétrole, orange),
+ * polices Poppins (titres) et DM Sans (texte). Les écrans simulés des exercices gardent leurs propres couleurs.
+ */
+const RECOLOR: [string, string][] = [
+  ['#16766a', '#21505a'],
+  ['#47c3b1', '#76a3ac'],
+  ['#f7941d', '#ea632e'],
+  ['#e07b00', '#d2541f'],
+  ['#b88400', '#b8431a'],
+  ['#fff1e0', '#fef3ee'],
+  ['#1f1300', '#0a1e22'],
+  ['#8aa3a4', '#76a3ac'],
+  ['#1d4a52', '#21505a'],
+  ['#cfe3e0', '#cadce0'],
+  ['#eaf4f2', '#f5f5f2'],
+];
+
+function applyBrand(part: string): string {
+  let out = part;
+  for (const [from, to] of RECOLOR) out = out.split(from).join(to).split(from.toUpperCase()).join(to);
+  // L'orange sert aux fonds (boutons) : en texte sur fond clair, il est trop pâle. Les textes passent par --link.
+  out = out.split('color:var(--pri)').join('color:var(--link)');
+  return out.split('"Atkinson Hyperlegible"').join('"DM Sans"').split('Lexend').join('Poppins');
+}
+
 /** Valeurs passées à la page : encodées pour un script en ligne (aucune fermeture de balise possible). */
 function contextScript(context: PasseportContext) {
   const json = JSON.stringify({ role: context.role, uid: context.uid, first: context.firstName, last: context.lastName })
@@ -52,7 +85,9 @@ function contextScript(context: PasseportContext) {
     .join('\\u2028')
     .split(String.fromCharCode(0x2029))
     .join('\\u2029');
-  return `<script>window.__PN=Object.freeze(${json});</script>`;
+  // pnExit : demande au cadre de la plateforme de quitter l'application (et le plein écran) vers une page autorisée.
+  const exit = "window.pnExit=function(to){try{if(window.parent&&window.parent!==window){window.parent.postMessage({type:'pn:exit',to:to},window.location.origin)}else{window.location.assign(to)}}catch(e){window.location.assign(to)}};";
+  return `<script>window.__PN=Object.freeze(${json});${exit}</script>`;
 }
 
 export function preparePasseportNumerique(source: string, context: PasseportContext): string {
@@ -66,6 +101,24 @@ export function preparePasseportNumerique(source: string, context: PasseportCont
     'polices Google',
   );
   html = replaceOnce(html, 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js', `${PASSEPORT_BASE}/vendor/pdf-lib.min.js`, 'bibliothèque PDF');
+
+  // 1 bis. Charte graphique HAPPI : feuille de thème après la feuille d'origine, couleurs et polices ramenées à la marque.
+  const styleEnd = html.indexOf('</style>');
+  if (styleEnd < 0) throw new Error('Passeport Numérique : feuille de style d’origine introuvable.');
+  html = `${html.slice(0, styleEnd + '</style>'.length)}\n<link rel="stylesheet" href="${PASSEPORT_BASE}/theme.css">${html.slice(styleEnd + '</style>'.length)}`;
+  html = outsideTranslations(html, applyBrand);
+  html = replaceOnce(html, "const LOGO='';", `const LOGO='${PASSEPORT_BASE.replace('/passeport-numerique', '')}/brand/happi-logotype-blanc.png';`, 'logo');
+  // Mascotte officielle dans les écrans HTML. La fourmi dessinée reste utilisée là où un dessin vectoriel est
+  // indispensable (tampons du passeport, fichiers PDF, attestation) : elle est déjà recolorée en orange HAPPI.
+  html = replaceOnce(
+    html,
+    "function ant(s=80,mood='',k='#102C32'){const arm=",
+    "function mascot(s=80){return `<img class=\"ant\" src=\"/brand/happi-mascotte.png\" alt=\"\" width=\"${s}\" height=\"${s}\">`}function ant(s=80,mood='',k='#102C32'){const arm=",
+    'mascotte',
+  );
+  const keepSvg = "${ant(130,'cheer').replace(";
+  if (html.split(keepSvg).length - 1 !== 1) throw new Error('Passeport Numérique : « passeport illustré » trouvé autrement qu’une fois. Le fichier d\'origine a changé : mettez à jour src/lib/passeport-numerique/page.ts.');
+  html = html.split(keepSvg).join('\u0000KEEP').split('${ant(').join('${mascot(').split('\u0000KEEP').join(keepSvg);
 
   // 2. Contexte de la personne, avant le premier script.
   html = replaceOnce(html, '<script>\n{', `${contextScript(context)}\n<script>\n{`, 'début du script principal');
@@ -100,11 +153,20 @@ export function preparePasseportNumerique(source: string, context: PasseportCont
     'bouton « Changer le code animateur »',
   );
 
+  // Pour un participant, « Me déconnecter » ramène à son espace HAPPI (la session reste celle de la plateforme).
+  html = replaceAllExactly(
+    html,
+    "${B('Me déconnecter')}",
+    "${__PN.role==='participant'?B('Retour à mon espace HAPPI'):B('Me déconnecter')}",
+    2,
+    'bouton « Me déconnecter »',
+  );
+
   // « Fermer » dans l'espace animateur ramène le formateur à la page « Programmes » de la plateforme.
   html = replaceOnce(
     html,
     "case 'aClose':V=",
-    "case 'aClose':if(__PN.role==='staff'){try{window.top.location.assign('/formateur/programmes?programme=passeport-numerique')}catch(e){}return}V=",
+    "case 'aClose':if(__PN.role==='staff'){pnExit('/formateur/programmes?programme=passeport-numerique');return}V=",
     'fermeture de l’espace animateur',
   );
 
@@ -130,7 +192,7 @@ export function preparePasseportNumerique(source: string, context: PasseportCont
   html = replaceOnce(
     html,
     "case 'logout':{stopSpeak();",
-    `case 'logout':if(__PN.role==='participant'){try{window.top.location.assign('/participant/dashboard')}catch(e){}return}{stopSpeak();`,
+    "case 'logout':if(__PN.role==='participant'){pnExit('/participant/dashboard');return}{stopSpeak();",
     'déconnexion',
   );
 

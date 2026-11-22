@@ -55,7 +55,7 @@ describe('Passeport Numérique : page préparée pour la personne connectée', (
       // Le rôle n'est jamais choisi dans la page : il est lu dans la valeur posée par le serveur.
       expect(html).toContain("const ok=__PN.role==='staff';");
       expect(html).toContain("if(__PN.role==='staff'){ANIM=true;V={s:'anim',back:V};break}");
-      expect(html).toContain("window.top.location.assign('/participant/dashboard')");
+      expect(html).toContain("pnExit('/participant/dashboard')");
     }
     expect(preparePasseportNumerique(source, participant)).toContain('"role":"participant"');
     expect(preparePasseportNumerique(source, staff)).toContain('"role":"staff"');
