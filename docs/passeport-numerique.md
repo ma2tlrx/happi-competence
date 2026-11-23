@@ -30,6 +30,18 @@ Adaptations faites à chaque requête (fichier d'origine **non modifié**, livr�
 5. **Charte graphique HAPPI** (voir ci-dessous) : feuille de thème `public/passeport-numerique/theme.css` chargée après celle d'origine, couleurs et polices ramenées à la marque, logo et mascotte officiels.
 6. **Sorties vers la plateforme** : « Retour à mon espace HAPPI » (participant) et « Fermer » (animateur) passent par un message au cadre de la plateforme, qui navigue vers une page autorisée (liste fermée).
 
+## Modifications apportées à l'application d'origine
+
+Évolutions fonctionnelles demandées par le client, faites **directement dans `private/passeport-numerique/index.html`** (changements ciblés, textes officiels conservés). À refaire à la main si le fichier d'origine est remplacé par une nouvelle livraison.
+
+- **Exercice « Les gestes spéciaux » (monde « Les premiers gestes », 3e exercice, parcours téléphone) : glisser la photo vers la gauche.**
+  - *Avant* : le geste n'était reconnu que si le pointeur se relevait sur la photo (280 × 210 px), après au moins 50 px, sans capture du pointeur ni retour visuel ; un balayage court, un petit coup sec ou un balayage qui sortait de la photo (souris) ne comptait pas, sans autre explication que « Faites glisser le doigt ». Aucune alternative au glisser.
+  - *Après* : nouveau moteur de geste `swipeLeft` (et sa décision pure `swipeVerdict`, entre les repères `swipe-verdict:start/end`) : événements pointeur unifiés (souris, doigt, stylet) avec capture du pointeur ; toute la zone grise est zone de prise ; seuil de 24 px, ou 12 px pour un petit mouvement rapide (flick) ; trajectoire en biais tolérée ; la photo suit le doigt, s'éclaire quand c'est assez, glisse hors cadre puis la suivante arrive (pas d'animation si « réduire les animations » est demandé) ; retour en place sinon, avec un message qui dit pourquoi (mauvais sens, trop court, trop vertical).
+  - *Sans glisser* (WCAG 2.5.7) : bouton « Déplacer vers la gauche » (80 px de haut) et flèches du clavier ← → quand la photo a le focus. Aide ajoutée sous la photo : « Faites glisser l'image vers la gauche, ou touchez le bouton ←. » La consigne et l'aide d'origine sont inchangées.
+  - Apparence (`.swipezone`, `.swipecard`) : `public/passeport-numerique/theme.css`. Sur la photo `touch-action: none` (le défilement de la page ne confisque pas le geste), sur le reste de la zone `pan-y` (la page reste défilable).
+  - Tests : `src/lib/passeport-numerique/geste-glisser.test.ts` (décision du geste et présence de l'alternative, sur le vrai fichier) ; le geste réel, souris et tactile, se vérifie avec Playwright (`1366 × 800` à la souris, `390 × 844` tactile avec événements tactiles réels).
+- **Autres exercices de glisser-déposer** : « Glisser-déposer » (la lettre vers la boîte aux lettres, `eDrag`) a son propre code, qui fonctionne (capture du pointeur, `touch-action: none`) mais n'a pas d'alternative sans glisser et demande que le centre de la lettre soit dans la boîte ; non modifié, signalé au client. Les exercices de tri (« Vrai ou arnaque ? », etc.) se font par boutons, pas en glissant.
+
 ## Charte graphique et affichage
 
 - **Couleurs** : encre pétrole `#102C32`, orange `#EA632E` (actions, mondes validés), blanc, papier `#F5F5F2`, trait `#E5E5E0`. Texte orange sur fond clair : `#B8431A` (contraste ≥ 4,5:1). Mode sombre cohérent (pétrole `#0A1E22`). Les écrans simulés des exercices (boîte mail, messagerie, banque, etc.) gardent volontairement le look des applications qu'ils imitent.

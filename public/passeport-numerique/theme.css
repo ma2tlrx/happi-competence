@@ -165,3 +165,15 @@ html { min-height: 100dvh; }
   .prog { max-width: min(720px, 100%); }
   .bubble { max-width: 640px; font-size: 24px; }
 }
+
+/* Exercice « Les gestes spéciaux » : glisser la photo vers la gauche.
+   Toute la zone grise est une zone de prise (le défilement vertical de la page y reste possible) ; sur la photo elle-même,
+   le navigateur ne prend jamais la main (touch-action: none), pour qu'un geste en biais ne soit pas confisqué par le défilement.
+   Le moteur du geste est dans l'application (swipeLeft) ; ici : seulement l'apparence. */
+.gbox.swipezone { touch-action: pan-y; cursor: grab; overflow: hidden; padding: 28px 24px; }
+.gbox.swipezone.drag, .gbox.swipezone.drag .swipecard { cursor: grabbing; }
+.swipecard { touch-action: none; cursor: grab; position: relative; will-change: transform; transition: border-color .12s, box-shadow .12s; }
+.swipecard.ready { border-color: var(--sun); box-shadow: 0 0 0 6px color-mix(in srgb, var(--sun) 40%, transparent); }
+.swipecard:focus-visible { outline: 4px solid var(--sun); outline-offset: 4px; }
+.swipezone .swhint { margin: 0; max-width: 32ch; font-weight: 700; line-height: 1.35; }
+.swipezone #gsl { touch-action: manipulation; min-width: min(100%, 320px); }
