@@ -206,6 +206,82 @@ table{width:100%;border-collapse:collapse;font-size:19px}th,td{text-align:left;p
 .rl button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left;padding:0}
 .rl .sp{flex:1}
 .rl small{color:inherit}.mrow time,.mfrom small,.mfrom time,.crow time,.ap-bot small{color:#5f6368}
+/* ===== écran simulé « réseau social » (habillage Facebook, texte et icônes dessinées) ===== */
+.fbx{background:#F0F2F5;color:#050505;font:16px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;min-height:0}
+.fbx *{box-sizing:border-box}
+.fbx .fi{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.fbx .fi.fis{width:13px;height:13px;vertical-align:-2px}
+.fbx small{color:#65676B;font-size:14px}
+.fbx .fbsr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+.fbx .fbhead{background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);flex:none;position:relative;z-index:2}
+.fbx .fbtop{display:flex;align-items:center;gap:8px;padding:6px 12px;min-height:56px}
+.fbx .fblogo{flex:1;color:#1877F2;font-weight:800;font-size:31px;letter-spacing:-1.6px;line-height:1}
+.fbx .fbgt{flex:1;min-width:0;font-size:19px;font-weight:700;line-height:1.15}
+.fbx .fbcirc{width:40px;height:40px;border-radius:50%;background:#E4E6EB;display:grid;place-items:center;flex:none}
+.fbx .fbbk{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;margin-left:-6px}
+.fbx button.fbbk:hover,.fbx button.fbtab:hover,.fbx button.fbrow:hover,.fbx button.fbpill:hover{background-color:#E4E6EB}
+.fbx .fbtabs{display:flex}
+.fbx .fbtab{flex:1;min-height:48px;display:grid;place-items:center;color:#65676B;border-bottom:3px solid transparent;border-radius:0}
+.fbx .fbtab.on{color:#1877F2;border-bottom-color:#1877F2}
+.fbx .fbtab .fi{width:26px;height:26px}
+.fbx .fbs{flex:1;min-height:0;overflow-y:auto}
+.fbx .fbc{max-width:680px;margin:0 auto;padding:8px 0 28px;display:flex;flex-direction:column;gap:8px}
+.dev.pc .fbx .fbc{padding:12px 12px 28px}
+.fbx .fbcard{background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);border-radius:0}
+.dev.pc .fbx .fbcard{border-radius:8px}
+.fbx .fbav{display:grid;place-items:center;border-radius:50%;color:#fff;font-weight:700;flex:none}
+.fbx .fbcomp{display:flex;align-items:center;gap:10px;padding:10px 12px}
+.fbx .fbpill{flex:1;min-height:44px;border-radius:22px;background:#F0F2F5;padding:0 16px;display:flex;align-items:center;color:#65676B;font-size:17px}
+.fbx .fbph2{color:#45BD62;display:grid;place-items:center;width:40px;height:40px;flex:none}
+.fbx .fbph2 .fi{width:28px;height:28px}
+.fbx .fbph{display:flex;align-items:center;gap:10px;padding:12px 12px 6px}
+.fbx .fbpm{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.fbx .fbpm b{font-weight:600}
+.fbx .fbdots{color:#65676B}
+.fbx .fbtx{margin:0;padding:4px 12px 12px;font-size:18px}
+.fbx .fbimgs{display:grid;gap:2px;margin-top:6px}
+.fbx .fbimgs.n1{margin-top:0}
+.fbx .fbimgs.n2{grid-template-columns:1fr 1fr}.fbx .fbimgs.n2,.fbx .fbimgs.n3{height:230px}
+.fbx .fbimgs.n3{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr}
+.fbx .fbimgs.n3>div:first-child{grid-row:span 2}
+.fbx .fbimgs>div{overflow:hidden;min-height:0}
+.fbx .fbimgs svg{display:block;width:100%;height:100%;object-fit:cover}
+.fbx .fbimgs.n1 svg{height:auto;max-height:260px}
+.fbx .fbst{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;color:#65676B;font-size:15px}
+.fbx .fbrx{display:inline-flex;align-items:center}
+.fbx .fbr{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;color:#fff;border:2px solid #fff;margin-right:-4px}
+.fbx .fbr .fi{width:11px;height:11px}
+.fbx .fbr.r1{background:#1877F2}.fbx .fbr.r2{background:#F3425F;margin-right:8px}
+.fbx .fbact{display:flex;margin:0 12px;border-top:1px solid #CED0D4}
+.fbx .fbact span{flex:1;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;color:#65676B;font-weight:600;font-size:15px}
+.fbx .fbact .fi{width:20px;height:20px}
+.fbx .fbgrp{padding-bottom:12px}
+.fbx .fbcover{height:150px;overflow:hidden}
+.fbx .fbcover svg{width:100%;height:100%;display:block}
+.fbx .fbgi{padding:12px 12px 0}
+.fbx .fbgi h3{margin:0;font-size:24px;line-height:1.2}
+.fbx .fbgi p{margin:4px 0 0;color:#65676B;font-size:15px}
+.fbx .fbpub{min-height:44px;padding:0 18px;border-radius:6px;background:#1664D8;color:#fff;font-weight:700;font-size:16px;display:inline-flex;align-items:center;justify-content:center}
+.fbx .fbpub.off{background:#E4E6EB;color:#8A8D91}
+.fbx .fbcomposer{background:#fff;padding:14px 12px;min-height:200px}
+.fbx .fbwho{display:flex;align-items:center;gap:10px}
+.fbx .fbwho b{display:block}
+.fbx .fbchip{display:inline-flex;align-items:center;gap:5px;margin-top:2px;padding:2px 8px;border-radius:6px;background:#E4E6EB;font-size:14px;font-weight:600}
+.fbx .fbin{display:block;width:100%;min-height:120px;margin-top:14px;border:2px solid #CED0D4;border-radius:8px;padding:10px;font:inherit;font-size:20px;color:#050505;background:#fff;resize:vertical}
+.fbx .fbin:focus-visible{outline:3px solid #1877F2;outline-offset:1px;border-color:#1877F2}
+.fbx .fbmsg{margin:14px 0 0;font-size:22px;min-height:60px}
+.fbx .fbadd{background:#fff;border:1px solid #CED0D4;border-radius:8px;margin:0 12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;font-size:15px}
+.fbx .fbadd span{display:flex;gap:12px;color:#45BD62}
+.fbx .fbrows{display:flex;flex-direction:column;gap:8px;padding:0 8px}
+.fbx .fbrow{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:10px 12px;background:#fff;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.fbx .fbico{width:40px;height:40px;border-radius:50%;background:#E4E6EB;display:grid;place-items:center;flex:none;color:#050505}
+.fbx .fbrt{flex:1;min-width:0;display:flex;flex-direction:column}
+.fbx .fbrt b{font-weight:600;font-size:17px}
+.fbx .fbch{color:#65676B}
+.fbx .fbrad{width:24px;height:24px;border-radius:50%;border:2px solid #8A8D91;flex:none}
+.fbx .hint,.fbx .fbpill.hint{outline:5px solid var(--hint)!important;outline-offset:2px}
+.fbx button:focus-visible{outline:3px solid #1877F2;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.fbx .hint{animation:none}}
 .av{border-radius:50%;color:#fff;display:inline-grid;place-items:center;font-weight:500;flex:none;font-family:Roboto,Arial,sans-serif}
 .stat{display:flex;justify-content:space-between;align-items:center;padding:6px 18px 2px;font:600 14px -apple-system,Roboto,Arial,sans-serif;color:#000}
 .stat span{display:flex;gap:6px;align-items:center}.stat .i{width:16px;height:16px}
@@ -2573,7 +2649,45 @@ function needsOf(e){const n=new Set();if(['gest','key','type','sim'].includes(e.
 function appOf(s){return s.app||(s.view?'mail':0)||(s.compose||/<small>De :/.test(s.body||'')||(s.rows||[]).some(r=>r[3]==='mail')?'mail':s.bar||(s.doc&&s.top)?'browser':s.chat?'msg':'os')}
 function skinOf(s){const a=appOf(s),e=env();if(a==='mail')return 'sk-'+(e.mail||'autre');if(a==='msg')return e.msg==='sms'?(e.os==='ios'?'sk-imsg':'sk-gmsg'):'sk-wa';if(a==='browser')return 'sk-'+(e.br||'chrome');return 'sk-'+(e.os||'android')}
 const resolveOk=o=>{const m=env().msg;return o==='@msg'?(m==='sms'?'msg':'wa'):o==='@share'?(m==='sms'?'sms':'wa'):o==='@vis'?(m==='sms'?'vis':'wa'):o};
-function scr(s,v,st){const RR=realScreen(s,v,st);if(RR)return LZ(RR);const B=(id,l,i,c)=>`<button class="sb" data-id="${id}"${c?` style="background:${c};color:#fff;border-color:${c}"`:''}>${i?ic(i):''}${l}</button>`;
+/* ---------- RÉSEAU SOCIAL (écran simulé façon Facebook : exercice « Les réseaux sociaux », rspost et rsconf) ---------- */
+/* Habillage seulement : mêmes scènes (titre, rows, body, form, bottom, top), mêmes identifiants cliquables, mêmes étapes. */
+/* Texte « facebook » et icônes SVG dessinées ici : aucune image de marque. Les éléments décoratifs ne sont pas focusables. */
+let CURSOC=false;
+const FBG='Famille Dupont';
+const FBP={home:'<path d="M3 11.5 12 4l9 7.5M5.5 10v10h5v-5.5h3V20h5v-10"/>',friends:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14.2c2.5 0 4.5 1.9 4.5 4.8"/>',video:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor"/>',shop:'<path d="M4 9.5 5.5 4h13L20 9.5M4 9.5V20h16V9.5M4 9.5c0 1.6 1.3 2.8 2.7 2.8s2.6-1.2 2.6-2.8c0 1.6 1.3 2.8 2.7 2.8s2.7-1.2 2.7-2.8c0 1.6 1.2 2.8 2.6 2.8S20 11.100 20 9.500"/>',bell:'<path d="M6 17v-6a6 6 0 0 1 12 0v6l2 2H4zM10 21.500h4"/>',menu:'<path d="M4 6.500h16M4 12h16M4 17.500h16"/>',search:'<circle cx="10.500" cy="10.500" r="6.500"/><path d="m15.500 15.500 5 5"/>',chat:'<path d="M12 3C6.800 3 3 6.600 3 11.200c0 2.500 1.200 4.700 3.100 6.100V21l3-1.700c.9.200 1.900.400 2.900.400 5.200 0 9-3.600 9-8.200S17.200 3 12 3z"/>',like:'<path d="M7 11v9H4v-9zM7 11l4-7c1.600 0 2.600 1.100 2.300 2.600L12.800 9H19a2 2 0 0 1 2 2.400l-1.300 6.500A2 2 0 0 1 17.800 20H7"/>',comment:'<path d="M4 5h16v11H10l-4 4v-4H4z"/>',share:'<path d="m14 4 7 7-7 7v-4c-5 0-8 1.500-10 5 .5-6 4-10 10-11z"/>',globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.200 3 3.200 15 0 18M12 3c-3.200 3-3.200 15 0 18"/>',lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',gear:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.900 4.900 7 7M17 17l2.100 2.100M4.900 19.100 7 17M17 7l2.100-2.100"/>',help:'<circle cx="12" cy="12" r="9"/><path d="M9.500 9.500a2.500 2.500 0 1 1 3.500 2.300c-.7.400-1 .9-1 1.700M12 17h.01"/>',dots:'<circle cx="5" cy="12" r="1.600" fill="currentColor"/><circle cx="12" cy="12" r="1.600" fill="currentColor"/><circle cx="19" cy="12" r="1.600" fill="currentColor"/>',back:'<path d="m15 5-7 7 7 7"/>',close:'<path d="m6 6 12 12M18 6 6 18"/>',photo:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.500" cy="10" r="1.500"/><path d="m3 17 5-4.500 4 3.500 3-2.500 6 4.500"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.400 3.600-7 8-7s8 2.600 8 7"/>',next:'<path d="m9 5 7 7-7 7"/>',heart:'<path d="M12 20s-7-4.400-7-10a4 4 0 0 1 7-2.500A4 4 0 0 1 19 10c0 5.600-7 10-7 10z" fill="currentColor" stroke="none"/>',thumb:'<path d="M7 11v9H4v-9zM7 11l4-7c1.600 0 2.600 1.100 2.300 2.600L12.800 9H19a2 2 0 0 1 2 2.400l-1.300 6.500A2 2 0 0 1 17.800 20H7" fill="currentColor" stroke="none"/>'};
+const fi=(n,c='')=>`<svg class="fi ${c}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${FBP[n]||FBP.user}</svg>`;
+const fbAC=['#E4A11B','#1877F2','#E0455F','#2A9D6F','#8B5CC6','#D9632B','#0E9BB0'];
+const fbSum=s=>[...String(s)].reduce((a,c)=>a+c.charCodeAt(0),0);
+const fbAv=(n,sz=40)=>`<span class="fbav" aria-hidden="true" style="width:${sz}px;height:${sz}px;font-size:${Math.round(sz*.45)}px;background:${fbAC[fbSum(n)%fbAC.length]}">${esc(String(n||'?')[0])}</span>`;
+const fbPh=i=>photo(i).replace("<svg ",`<svg preserveAspectRatio="xMidYMid slice" `);
+const fbMe=()=>(me()&&me().name)||'Camille';
+const fbTabs=menuId=>`<div class="fbtabs">${[['home','Accueil'],['friends','Amis'],['video','Vidéo'],['shop','Marketplace'],['bell','Notifications'],['menu','Menu']].map(([i,l],k)=>l==='Menu'&&menuId?`<button class="fbtab" data-id="${menuId}" aria-label="Menu">${fi(i)}</button>`:`<span class="fbtab${k===0?' on':''}" aria-hidden="true">${fi(i)}</span>`).join('')}</div>`;
+const fbPosts=html=>[...String(html||'').matchAll(/<p>([\s\S]*?)<\/p>/g)].map(m=>{const t=m[1],who=(t.match(/<b>([\s\S]*?)<\/b>/)||[])[1]||'',rest=t.replace(/<b>[\s\S]*?<\/b>/,'').trim();return{who,rest}});
+const fbPost=(p,i,grp)=>{const h=fbSum(p.who)+i*7,verb=/^[a-zà-ÿ]/.test(p.rest),n=+((p.rest.match(/(\d+) photo/)||[])[1]||0),c=1+h%4,l=3+h%17;
+ const body=verb?`<div class="fbimgs n${Math.min(n||1,3)}">${Array.from({length:Math.min(n||1,3)},(_,k)=>`<div>${fbPh((h+k)%5)}</div>`).join('')}</div>`:`<p class="fbtx">${p.rest.replace(/^:\s*/,'')}</p>${i===0?`<div class="fbimgs n1"><div>${fbPh(h%5)}</div></div>`:''}`;
+ return `<article class="fbcard fbpost"><div class="fbph">${fbAv(p.who,40)}<div class="fbpm"><span><b>${esc(p.who)}</b>${verb?' '+p.rest:''}</span><small>${['2 h','5 h','Hier','3 h'][h%4]} · ${fi(grp?'friends':'globe','fis')}</small></div><span class="fbdots" aria-hidden="true">${fi('dots')}</span></div>${body}<div class="fbst"><span class="fbrx"><i class="fbr r1">${fi('thumb')}</i><i class="fbr r2">${fi('heart')}</i> ${l}</span><span>${c} commentaire${c>1?'s':''}</span></div><div class="fbact" aria-hidden="true"><span>${fi('like')} J’aime</span><span>${fi('comment')} Commenter</span><span>${fi('share')} Partager</span></div></article>`};
+const fbRowIcon={prof:'user',grp:'friends'};
+function fbScreen(s,v,st){const me0=fbMe(),title=s.title||'',sr=`<h2 class="fbsr">${esc(title)}</h2>`;
+ const wrap=(head,body)=>LZ(`<div class="rl fbx">${statBar(0)}<div class="fbhead">${head}</div><div class="fbs"><div class="fbc">${sr}${body}</div></div></div>`);
+ const top=(l,r)=>`<div class="fbtop">${l}${r||''}</div>`;
+ const back=`<button class="fbbk" data-id="back" aria-label="Retour">${fi('back')}</button>`;
+ // fil d’actualité
+ if(s.body&&!s.bottom&&!s.rows&&!s.form&&!/groupe/i.test(title))return wrap(top('<span class="fblogo">facebook</span>',`<span class="fbcirc" aria-hidden="true">${fi('search')}</span><span class="fbcirc" aria-hidden="true">${fi('chat')}</span>`)+fbTabs((s.top||[]).map(b=>b[0])[0]),`<div class="fbcard fbcomp" aria-hidden="true">${fbAv(me0,40)}<span class="fbpill">Quoi de neuf, ${esc(me0)} ?</span><span class="fbph2">${fi('photo')}</span></div>${fbPosts(s.body).map((p,i)=>fbPost(p,i+1,false)).join('')}`);
+ // page du groupe
+ if(s.body&&s.bottom&&/groupe/i.test(title)){const g=title.split(' · ')[0],b=s.bottom[0];
+  return wrap(top(`<span class="fbbk dec" aria-hidden="true">${fi('back')}</span><b class="fbgt">${esc(g)}</b>`,`<span class="fbcirc" aria-hidden="true">${fi('search')}</span>`),`<div class="fbcard fbgrp"><div class="fbcover" aria-hidden="true">${fbPh(1)}</div><div class="fbgi"><h3>${esc(g)}</h3><p>${fi('lock','fis')} Groupe privé · 12 membres</p></div></div><div class="fbcard fbcomp">${fbAv(me0,40)}<button class="fbpill" data-id="${b[0]}">${esc(b[1])}…</button><span class="fbph2" aria-hidden="true">${fi('photo')}</span></div>${fbPosts(s.body).map((p,i)=>fbPost(p,i,true)).join('')}`)}
+ // création d’une publication
+ if(/Créer une publication/i.test(title)){const b=(s.bottom||[])[0],msg=(fbPosts(s.body)[0]||{}).rest||'',vis=(String(s.body||'').match(/Visible par : ([^<]*)/)||[])[1]||FBG,ic0=/groupe/i.test(vis)||vis===FBG?'friends':'globe',f=(s.form||[])[0];
+  const pub=b?`<button class="fbpub" data-id="${b[0]}">${esc(b[1])}</button>`:`<span class="fbpub off" aria-disabled="true">Publier</span>`;
+  const input=f?(st.field===f[0]?`<textarea class="fbin" id="live" placeholder="Écrivez quelque chose…" aria-label="${esc(f[1])}"></textarea>`:`<p class="fbmsg">${esc(v[f[0]]||'')}</p>`):`<p class="fbmsg">${msg}</p>`;
+  return wrap(top(`<span class="fbbk dec" aria-hidden="true">${fi('close')}</span><b class="fbgt">${esc(title)}</b>`,pub),`<div class="fbcomposer"><div class="fbwho">${fbAv(me0,44)}<div><b>${esc(me0)}</b><span class="fbchip">${fi(ic0,'fis')} ${esc(vis[0].toUpperCase()+vis.slice(1))}</span></div></div>${input}</div><div class="fbadd" aria-hidden="true"><b>Ajouter à votre publication</b><span>${fi('photo')}${fi('user')}${fi('globe')}</span></div>`)}
+ // listes (menu, réglages, choix de public)
+ if(s.rows){const radio=/^(Qui peut voir \?|Vos publications)$/.test(title);
+  const rows=s.rows.map(r=>`<button class="fbrow" data-id="${r[0]}"><span class="fbico">${fi(fbRowIcon[r[0]]||r[3]||'gear')}</span><span class="fbrt"><b>${esc(r[1])}</b>${r[2]?`<small>${esc(r[2])}</small>`:''}</span>${radio?'<span class="fbrad" aria-hidden="true"></span>':fi('next','fbch')}</button>`).join('');
+  return wrap(top(s.back?back:'',`<b class="fbgt">${esc(title)}</b>`),`<div class="fbrows">${rows}</div>`)}
+ return null}
+/* ---------- FIN RÉSEAU SOCIAL ---------- */
+function scr(s,v,st){if(CURSOC){const F=fbScreen(s,v,st);if(F)return F}const RR=realScreen(s,v,st);if(RR)return LZ(RR);const B=(id,l,i,c)=>`<button class="sb" data-id="${id}"${c?` style="background:${c};color:#fff;border-color:${c}"`:''}>${i?ic(i):''}${l}</button>`;
  const live=(k,ph,ml)=>st.field===k?(ml?`<textarea class="inp" id="live" aria-label="${ph}"></textarea>`:`<input class="inp" id="live" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="${ph}">`):`<span>${esc(v[k]||'')}</span>`;
  const ap=appOf(s);const badge=ap==='mail'?'{MAILAPP}':ap==='msg'?'':ap==='browser'?'{BROWSERAPP}':'';
  let h=`<div class="sbar">${s.back?B('back','Retour','back'):''}${badge&&s.title!==badge?`<span class="appn">${badge}</span>`:''}<b>${esc(s.title||'')}</b>${(s.top||[]).map(b=>B(...b)).join('')}</div><div class="sbody">`;
@@ -2590,7 +2704,7 @@ function scr(s,v,st){const RR=realScreen(s,v,st);if(RR)return LZ(RR);const B=(id
  if(s.doc)h+=`<div class="doc"><b>ORDONNANCE</b><i style="width:70%"></i><i></i><i style="width:85%"></i><i style="width:60%"></i><i></i><i style="width:40%"></i></div>`;
  if(s.chat)h+=`<div class="chat">${s.chat.map(c=>`<div class="bub ${c.me?'me':''}">${c.photo!=null?(c.id?`<button data-id="${c.id}" aria-label="Photo reçue">${photo(c.photo)}</button>`:photo(c.photo)):(c.id?`<button class="sb" data-id="${c.id}" style="width:auto;font-weight:400">${esc(c.text)}</button>`:esc(c.text))}</div>`).join('')}</div>`;
  h+='</div>';if(s.bottom)h+=`<div class="sbot">${s.bottom.map(b=>B(...b)).join('')}</div>`;return LZ(h)}
-function eSim(e,A,win){const steps=simSteps(e);let i=0,miss=0,busy=false;const v={};const pc=dev()==='pc';
+function eSim(e,A,win){CURSOC=/^rs/.test(e.id);const steps=simSteps(e);let i=0,miss=0,busy=false;const v={};const pc=dev()==='pc';
  A.innerHTML=`<div class="dev ${pc?'pc':'phone'} os-${env().os||''}">${pc?'<div class="wbar"><i></i><i></i><i></i></div>':''}<div class="screen" id="scr"></div></div>`;const sc=A.querySelector('#scr');
  const draw=()=>{const st=steps[i];Object.assign(v,st.set||{});setSay(st.say);setStep(i,steps.length);miss=0;clearTimeout(AUTOH);AUTOH=setTimeout(()=>{if(steps[i]===st)showHint(st)},25000);const s=typeof st.s==='function'?st.s(v):st.s;sc.className='screen '+skinOf(s);sc.innerHTML=scr(s,v,st);if(sc.querySelector('.rl'))sc.className='screen real';
   setTimeout(()=>{try{const t=st.field?sc.querySelector('#live'):[...sc.querySelectorAll('[data-id]')].find(x=>[].concat(st.ok).map(resolveOk).includes(x.dataset.id));if(t)reveal(t,sc)}catch(er){}scrollCue()},60);

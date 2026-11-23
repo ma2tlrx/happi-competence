@@ -51,6 +51,17 @@ Adaptations faites à chaque requête (fichier d’origine livré dans `private/
   - Tests : `src/lib/passeport-numerique/geste-glisser.test.ts` (décision du geste et présence de l'alternative, sur le vrai fichier) ; le geste réel, souris et tactile, se vérifie avec Playwright (`1366 × 800` à la souris, `390 × 844` tactile avec événements tactiles réels).
 - **Autres exercices de glisser-déposer** : « Glisser-déposer » (la lettre vers la boîte aux lettres, `eDrag`) a son propre code, qui fonctionne (capture du pointeur, `touch-action: none`) mais n'a pas d'alternative sans glisser et demande que le centre de la lettre soit dans la boîte ; non modifié, signalé au client. Les exercices de tri (« Vrai ou arnaque ? », etc.) se font par boutons, pas en glissant.
 
+## Modifications apportées à l'application d'origine
+
+Contrairement aux adaptations ci-dessus (faites à la volée par `page.ts`), celles-ci sont écrites **directement dans** `private/passeport-numerique/index.html`, à l'endroit de l'exercice concerné. Un test (`page.test.ts`) vérifie qu'elles sont toujours là et que les étapes attendues n'ont pas bougé.
+
+- **Exercice « Les réseaux sociaux » : écran simulé façon Facebook** (« Publier dans le groupe de la famille » et « Protéger mon compte »). Seul l'habillage change : consignes, étapes, cibles cliquables, corrections et validation sont ceux d'origine.
+  - Code : bloc `RÉSEAU SOCIAL` (fonction `fbScreen`, juste avant `scr`) et feuille de style `.fbx…` (après `.rl small`). `eSim` active l'habillage pour les exercices dont l'identifiant commence par `rs` (`CURSOC`) ; `scr` lui confie alors les écrans (fil d'actualité, page de groupe, création de publication, listes de menu et de réglages). Tout autre écran retombe sur le rendu générique.
+  - Rendu : barre du haut avec le mot « facebook » en texte bleu (#1877F2), pas d'image de marque ; onglets Accueil, Amis, Vidéo, Marketplace, Notifications, Menu en icônes SVG dessinées ; zone « Quoi de neuf, <prénom> ? » ; cartes blanches sur fond #F0F2F5 (avatar rond, nom, heure, texte, image, pastilles de réaction, J'aime · Commenter · Partager) ; bouton « Publier » bleu ; police système (Segoe UI / Helvetica). Cet écran garde volontairement la direction artistique de l'application imitée, comme les autres écrans simulés ; seuls la consigne et la bulle du guide restent en charte HAPPI.
+  - Accessibilité : les zones cliquables attendues sont de vrais boutons (focus clavier, libellés, 44 px au minimum) ; les éléments décoratifs (onglets, « … », J'aime, etc.) ne sont ni focusables ni lus.
+  - Les images des publications sont les illustrations vectorielles déjà présentes dans l'application ; l'avatar est l'initiale du prénom du compte.
+  - Autres écrans simulés de réseau social : aucun autre (Instagram, etc.). WhatsApp apparaît dans les exercices de messagerie, de message vocal et d'installation d'application ; ils n'ont pas été modifiés.
+
 ## Charte graphique et affichage
 
 - **Couleurs** : encre pétrole `#102C32`, orange `#EA632E` (actions, mondes validés), blanc, papier `#F5F5F2`, trait `#E5E5E0`. Texte orange sur fond clair : `#B8431A` (contraste ≥ 4,5:1). Mode sombre cohérent (pétrole `#0A1E22`). Les écrans simulés des exercices (boîte mail, messagerie, banque, etc.) gardent volontairement le look des applications qu'ils imitent.

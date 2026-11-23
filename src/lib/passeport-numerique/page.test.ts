@@ -132,4 +132,24 @@ describe('Passeport Numérique : page préparée pour la personne connectée', (
       expect(rule).not.toContain('display:none');
     });
   });
+
+  describe('exercice « réseaux sociaux » : écran simulé façon Facebook', () => {
+    const exercise = (id: string) => source.split(`{id:'${id}',`)[1]?.split('\n {id:')[0] ?? '';
+
+    it('habille les deux simulations (rspost, rsconf) sans toucher aux étapes attendues', () => {
+      expect(source).toContain('function fbScreen(');
+      expect(source).toContain('CURSOC=/^rs/.test(e.id)');
+      for (const id of ['rspost', 'rsconf']) expect(exercise(id)).toContain("type:'sim'");
+      for (const ok of ["ok:'new'", "ok:'grp'", "ok:'pub'"]) expect(exercise('rspost')).toContain(ok);
+      for (const ok of ["ok:'menu'", "ok:'conf'", "ok:'pub'", "ok:'amis'"]) expect(exercise('rsconf')).toContain(ok);
+    });
+
+    it('reste du texte et des icônes dessinées : ni image, ni police, ni adresse externe', () => {
+      const block = source.split('/* ---------- RÉSEAU SOCIAL')[1]?.split('/* ---------- FIN RÉSEAU SOCIAL')[0] ?? '';
+      expect(block.length).toBeGreaterThan(500);
+      expect(block).not.toMatch(/https?:\/\//);
+      expect(block).not.toMatch(/<img/i);
+      expect(block).toContain('aria-label');
+    });
+  });
 });
