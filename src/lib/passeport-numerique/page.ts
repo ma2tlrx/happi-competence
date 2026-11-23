@@ -5,6 +5,9 @@
  *
  * Ce que change cette adaptation :
  * - polices et bibliothèque PDF servies par la plateforme (aucun appel à Google Fonts ni à un CDN) ;
+ * - **tous les PDF et le certificat aux couleurs de HAPPI** : un seul gabarit (public/passeport-numerique/happi-pdf.js)
+ *   remplace la mise en page d'origine (polices, bandeau, logo, mascotte, pied de page) ; les contenus ne changent pas.
+ *   Le sceau « Passeport Numérique · Validé » est redessiné dans la charte avec la mascotte ;
  * - **aucun code animateur dans la page** : l'espace animateur s'ouvre directement pour un formateur ou un
  *   administrateur, et reste fermé pour un participant (le code « 1111 » de l'original est retiré) ;
  * - pour un participant, la création de compte de l'application (prénom, nom, code à quatre chiffres) est
@@ -40,6 +43,16 @@ function replaceAllExactly(html: string, search: string, replacement: string, ex
   const found = html.split(search).length - 1;
   if (found !== expected) throw new Error(`Passeport Numérique : « ${label} » trouvé ${found} fois (${expected} attendues). Le fichier d'origine a changé : mettez à jour src/lib/passeport-numerique/page.ts.`);
   return html.split(search).join(replacement);
+}
+
+/** Remplace tout ce qui sépare deux repères (chacun présent une seule fois) : le repère de fin est conservé. */
+function replaceBetween(html: string, from: string, to: string, replacement: string, label: string): string {
+  const count = (needle: string) => html.split(needle).length - 1;
+  if (count(from) !== 1 || count(to) !== 1) throw new Error(`Passeport Numérique : « ${label} » : repères trouvés ${count(from)} et ${count(to)} fois (1 attendue chacun). Le fichier d'origine a changé : mettez à jour src/lib/passeport-numerique/page.ts.`);
+  const start = html.indexOf(from);
+  const end = html.indexOf(to);
+  if (end < start) throw new Error(`Passeport Numérique : « ${label} » : repères dans le désordre. Le fichier d'origine a changé : mettez à jour src/lib/passeport-numerique/page.ts.`);
+  return html.slice(0, start) + replacement + html.slice(end);
 }
 
 /** Applique une transformation à toute la page sauf au dictionnaire de traductions (texte seulement, aucune couleur). */
@@ -120,8 +133,56 @@ export function preparePasseportNumerique(source: string, context: PasseportCont
   if (html.split(keepSvg).length - 1 !== 1) throw new Error('Passeport Numérique : « passeport illustré » trouvé autrement qu’une fois. Le fichier d\'origine a changé : mettez à jour src/lib/passeport-numerique/page.ts.');
   html = html.split(keepSvg).join('\u0000KEEP').split('${ant(').join('${mascot(').split('\u0000KEEP').join(keepSvg);
 
-  // 2. Contexte de la personne, avant le premier script.
-  html = replaceOnce(html, '<script>\n{', `${contextScript(context)}\n<script>\n{`, 'début du script principal');
+  // 1 ter. Charte HAPPI des PDF et du certificat : le gabarit commun remplace la mise en page d'origine. Les fonctions
+  // qui fabriquent le contenu (rapport, émargement, attestation, défis) restent celles de l'application : elles
+  // écrivent dans le gabarit (`makePdf`) avec la même interface. Cartes, mémos, certificat et sceau, qui dessinaient
+  // eux-mêmes, appellent directement le gabarit.
+  html = replaceOnce(html, /const PC=\{[^\n]*\};/, 'const PC=HappiPdf.PC;', 'palette des PDF');
+  html = replaceBetween(html, 'async function makePdf(opts){', 'async function pdfGive(', 'async function makePdf(opts){return HappiPdf.create(await loadPdfLib(),opts,{asso:S.cfg.asso,fmtD})}\n', 'gabarit des PDF');
+  html = replaceBetween(
+    html,
+    'async function pdfCartes(ids){',
+    'async function pdfDefis(){',
+    [
+      "async function pdfCartes(ids){const P=await makePdf({title:'Cartes de code',bare:true,noFirst:true});return HappiPdf.cartes(P,ids.map(id=>S.profiles[id]))}",
+      "async function pdfMemos(ws,all){if(lang()==='ar')return null;const P=await makePdf({title:'Mémo',bare:true,noFirst:true});return HappiPdf.memos(P,{RECAP,exs,T1},ws,all)}",
+      '',
+    ].join('\n'),
+    'cartes de code et mémos',
+  );
+  html = replaceBetween(
+    html,
+    'async function pdfCert(p){',
+    '/* ================= MÉMOS À IMPRIMER ================= */',
+    [
+      "async function pdfCert(p){const seal=await svgPng(happiStamp(300,true),720,720);const P=await makePdf({title:'Certificat de réussite',landscape:true,bare:true,noFirst:true,noFooter:true});",
+      ' return HappiPdf.certificate(P,{name:p.name,worlds:W.map(w=>w.n),count:W.length,date:certDate(p),lieu:S.cfg.lieu,asso:S.cfg.asso,seal})}',
+      '',
+      '',
+    ].join('\n'),
+    'certificat PDF',
+  );
+  // Sceau « Passeport Numérique · Validé » : nouveau dessin ; la version rasterisée (PDF, image du certificat) embarque sa police.
+  html = replaceBetween(
+    html,
+    'function happiStamp(s=150){',
+    'async function openMail(',
+    'function happiStamp(s=150,raster=false){return HappiPdf.sealSvg(s,{asso:S.cfg&&S.cfg.asso,year:new Date().getFullYear(),raster})}\n\n',
+    'sceau',
+  );
+  // Image PNG du certificat (envoi par mail, ou si le PDF n'a pas pu être créé) : papier HAPPI, texte DM Sans,
+  // prénom en orange foncé lisible, sceau un peu plus petit pour rester dans le cadre.
+  html = replaceOnce(html, "x.fillStyle='#fffaf2'", "x.fillStyle='#f5f5f2'", 'fond de l’image du certificat');
+  html = replaceOnce(html, "x.fillStyle='#ea632e';x.font='700 110px", "x.fillStyle='#b8431a';x.font='700 110px", 'prénom de l’image du certificat');
+  html = replaceAllExactly(html, 'px Arial, sans-serif', 'px DM Sans, Arial, sans-serif', 3, 'police du texte de l’image du certificat');
+  html = replaceOnce(html, 'W2/2,600,1300,50', 'W2/2,600,1450,50', 'largeur de la phrase de l’image du certificat');
+  html = replaceOnce(html, 'x.drawImage(img,W2/2-110,945,220,220)', 'x.drawImage(img,W2/2-105,930,210,210)', 'sceau de l’image du certificat (trois colonnes)');
+  html = replaceOnce(html, 'svgPng(happiStamp(300),300,300)', 'svgPng(happiStamp(300,true),600,600)', 'sceau de l’attestation');
+  html = replaceOnce(html, 'encodeURIComponent(happiStamp(340))', 'encodeURIComponent(happiStamp(340,true))', 'sceau de l’image du certificat');
+
+  // 2. Contexte de la personne, avant le premier script (puis le gabarit PDF et son sceau, servis par la plateforme).
+  const pdfScripts = `<script src="${PASSEPORT_BASE}/happi-pdf-assets.js"></script><script src="${PASSEPORT_BASE}/happi-pdf.js"></script>`;
+  html = replaceOnce(html, '<script>\n{', `${contextScript(context)}\n${pdfScripts}\n<script>\n{`, 'début du script principal');
 
   // 3. Données rangées par compte (et non par navigateur).
   html = replaceOnce(html, "const KEY='passeport-numerique-v1';", "const KEY='passeport-numerique-v1:'+__PN.uid;", 'clé de stockage');

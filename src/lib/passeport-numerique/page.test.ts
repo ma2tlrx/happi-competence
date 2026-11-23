@@ -70,6 +70,42 @@ describe('Passeport Numérique : page préparée pour la personne connectée', (
     }
   });
 
+  it('charte HAPPI des PDF : le gabarit commun remplace les polices Helvetica, la palette d’origine et l’ancien sceau', () => {
+    for (const context of [participant, staff]) {
+      const html = preparePasseportNumerique(source, context);
+      // Gabarit et sceau chargés depuis la plateforme (aucun CDN), avant le script principal.
+      expect(html).toContain('/passeport-numerique/happi-pdf-assets.js');
+      expect(html).toContain('/passeport-numerique/happi-pdf.js');
+      expect(html.indexOf('/passeport-numerique/happi-pdf.js')).toBeLessThan(html.indexOf("const KEY='passeport-numerique-v1:"));
+      // Tous les PDF passent par le même gabarit.
+      expect(html).toContain('async function makePdf(opts){return HappiPdf.create(');
+      expect(html).toContain('HappiPdf.cartes(');
+      expect(html).toContain('HappiPdf.memos(');
+      expect(html).toContain('HappiPdf.certificate(');
+      expect(html).not.toContain('StandardFonts');
+      expect(html).not.toContain('const PC={ink:[16,44,50],teal:[22,118,106]');
+      expect(html).toContain('const PC=HappiPdf.PC;');
+      // Sceau : nouveau dessin, rasterisé avec sa police pour les PDF et l’image du certificat.
+      expect(html).toContain('HappiPdf.sealSvg(');
+      expect(html).toContain('happiStamp(300,true)');
+      expect(html).toContain('happiStamp(340,true)');
+      expect(html).not.toContain('#d86f00');
+      // Image PNG du certificat (envoi par mail) : papier HAPPI, DM Sans, prénom en orange foncé.
+      expect(html).toContain("x.fillStyle='#f5f5f2'");
+      expect(html).not.toContain("x.fillStyle='#fffaf2'");
+      expect(html).toContain("x.fillStyle='#b8431a';x.font='700 110px");
+    }
+  });
+
+  it('garde les textes d’origine des cartes, mémos et certificat (seule la mise en page change)', () => {
+    const html = preparePasseportNumerique(source, staff);
+    for (const text of ['Ce que je sais faire', 'Les astuces', 'Mes notes', 'décerné à', 'Signature de l’animateur', 'Certificat de réussite']) expect(html).toContain(text);
+    // Les fichiers de gabarit existent et portent la mention de pied de page demandée.
+    const gabarit = readFileSync(join(process.cwd(), 'public/passeport-numerique/happi-pdf.js'), 'utf8');
+    expect(gabarit).toContain('HAPPI Compétence · Passeport Numérique');
+    for (const file of ['vendor/fontkit.umd.min.js', 'vendor/fontkit.LICENSE.md', 'happi-pdf-assets.js']) expect(() => readFileSync(join(process.cwd(), 'public/passeport-numerique', file))).not.toThrow();
+  });
+
   it('le nombre de mondes annoncé par la plateforme est celui de l’application', () => {
     const worlds = source.match(/\n\{id:'w\d+',n:'/g) ?? [];
     expect(worlds.length).toBe(PASSEPORT_WORLD_COUNT);
