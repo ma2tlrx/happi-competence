@@ -1,4 +1,6 @@
+import { ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
@@ -7,13 +9,22 @@ import { cn } from '@/lib/utils';
  * Cadre immersif des jeux : fond vert pétrole, logo HAPPI, aucun menu du site.
  * Utilisé par le groupe de routes `(jeu)` (écrans joueur sur téléphone, écran animateur au projecteur).
  */
-export function GameShell({ children }: { children: ReactNode }) {
+export function GameShell({ children, back }: { children: ReactNode; back?: { href: string; label: string } }) {
   return (
     <div className="flex min-h-dvh flex-col bg-petrol-900 text-white">
       <header className="flex items-center gap-3 px-4 pt-4 pb-2 sm:px-8 sm:pt-6">
         <Image src="/brand/happi-mascotte.png" alt="" width={36} height={36} className="size-9 shrink-0" />
         <Image src="/brand/happi-logotype-blanc.png" alt="HAPPI" width={800} height={305} className="h-5 w-auto" priority />
         <span className="ml-1 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-medium text-white/80">Jeux</span>
+        {back ? (
+          <Link
+            href={back.href}
+            className="ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-md border border-white/25 px-3 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            <ArrowLeft className="size-4" aria-hidden />
+            {back.label}
+          </Link>
+        ) : null}
       </header>
       <main id="contenu" className="flex flex-1 flex-col px-4 pt-4 pb-10 sm:px-8">
         {children}

@@ -13,7 +13,7 @@
 
 ## Bloquants pour un atelier
 1. **Aucun SMTP configuré dans Supabase Auth** : les e-mails de confirmation passent par le service intégré, limité à **2 e-mails par heure pour tout le projet** (`rate_limit_email_sent = 2`), et réservé aux membres de l'équipe du projet. Des participants ne recevront pas leur lien : inscription impossible. À faire : brancher un SMTP (Brevo) dans Supabase › Auth › SMTP, puis relever la limite.
-2. **Limite d'inscription par IP : 10 par heure.** Un groupe derrière la même connexion (salle, Wi-Fi) est bloqué dès la 11e personne. À relever (ex. 60/h) ou à contourner par le code d'accès groupe.
+2. **Limite d'inscription par IP : 10 par heure.** Un groupe derrière la même connexion (salle, Wi-Fi) était bloqué dès la 11e personne. **Corrigé (23 novembre)** : 200 inscriptions par heure, 300 connexions par 15 minutes et 60 demandes de mot de passe oublié par heure et par adresse ; les plafonds par e-mail (8 connexions/15 min, 3 réinitialisations/h) et par compte restent inchangés. Attention : le plafond d'e-mails de Supabase (point 1) reste la vraie limite tant que le SMTP n'est pas branché.
 3. **URL du site (Auth) = adresse d'aperçu Vercel de la branche de travail** : les liens des e-mails pointent dessus. À remplacer par l'adresse définitive.
 
 ## Recommandé

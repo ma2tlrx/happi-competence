@@ -19,10 +19,13 @@ export type RateLimitRule = {
  * bloquent les essais en série. Supabase Auth applique en plus ses propres limites.
  */
 export const RATE_LIMITS = {
-  'login.ip': { limit: 30, windowSeconds: 15 * 60 },
+  // Ateliers : plusieurs classes d'une trentaine de jeunes se connectent et s'inscrivent chaque heure derrière UNE seule
+  // adresse IP (même Wi-Fi). Les plafonds par adresse sont donc larges ; la protection contre les essais en série
+  // repose surtout sur les plafonds par e-mail et par compte, inchangés.
+  'login.ip': { limit: 300, windowSeconds: 15 * 60 },
   'login.email': { limit: 8, windowSeconds: 15 * 60 },
-  'signup.ip': { limit: 60, windowSeconds: 60 * 60 },
-  'password_reset.ip': { limit: 10, windowSeconds: 60 * 60 },
+  'signup.ip': { limit: 200, windowSeconds: 60 * 60 },
+  'password_reset.ip': { limit: 60, windowSeconds: 60 * 60 },
   'password_reset.email': { limit: 3, windowSeconds: 60 * 60 },
   'contact.ip': { limit: 5, windowSeconds: 60 * 60 },
   'access_code.ip': { limit: 10, windowSeconds: 60 * 60 },

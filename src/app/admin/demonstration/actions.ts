@@ -1,10 +1,12 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import { actionError, actionSuccess, type ActionState } from '@/lib/action-state';
 import { requireRole } from '@/lib/auth/session';
+import { DEMO_RETURN_COOKIE, DEMO_RETURN_TTL_SECONDS, signDemoReturn } from '@/lib/demo/return';
 import { createDemo, DEMO_SPACES, demoLoginToken, isDemoAllowed, purgeDemo, type DemoSpace } from '@/lib/demo/environment';
 import { isAdminClientConfigured } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
@@ -54,8 +56,20 @@ export async function openDemoSpaceAction(space: DemoSpace): Promise<ActionState
   const tokenHash = await demoLoginToken(space);
   if (!tokenHash) return actionError('Ce compte de démonstration n’existe pas : créez d’abord la démonstration.');
   const supabase = await createClient();
+  const { data: before } = await supabase.auth.getUser();
   await supabase.rpc('log_event', { p_action: 'demo.space_opened', p_metadata: { space } });
-  const { error } = await supabase.auth.verifyOtp({ type: 'magiclink', token_hash: tokenHash });
+  const { data: opened, error } = await supabase.auth.verifyOtp({ type: 'magiclink', token_hash: tokenHash });
   if (error) return actionError(`Connexion au compte de démonstration impossible : ${error.message}`);
+  // Témoin signé : « Quitter la démonstration » ramènera l'administrateur à son tableau de bord (src/lib/demo/return.ts).
+  const secret = process.env.RATE_LIMIT_SECRET ?? process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY ?? '';
+  if (before.user && opened.user && secret) {
+    (await cookies()).set(DEMO_RETURN_COOKIE, signDemoReturn(secret, before.user.id, opened.user.id), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: DEMO_RETURN_TTL_SECONDS,
+    });
+  }
   redirect(DEMO_SPACES[space].home);
 }

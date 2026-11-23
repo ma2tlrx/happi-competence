@@ -22,7 +22,7 @@ export async function SpaceShell({ space, user, banner, children }: { space: App
       <span>
         <span className="font-semibold">Compte de démonstration</span> · toutes les données affichées sont fictives et marquées « démo ».
       </span>
-      <form action="/deconnexion" method="post">
+      <form action="/demo/quitter" method="post">
         <button type="submit" className="font-semibold underline underline-offset-4 hover:text-petrol-700">
           Quitter la démonstration
         </button>

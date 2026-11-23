@@ -119,6 +119,11 @@ export function SkillRadar({
         </button>
       </div>
 
+      {/* Le message est placé AU-DESSUS du graphique, jamais dessus : il ne masque plus rien. */}
+      {!hasObserved ? (
+        <p className="mb-3 rounded-md bg-paper px-3 py-2 text-sm font-medium text-ink-muted">Les observations apparaîtront ici après votre première session évaluée.</p>
+      ) : null}
+
       {table ? (
         <table className="w-full text-left text-sm">
           <thead>
@@ -182,11 +187,6 @@ export function SkillRadar({
               />
             </RadarChart>
           </ResponsiveContainer>
-          {!hasObserved ? (
-            <p className="absolute inset-0 flex items-center justify-center px-8 text-center text-sm font-medium text-ink-muted">
-              Les observations apparaîtront ici après votre première session évaluée.
-            </p>
-          ) : null}
         </div>
       )}
       <p className="mt-2 text-xs text-ink-subtle">Échelle de {min} à {max}. Une compétence non observée est placée au centre.</p>
