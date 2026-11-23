@@ -74,4 +74,26 @@ describe('Passeport Numérique : page préparée pour la personne connectée', (
     const worlds = source.match(/\n\{id:'w\d+',n:'/g) ?? [];
     expect(worlds.length).toBe(PASSEPORT_WORLD_COUNT);
   });
+
+  describe('évolutions demandées par le client (comportement de l’application)', () => {
+    it('défis chrono : une fois le code saisi, on revient à la grille de tous les défis, pas au seul premier', () => {
+      const line = source.split('\n').find((l) => l.includes("case 'lobbyGo':")) ?? '';
+      expect(line).toContain('S.lobbyDay=dayKey();save();closeOv();');
+      expect(line).not.toContain("V={s:'defi',d:val}");
+    });
+
+    it('les mondes et les exercices se débloquent un par un, après la fin du précédent', () => {
+      expect(source).toContain('wDone(W[i-1])');
+      expect(source).not.toContain('wDone(W[0])&&wDone(W[1])');
+      expect(source).toContain('const exUnlocked=');
+      expect(source).toContain('aria-disabled="true"');
+    });
+
+    it('défis chrono : le message de pénalité est une région annoncée, hors de la mise en page', () => {
+      expect(source).toContain('<div class="fb dfb" id="fb" role="status" aria-live="polite" aria-atomic="true"></div>');
+      const rule = source.split('\n').find((l) => l.startsWith('.defibox #fb{')) ?? '';
+      expect(rule).toContain('position:fixed');
+      expect(rule).not.toContain('display:none');
+    });
+  });
 });
