@@ -5,6 +5,9 @@ import { decodeJwtPayload, MFA_CHALLENGE_PATH } from '@/lib/auth/mfa';
 import { buildCsp, createNonce } from '@/lib/security/csp';
 
 /** Préfixes réservés aux utilisateurs connectés. Le contrôle du rôle est fait côté serveur, dans les layouts. */
+/** Dernier espace visité (cookie d'aide à l'affichage, sans effet sur les droits). */
+const SPACE_COOKIE = 'happi_space';
+const SPACE_PREFIXES = ['participant', 'formateur', 'organisme', 'admin'] as const;
 const PROTECTED_PREFIXES = ['/jouer', '/bienvenue', '/passeport-numerique/app', '/participant', '/organisme', '/formateur', '/admin', '/compte', '/notifications', '/jeux', '/api/exports'];
 /** Pages publiques dont l'adresse porte un jeton (vérification d'un passeport partagé, d'un badge). */
 const TOKEN_PREFIXES = ['/verifier', '/badges/verifier'];
@@ -113,6 +116,12 @@ async function guard(request: NextRequest, next: () => NextResponse) {
   if (isProtected) {
     // Les pages privées ne doivent jamais être mises en cache par un intermédiaire.
     response.headers.set('Cache-Control', 'private, no-store');
+  }
+  // Espace dans lequel la personne se trouve : un administrateur qui consulte l'espace formateur garde ce menu
+  // en ouvrant une page commune (« Jeux ») au lieu d'être ramené dans l'espace administrateur.
+  const space = SPACE_PREFIXES.find((prefix) => pathname === `/${prefix}` || pathname.startsWith(`/${prefix}/`));
+  if (space && request.cookies.get(SPACE_COOKIE)?.value !== space) {
+    response.cookies.set(SPACE_COOKIE, space, { path: '/', sameSite: 'lax', httpOnly: true, secure: process.env.NODE_ENV === 'production' });
   }
   return response;
 }
