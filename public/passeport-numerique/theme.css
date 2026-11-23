@@ -166,3 +166,25 @@ html { min-height: 100dvh; }
   .prog { max-width: min(720px, 100%); }
   .bubble { max-width: 640px; font-size: 24px; }
 }
+
+/* ── Certificat de réussite (écran) : papier HAPPI, bandeau pétrole à motif discret, sceau à la mascotte ───
+   Même composition que le PDF (voir happi-pdf.js). */
+.cert { background: #f5f5f2; border: 1px solid #e5e5e0; border-radius: 18px; padding: 0; overflow: hidden; }
+.cert-in { --cp: clamp(16px, 3vw, 34px); border: 0; border-radius: 0; padding: 0 var(--cp) var(--cp); }
+.cert-top {
+  margin: 0 calc(-1 * var(--cp)) 0;
+  padding: 14px var(--cp);
+  background-color: #102c32;
+  background-image: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.1) 1px, transparent 0);
+  background-size: 12px 12px;
+  border-bottom: 3px solid #ea632e;
+  color: #f5f5f2;
+}
+.cert-top small { color: #cadce0; }
+.cert-top b { color: #fff; }
+.cert-t { margin-top: 22px; }
+.cert-n { color: #b8431a; }
+.cert-s { color: #4b6166; }
+.sigl { border-top-color: #76a3ac; color: #4b6166; }
+.cert-hs { width: 150px; margin: -6px 0 -4px; }
+@media (max-width: 600px) { .cert-hs { width: 104px; } }
