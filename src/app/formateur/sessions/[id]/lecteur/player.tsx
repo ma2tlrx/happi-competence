@@ -9,6 +9,7 @@ import {
   ClipboardPen,
   Coffee,
   Eye,
+  Gamepad2,
   Hand,
   Lightbulb,
   ListOrdered,
@@ -35,6 +36,7 @@ import { PART_LABELS, SEQUENCE_TYPE_LABELS, type PartKind, type SessionScript } 
 import { cn } from '@/lib/utils';
 
 import { savePlayerState, saveTrainerNote } from './actions';
+import { GamesPanel } from './jeux-panel';
 
 type TimerState = { elapsedMs: number; runningSince: number | null };
 export type PlayerInitialState = {
@@ -82,6 +84,8 @@ export function SessionPlayer({
   isProvisional,
   initial,
   notes: initialNotes,
+  memberCount = 0,
+  canLaunchGames = false,
 }: {
   sessionId: string;
   sessionLabel: string;
@@ -91,6 +95,8 @@ export function SessionPlayer({
   isProvisional: boolean;
   initial: PlayerInitialState;
   notes: Record<string, string>;
+  memberCount?: number;
+  canLaunchGames?: boolean;
 }) {
   const sequences = script.sequences;
   const hasPrep = script.info.length > 0 || Boolean(script.intro);
@@ -103,6 +109,7 @@ export function SessionPlayer({
   const [fullscreen, setFullscreen] = useState(false);
   const [panel, setPanel] = useState<'notes' | null>(null);
   const [direction, setDirection] = useState(1);
+  const [gamesOpen, setGamesOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -191,6 +198,7 @@ export function SessionPlayer({
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
+      if (gamesOpen) return;
       if (['TEXTAREA', 'INPUT', 'SELECT'].includes(target.tagName) || target.isContentEditable) return;
       if (event.key === 'ArrowRight' || event.key === 'PageDown') {
         event.preventDefault();
@@ -249,6 +257,11 @@ export function SessionPlayer({
             Évaluations
           </Link>
         </nav>
+        <button id="lecteur-jeux-bouton" type="button" onClick={() => setGamesOpen(true)} className="flex h-10 items-center gap-2 rounded-md px-2 text-sm font-medium hover:bg-white/10 sm:px-3" aria-haspopup="dialog">
+          <Gamepad2 className="size-5" aria-hidden />
+          <span className="hidden sm:inline">Jeux</span>
+          <span className="sr-only sm:hidden">Jeux : lancer une activité</span>
+        </button>
         <button type="button" onClick={() => setPanel((value) => (value ? null : 'notes'))} aria-pressed={panel === 'notes'} className={cn('flex size-10 items-center justify-center rounded-md hover:bg-white/10', panel && 'bg-white/15')} aria-label="Notes privées (N)">
           <NotebookPen className="size-5" aria-hidden />
         </button>
@@ -425,6 +438,8 @@ export function SessionPlayer({
           ) : null}
         </AnimatePresence>
       </div>
+
+      <GamesPanel sessionId={sessionId} memberCount={memberCount} canLaunch={canLaunchGames} open={gamesOpen} onOpenChange={setGamesOpen} />
 
       {/* Navigation */}
       <footer className="pb-safe flex shrink-0 items-center gap-2 border-t border-line bg-white px-3 pt-3 sm:px-5">
