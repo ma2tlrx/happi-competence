@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import { CircleAlert, CircleCheck, Info, TriangleAlert } from 'lucide-react';
-import type { HTMLAttributes, ReactNode } from 'react';
+import type { HTMLAttributes, ReactNode, Ref } from 'react';
 
 import { cn, initials } from '@/lib/utils';
 
@@ -144,6 +144,7 @@ export function PageHeader({
   actions,
   back,
   className,
+  titleRef,
 }: {
   title: ReactNode;
   description?: ReactNode;
@@ -151,12 +152,14 @@ export function PageHeader({
   /** Lien de retour affiché au-dessus du titre. */
   back?: ReactNode;
   className?: string;
+  /** Rend le titre focalisable par programme (changement d'étape d'un questionnaire). */
+  titleRef?: Ref<HTMLHeadingElement>;
 }) {
   return (
     <header className={cn('mb-6 flex flex-col gap-4 sm:mb-8 lg:flex-row lg:items-end lg:justify-between', className)}>
       <div className="min-w-0">
         {back ? <div className="mb-2 text-sm">{back}</div> : null}
-        <h1 className="text-[1.625rem] leading-tight font-semibold tracking-[-0.02em] sm:text-[1.875rem]">{title}</h1>
+        <h1 ref={titleRef} tabIndex={titleRef ? -1 : undefined} className={titleRef ? 'text-[1.625rem] leading-tight font-semibold tracking-[-0.02em] outline-none sm:text-[1.875rem]' : 'text-[1.625rem] leading-tight font-semibold tracking-[-0.02em] sm:text-[1.875rem]'}>{title}</h1>
         {description ? <p className="mt-1.5 max-w-2xl text-[0.9375rem] text-ink-muted">{description}</p> : null}
       </div>
       {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}

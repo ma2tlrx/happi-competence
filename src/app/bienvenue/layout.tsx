@@ -1,22 +1,16 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 
-import { Logo } from '@/components/brand/logo';
+import { SpaceShell } from '@/components/app/shell-loader';
+import { requireRole } from '@/lib/auth/session';
 
 export const metadata: Metadata = { title: 'Bienvenue', robots: { index: false } };
 
-/** Mise en page sans menu : le questionnaire d'accueil occupe tout l'écran, comme dans l'ancien formulaire. */
-export default function BienvenueLayout({ children }: { children: React.ReactNode }) {
+/** Même coque que l'auto-évaluation (menu, en-tête, largeur de lecture) : les deux questionnaires se présentent pareil. */
+export default async function BienvenueLayout({ children }: { children: React.ReactNode }) {
+  const user = await requireRole('participant');
   return (
-    <div className="pixel-grid min-h-dvh bg-petrol-900">
-      <header className="mx-auto flex h-16 w-full max-w-xl items-center px-4">
-        <Link href="/participant/dashboard" aria-label="HAPPI Compétence, mon accueil">
-          <Logo tone="white" />
-        </Link>
-      </header>
-      <main id="contenu" className="mx-auto w-full max-w-xl px-4 pb-16">
-        {children}
-      </main>
-    </div>
+    <SpaceShell space="participant" user={user}>
+      {children}
+    </SpaceShell>
   );
 }
