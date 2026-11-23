@@ -21,7 +21,7 @@ Le programme d'une personne est celui de son **groupe actif** s'il existe, sinon
 
 ## Ce qui est modifié dans l'application d'origine
 
-Adaptations faites à chaque requête (fichier d'origine **non modifié**, livré tel quel dans `private/`). Si le fichier est mis à jour, `npm test` signale précisément la phrase qui ne se retrouve plus.
+Adaptations faites à chaque requête (fichier d’origine livré dans `private/`, avec les évolutions fonctionnelles listées plus bas). Si le fichier est mis à jour, `npm test` signale précisément la phrase qui ne se retrouve plus.
 
 1. **Plus aucun code animateur dans la page** : le code « 1111 » (et la constante « 000 ») sont retirés ; l'espace animateur s'ouvre directement pour un formateur ou un administrateur, il reste fermé pour un participant ; le bouton « Changer le code animateur » disparaît.
 2. **Compte** : pour un participant, la création de compte de l'application (prénom, nom, code à quatre chiffres) est remplacée par son compte HAPPI. Les textes du consentement et de la notice qui parlent du code secret sont adaptés.
@@ -29,6 +29,14 @@ Adaptations faites à chaque requête (fichier d'origine **non modifié**, livr�
 4. Polices et bibliothèque PDF locales.
 5. **Charte graphique HAPPI** (voir ci-dessous) : feuille de thème `public/passeport-numerique/theme.css` chargée après celle d'origine, couleurs et polices ramenées à la marque, logo et mascotte officiels.
 6. **Sorties vers la plateforme** : « Retour à mon espace HAPPI » (participant) et « Fermer » (animateur) passent par un message au cadre de la plateforme, qui navigue vers une page autorisée (liste fermée).
+
+## Modifications apportées à l'application d'origine
+
+Évolutions fonctionnelles demandées par le client, faites directement dans `private/passeport-numerique/index.html` (changements minimaux ; à refaire si le fichier d'origine est remplacé). Testées sur le vrai fichier (`page.test.ts`) et au navigateur.
+
+- **Défis chrono, accès à tous les mini-jeux** : après le code de la salle, l'application ouvrait directement le premier défi (« Course au clavier ») sans montrer les autres. Elle revient maintenant au passeport, où la grille des 8 défis est ouverte (message « Code accepté »). Le code (`1001`) et le stockage du déverrouillage (`S.lobbyDay`, valable la journée, conservé au rechargement) sont inchangés.
+- **Déblocage progressif** : un exercice n'est ouvert que si le précédent est réussi (le premier toujours ; un exercice déjà réussi reste ouvert). Les autres affichent un cadenas, « Verrouillé : terminez l'exercice précédent », `aria-disabled="true"` et un message au toucher. Même erreur côté mondes : l'ancienne règle n'exigeait que les deux premiers mondes pour ouvrir tous les autres ; chaque monde s'ouvre maintenant quand le précédent est terminé (un monde déjà terminé reste ouvert). Le mode démonstration et « tout débloquer » de l'animateur ne changent pas.
+- **Défis chrono, message d'erreur/pénalité** : le message (`#fb`) poussait le jeu vers le bas (50 px sur ordinateur, 100 px sur téléphone). Il s'affiche maintenant en bulle fixe au-dessus de la barre basse (sans effet sur la mise en page ni sur les clics), dans une région `role="status" aria-live="polite"`. Vaut pour tous les défis chrono.
 
 ## Charte graphique et affichage
 
