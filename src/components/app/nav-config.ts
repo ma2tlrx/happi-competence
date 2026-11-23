@@ -65,6 +65,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
           also: ['/participant/habiletes-sociocognitives', '/participant/auto-evaluation', '/participant/evolution'],
         },
         { href: '/participant/parcours', label: 'Mon parcours', icon: Route, mobile: true, short: 'Parcours', programKind: 'happi_competence' },
+        { href: '/participant/calendrier', label: 'Calendrier', icon: CalendarDays },
         { href: '/participant/reussites', label: 'Mes réussites', icon: Trophy, mobile: true, short: 'Réussites', also: ['/participant/badges', '/participant/jeux'], programKind: 'happi_competence' },
         { href: '/participant/bilan', label: 'Mon bilan', icon: FileText, mobile: true, short: 'Bilan', also: ['/participant/partage'], programKind: 'happi_competence' },
         { href: '/jouer', label: 'Rejoindre une partie', icon: Gamepad2 },
@@ -83,7 +84,10 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
   // Les autres pages organisme existent toujours (liens d'anciennes notifications) mais ne sont plus au menu.
   organisme: [
     {
-      items: [{ href: '/organisme/dashboard', label: 'Mes groupes', icon: Users, mobile: true, also: ['/organisme/groupes', '/organisme/participants'] }],
+      items: [
+        { href: '/organisme/dashboard', label: 'Mes groupes', icon: Users, mobile: true, also: ['/organisme/groupes', '/organisme/participants'] },
+        { href: '/organisme/calendrier', label: 'Calendrier', icon: CalendarDays, mobile: true },
+      ],
     },
     HELP,
   ],
@@ -92,6 +96,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
       items: [
         { href: '/formateur/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, mobile: true, short: 'Accueil' },
         { href: '/formateur/sessions', label: 'Sessions', icon: CalendarDays, mobile: true },
+        { href: '/formateur/calendrier', label: 'Calendrier', icon: CalendarDays },
         { href: '/formateur/groupes', label: 'Groupes', icon: Users, mobile: true },
         { href: '/formateur/programmes', label: 'Programmes', icon: BookOpen, mobile: true },
         { href: '/jeux', label: 'Jeux', icon: Gamepad2, permission: 'games.manage' },
@@ -114,6 +119,7 @@ export const NAVIGATION: Record<AppSpace, NavGroup[]> = {
         },
         { href: '/admin/programmes', label: 'Programmes', icon: BookOpen, also: ['/admin/referentiels', '/admin/contenus'] },
         { href: '/admin/sessions', label: 'Groupes et sessions', icon: CalendarDays, mobile: true, also: ['/admin/groupes'] },
+        { href: '/admin/calendrier', label: 'Calendrier', icon: CalendarDays },
         { href: '/jeux', label: 'Jeux', icon: Gamepad2, permission: 'games.manage' },
         {
           href: '/admin/impact',
