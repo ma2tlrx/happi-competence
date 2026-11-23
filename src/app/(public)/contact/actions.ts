@@ -12,6 +12,8 @@ const schema = z.object({
   email: z.string().trim().toLowerCase().email('Indiquez une adresse e-mail valide.').max(254),
   organization: z.string().trim().max(160, 'Ce nom de structure est trop long.').optional(),
   audience: z.enum(['participant', 'organisme', 'entreprise', 'autre']).optional(),
+  program: z.enum(['happi_competence', 'passeport_numerique', 'les_deux', 'autre'], { message: 'Indiquez le programme concerné.' }),
+  subject: z.string().trim().min(2, 'Indiquez l’objet de votre message.').max(160, 'Cet objet est trop long (160 caractères au maximum).'),
   message: z.string().trim().min(10, 'Votre message doit contenir au moins 10 caractères.').max(4000, 'Votre message est trop long (4 000 caractères au maximum).'),
   consent: z.literal('on', { message: 'Vous devez accepter le traitement de votre message.' }),
 });
@@ -25,6 +27,8 @@ export async function sendContactMessage(_: ActionState, formData: FormData): Pr
     email: formData.get('email'),
     organization: formData.get('organization') || undefined,
     audience: formData.get('audience') || undefined,
+    program: formData.get('program') || undefined,
+    subject: formData.get('subject'),
     message: formData.get('message'),
     consent: formData.get('consent') ?? undefined,
   });
@@ -47,6 +51,8 @@ export async function sendContactMessage(_: ActionState, formData: FormData): Pr
     p_audience: parsed.data.audience ?? '',
     p_message: parsed.data.message,
     p_origin_hash: originHash,
+    p_program: parsed.data.program,
+    p_subject: parsed.data.subject,
   });
   if (error) {
     if (error.message.includes('RATE_LIMITED')) return actionError('Vous avez envoyé plusieurs messages récemment. Réessayez dans une heure.');

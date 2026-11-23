@@ -33,8 +33,19 @@ export function ContactForm() {
           )}
         </Field>
       </div>
+      <Field label="Votre demande concerne" required error={errors.program}>
+        {({ id, describedBy, invalid }) => (
+          <Select id={id} name="program" defaultValue="" required aria-describedby={describedBy} aria-invalid={invalid || undefined}>
+            <option value="">Choisir un programme</option>
+            <option value="happi_competence">Le programme HAPPI Compétence</option>
+            <option value="passeport_numerique">Le Passeport Numérique</option>
+            <option value="les_deux">Les deux programmes</option>
+            <option value="autre">Autre question</option>
+          </Select>
+        )}
+      </Field>
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Structure" optional error={errors.organization}>
+        <Field label="Votre organisme" optional hint="Association, mission locale, entreprise…" error={errors.organization}>
           {({ id, describedBy }) => <Input id={id} name="organization" autoComplete="organization" aria-describedby={describedBy} />}
         </Field>
         <Field label="Vous êtes" optional>
@@ -49,6 +60,11 @@ export function ContactForm() {
           )}
         </Field>
       </div>
+      <Field label="Objet" required hint="Pourquoi nous contactez-vous ? Par exemple : inscrire un groupe, avoir des informations, devenir partenaire." error={errors.subject}>
+        {({ id, describedBy, invalid }) => (
+          <Input id={id} name="subject" maxLength={160} required aria-describedby={describedBy} aria-invalid={invalid || undefined} />
+        )}
+      </Field>
       <Field label="Message" required error={errors.message}>
         {({ id, describedBy, invalid }) => (
           <Textarea id={id} name="message" rows={6} required maxLength={4000} aria-describedby={describedBy} aria-invalid={invalid || undefined} />

@@ -8,6 +8,14 @@ import { formatDateTime } from '@/lib/utils';
 import { DataRequestActions, MessageActions } from '../admin-client';
 import { SettingsForm } from './settings-form';
 
+/** Programme indiqué dans le formulaire de contact. */
+const PROGRAM_LABELS: Record<string, string> = {
+  happi_competence: 'HAPPI Compétence',
+  passeport_numerique: 'Passeport Numérique',
+  les_deux: 'Les deux programmes',
+  autre: 'Autre question',
+};
+
 export const metadata: Metadata = { title: 'Paramètres' };
 
 export default async function SettingsPage() {
@@ -37,11 +45,13 @@ export default async function SettingsPage() {
                       <p className="font-semibold">
                         {message.name} · <a href={`mailto:${message.email}`} className="text-petrol-700 underline">{message.email}</a>
                         {message.organization ? <span className="font-normal text-ink-muted"> · {message.organization}</span> : null}
+                        {message.program ? <Badge variant="petrol" className="ml-2">{PROGRAM_LABELS[message.program] ?? message.program}</Badge> : null}
                         {message.status === 'new' ? <Badge variant="orange" className="ml-2">Nouveau</Badge> : null}
                       </p>
                       <MessageActions id={message.id} status={message.status} />
                     </div>
                     <p className="mt-1 text-sm text-ink-subtle">{formatDateTime(message.created_at)}</p>
+                    {message.subject ? <p className="mt-2 font-semibold">Objet : {message.subject}</p> : null}
                     <p className="mt-2 whitespace-pre-line text-[0.9375rem]">{message.message}</p>
                   </li>
                 ))}

@@ -22,7 +22,12 @@ test('le formulaire de contact valide puis enregistre le message', async ({ page
   await page.goto('/contact');
   await page.getByRole('button', { name: 'Envoyer le message' }).click();
   await expect(page.getByText('Indiquez votre nom.')).toBeVisible();
+  await expect(page.getByText('Indiquez le programme concerné.')).toBeVisible();
+  await expect(page.getByText('Indiquez l’objet de votre message.')).toBeVisible();
   await page.getByLabel('Nom').fill('Test Contact');
+  await page.getByLabel('Votre demande concerne').selectOption('passeport_numerique');
+  await page.getByLabel('Votre organisme').fill('Association Test');
+  await page.getByLabel('Objet').fill('Inscrire un groupe de jeunes');
   await page.getByLabel('Adresse e-mail').fill(`contact.${unique()}@exemple.org`);
   await page.getByLabel('Message').fill('Message envoyé par les tests de bout en bout.');
   await page.locator('input[name=consent]').check();

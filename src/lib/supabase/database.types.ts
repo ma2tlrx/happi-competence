@@ -685,6 +685,8 @@ export type Database = {
           message: string
           name: string
           organization: string | null
+          program: string | null
+          subject: string | null
           origin_hash: string | null
           status: string
         }
@@ -700,6 +702,8 @@ export type Database = {
           message: string
           name: string
           organization?: string | null
+          program?: string | null
+          subject?: string | null
           origin_hash?: string | null
           status?: string
         }
@@ -714,6 +718,8 @@ export type Database = {
           message?: string
           name?: string
           organization?: string | null
+          program?: string | null
+          subject?: string | null
           origin_hash?: string | null
           status?: string
         }
@@ -5331,6 +5337,8 @@ export type Database = {
           p_name: string
           p_organization: string
           p_origin_hash: string
+          p_program?: string
+          p_subject?: string
         }
         Returns: string
       }
