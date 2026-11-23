@@ -199,3 +199,79 @@ html { min-height: 100dvh; }
 .swipecard:focus-visible { outline: 4px solid var(--sun); outline-offset: 4px; }
 .swipezone .swhint { margin: 0; max-width: 32ch; font-weight: 700; line-height: 1.35; }
 .swipezone #gsl { touch-action: manipulation; min-width: min(100%, 320px); }
+/* ── Assistant vocal : réglage et bouton muet, présents sur tous les écrans ─────────────────
+   Deux commandes à pastille (interrupteur « Assistant vocal », bouton « Son / Muet »), en bas à gauche
+   (le bouton d'aide est à droite). Sur téléphone, au-dessus de la barre basse. L'état est écrit en toutes
+   lettres : il ne repose jamais sur la couleur seule. */
+.vox {
+  position: fixed;
+  left: max(12px, env(safe-area-inset-left));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 100; /* au-dessus des fenêtres (fin d'exercice, mémo…) : le réglage reste atteignable partout */
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  border-radius: var(--r-card);
+  background: var(--card);
+  border: 2px solid var(--line);
+  box-shadow: 0 8px 24px rgb(10 30 34 / 0.2);
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+.vox button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  min-width: 48px;
+  padding: 6px 12px;
+  border-radius: var(--r-btn);
+  border: 2px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.15;
+  text-align: left;
+  cursor: pointer;
+}
+.vox button:hover { border-color: var(--petrol-400); }
+.vox button:focus-visible { outline: 3px solid #ea632e; outline-offset: 2px; }
+.vox .vox-ic svg { width: 22px; height: 22px; display: block; }
+.vox .vox-t { display: flex; flex-direction: column; }
+.vox .vox-l { font-weight: 500; font-size: 13px; color: var(--mute); }
+.vox .vox-s { font-weight: 700; }
+.vox .vox-sw.on { background: var(--deep); border-color: var(--deep); color: #fff; }
+.vox .vox-sw.on .vox-l { color: #cadce0; }
+.vox .vox-sw[aria-disabled="true"] { opacity: 0.7; }
+.vox .vox-mu.on { background: var(--sun); border-color: var(--sun); color: var(--sunInk); }
+.vox-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 700px) {
+  .vox { bottom: calc(88px + env(safe-area-inset-bottom)); gap: 4px; padding: 4px; }
+  .vox button { min-height: 44px; padding: 4px 10px; font-size: 14px; }
+  .vox .vox-l { font-size: 12px; }
+  /* Fenêtre ouverte (fin d'exercice, mémo…) : les commandes passent en haut pour ne pas cacher ses boutons. */
+  body:has(#ov) .vox { top: max(8px, env(safe-area-inset-top)); bottom: auto; }
+}
+@media (max-width: 380px) {
+  .vox .vox-l { display: none; }
+}
+
+/* ── Diaporama récapitulatif : « Passer cette diapositive » reste lisible sur téléphone ─── */
+.rc-ctl .rc-next { background: #fff; border-color: #fff; color: #102c32; }
+@media (max-width: 600px) {
+  .rc-ctl .rc-next { width: auto; padding: 0 18px; }
+  .rc-ctl .rc-next span { display: inline; }
+}
+
+/* ── Vidéo de présentation : commandes par diapositive ──────────────────────────────────── */
+.pn-vidctl { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+.pn-vidctl .btn { min-height: 52px; }
+.pn-vidpos { flex: 1 1 auto; text-align: center; font-weight: 600; color: var(--mute); }
+@media (max-width: 600px) {
+  .pn-vidctl .btn { flex: 1 1 100%; justify-content: center; }
+  .pn-vidpos { order: -1; flex-basis: 100%; }
+}
+
+/* ── Retour à mon passeport (écrans de fin) ──────────────────────────────────────────────── */
+.pn-retour { justify-content: center; }

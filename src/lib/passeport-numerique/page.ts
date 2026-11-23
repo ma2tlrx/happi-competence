@@ -22,6 +22,9 @@
  * on le voit aux tests, pas chez les utilisateurs.
  */
 
+import { applyEvolutions } from './evolutions';
+import { replaceAllExactly, replaceOnce } from './replace';
+
 export type PasseportContext = {
   /** `staff` : formateur ou administrateur (espace animateur ouvert). `participant` : parcours de la personne. */
   role: 'staff' | 'participant';
@@ -32,18 +35,6 @@ export type PasseportContext = {
 };
 
 export const PASSEPORT_BASE = '/passeport-numerique';
-
-function replaceOnce(html: string, search: string | RegExp, replacement: string, label: string): string {
-  const matches = typeof search === 'string' ? html.split(search).length - 1 : (html.match(new RegExp(search.source, search.flags.includes('g') ? search.flags : `${search.flags}g`)) ?? []).length;
-  if (matches !== 1) throw new Error(`Passeport Numérique : « ${label} » trouvé ${matches} fois (1 attendue). Le fichier d'origine a changé : mettez à jour src/lib/passeport-numerique/page.ts.`);
-  return typeof search === 'string' ? html.replace(search, () => replacement) : html.replace(search, () => replacement);
-}
-
-function replaceAllExactly(html: string, search: string, replacement: string, expected: number, label: string): string {
-  const found = html.split(search).length - 1;
-  if (found !== expected) throw new Error(`Passeport Numérique : « ${label} » trouvé ${found} fois (${expected} attendues). Le fichier d'origine a changé : mettez à jour src/lib/passeport-numerique/page.ts.`);
-  return html.split(search).join(replacement);
-}
 
 /** Remplace tout ce qui sépare deux repères (chacun présent une seule fois) : le repère de fin est conservé. */
 function replaceBetween(html: string, from: string, to: string, replacement: string, label: string): string {
@@ -271,5 +262,6 @@ export function preparePasseportNumerique(source: string, context: PasseportCont
   tail = replaceAllExactly(tail, 'Votre prénom et votre nom, votre code secret, vos exercices réussis', 'Votre prénom et votre nom, vos exercices réussis', 1, 'liste des informations conservées');
   html = html.slice(0, scriptStart) + tail;
 
-  return html;
+  // 8. Évolutions demandées par le client (assistant vocal, diaporama, retour au passeport, champs présélectionnés).
+  return applyEvolutions(html);
 }
