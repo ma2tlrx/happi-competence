@@ -211,3 +211,13 @@ Undercover — `player_joined`, `game_started`, `game_cancelled`, `phase_changed
 ## Import des anciennes données (optionnel)
 
 `node scripts/import-quizzhappi.mjs export.json --owner <uuid-profil> [--out import.sql]` lit un export JSON (quiz, questions, configurations Undercover) et écrit des `INSERT … ON CONFLICT DO NOTHING` à relire puis exécuter. Le script ne contacte aucune base. Parties, joueurs et états ne sont pas importés.
+
+## Depuis le lecteur pédagogique
+
+Le bouton « Jeux » de la barre du lecteur (`/formateur/sessions/[id]/lecteur`) ouvre le dialogue « Lancer une activité » (focus piégé, Échap, retour du focus sur le bouton). Le lecteur garde sa position et ses chronomètres : l'écran animateur s'ouvre dans un **nouvel onglet**.
+- **Undercover** : rappel des règles (repris des textes de l'application), thème et paire de mots (tirée au hasard, modifiable), option Espion, « Lancer une partie d'Undercover » (`POST /api/jeux/undercover/games`).
+- **Quiz** : liste des quiz du formateur (`GET /api/jeux/quizzes`), « Lancer ce quiz » (`POST /api/jeux/sessions`, places = effectif du groupe entre 10 et 50) ; état vide avec lien « Créer un quiz » (nouvel onglet).
+- Aucune nouvelle route ni logique de jeu : mêmes routes, mêmes droits (`games.manage`, propriétaire ou administrateur). Sans la permission, le panneau l'indique. Les erreurs de l'API sont affichées telles quelles.
+- **Partie déjà en cours** : l'identifiant de la dernière partie lancée pour la session est mémorisé dans le navigateur du formateur (`localStorage`, clé `lecteur-jeu:<session>:<jeu>`) ; à la réouverture, si elle n'est pas terminée, le panneau propose « Reprendre la partie » avant « Nouvelle partie ».
+- **Limites** : la partie n'est pas rattachée au groupe en base (les jeux se rejoignent par code, comme ailleurs) ; la mémoire de reprise est propre à l'appareil. Le mode essai ne concerne que les joueurs (un animateur qui veut tester rejoint avec le code).
+- Code : `lecteur/jeux-panel.tsx`, logique pure et tests dans `lecteur/jeux-launch(.test).ts`, e2e `tests/e2e/lecteur-jeux.spec.ts`.

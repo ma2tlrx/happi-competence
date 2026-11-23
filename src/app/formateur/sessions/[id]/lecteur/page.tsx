@@ -19,7 +19,7 @@ const asTimer = (value: unknown) => {
 
 export default async function LecteurPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { user, supabase, session, group, title } = await getSessionContext(id);
+  const { user, supabase, session, group, title, members } = await getSessionContext(id);
 
   const { data: content } = await supabase
     .from('pedagogical_contents')
@@ -72,6 +72,8 @@ export default async function LecteurPage({ params }: { params: Promise<{ id: st
       contentVersionId={version.id}
       isProvisional={version.is_provisional}
       initial={initial}
+      memberCount={members.length}
+      canLaunchGames={hasPermission(user, 'games.manage')}
       notes={Object.fromEntries((notes ?? []).map((note) => [note.block_key, note.body]))}
     />
   );
