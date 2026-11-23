@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Check,
   ChevronLeft,
+  CirclePlus,
   ChevronRight,
   ClipboardCheck,
   ClipboardPen,
@@ -37,6 +38,7 @@ import { cn } from '@/lib/utils';
 
 import { savePlayerState, saveTrainerNote } from './actions';
 import { GamesPanel } from './jeux-panel';
+import { LiveMarksPanel, type LiveContext, type LiveMarkSummary, type LiveParticipant, type LiveSkill } from './live-marks-panel';
 
 type TimerState = { elapsedMs: number; runningSince: number | null };
 export type PlayerInitialState = {
@@ -86,6 +88,9 @@ export function SessionPlayer({
   notes: initialNotes,
   memberCount = 0,
   canLaunchGames = false,
+  liveParticipants = [],
+  liveSkills = [],
+  liveMarks = [],
 }: {
   sessionId: string;
   sessionLabel: string;
@@ -97,6 +102,9 @@ export function SessionPlayer({
   notes: Record<string, string>;
   memberCount?: number;
   canLaunchGames?: boolean;
+  liveParticipants?: LiveParticipant[];
+  liveSkills?: LiveSkill[];
+  liveMarks?: LiveMarkSummary[];
 }) {
   const sequences = script.sequences;
   const hasPrep = script.info.length > 0 || Boolean(script.intro);
@@ -108,6 +116,8 @@ export function SessionPlayer({
   const [now, setNow] = useState<number | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const [panel, setPanel] = useState<'notes' | null>(null);
+  const [marksOpen, setMarksOpen] = useState(false);
+  const [marksCount, setMarksCount] = useState(liveMarks.length);
   const [direction, setDirection] = useState(1);
   const [gamesOpen, setGamesOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -200,6 +210,8 @@ export function SessionPlayer({
       const target = event.target as HTMLElement;
       if (gamesOpen) return;
       if (['TEXTAREA', 'INPUT', 'SELECT'].includes(target.tagName) || target.isContentEditable) return;
+      // Espace/flèches sur un bouton du panneau « Points en direct » : activation normale du bouton.
+      if (target.closest?.('[data-live-marks]')) return;
       if (event.key === 'ArrowRight' || event.key === 'PageDown') {
         event.preventDefault();
         go((value) => value + 1);
@@ -213,10 +225,19 @@ export function SessionPlayer({
         void toggleFullscreen();
       } else if (event.key.toLowerCase() === 'n') {
         setPanel((value) => (value ? null : 'notes'));
+      } else if (event.key.toLowerCase() === 'p' && liveParticipants.length > 0) {
+        setMarksOpen((value) => !value);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
+  });
+
+  // Repère d'un « + » : bloc en cours et minutes écoulées (seulement si le chronomètre de session a servi).
+  const liveContext = (): LiveContext => ({
+    blockIndex: sequence ? sequence.index : null,
+    blockTitle: sequence ? sequence.title.slice(0, 200) : null,
+    elapsedSeconds: sessionTimer.elapsedMs > 0 || sessionTimer.runningSince ? Math.min(86400, Math.floor(elapsed(sessionTimer, Date.now()) / 1000)) : null,
   });
 
   const sessionElapsed = elapsed(sessionTimer, now);
@@ -262,6 +283,13 @@ export function SessionPlayer({
           <span className="hidden sm:inline">Jeux</span>
           <span className="sr-only sm:hidden">Jeux : lancer une activité</span>
         </button>
+        {liveParticipants.length > 0 ? (
+          <button type="button" onClick={() => setMarksOpen((value) => !value)} aria-pressed={marksOpen} aria-expanded={marksOpen} className={cn('relative flex h-10 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium hover:bg-white/10', marksOpen && 'bg-white/15')} aria-label={`Points en direct (P), ${marksCount} enregistré${marksCount > 1 ? 's' : ''}`}>
+            <CirclePlus className="size-5" aria-hidden />
+            <span className="hidden sm:inline">Points</span>
+            {marksCount > 0 ? <span className="min-w-5 rounded-full bg-orange-500 px-1 text-center text-xs font-semibold text-petrol-950 tabular-nums">{marksCount}</span> : null}
+          </button>
+        ) : null}
         <button type="button" onClick={() => setPanel((value) => (value ? null : 'notes'))} aria-pressed={panel === 'notes'} className={cn('flex size-10 items-center justify-center rounded-md hover:bg-white/10', panel && 'bg-white/15')} aria-label="Notes privées (N)">
           <NotebookPen className="size-5" aria-hidden />
         </button>
@@ -435,6 +463,21 @@ export function SessionPlayer({
               <p className="mb-1.5 text-sm font-semibold">Note générale de la session</p>
               <AutosaveTextarea label="Note générale de la session" rows={6} maxLength={8000} initialValue={initialNotes[''] ?? ''} onSave={(body) => saveTrainerNote(sessionId, '', body)} />
             </motion.aside>
+          ) : null}
+        </AnimatePresence>
+
+        {/* Points en direct : aide-mémoire horodatés, à côté du contenu (colonne sur grand écran, feuille basse sur mobile) */}
+        <AnimatePresence>
+          {marksOpen ? (
+            <LiveMarksPanel
+              sessionId={sessionId}
+              participants={liveParticipants}
+              skills={liveSkills}
+              initialMarks={liveMarks}
+              getContext={liveContext}
+              onClose={() => setMarksOpen(false)}
+              onCount={setMarksCount}
+            />
           ) : null}
         </AnimatePresence>
       </div>

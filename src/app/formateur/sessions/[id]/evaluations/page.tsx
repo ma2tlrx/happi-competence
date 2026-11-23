@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Card, EmptyState, Notice } from '@/components/ui/primitives';
 import { hasPermission } from '@/lib/auth/session';
 import type { Aggregation, Rounding, ScoringMode } from '@/lib/evaluation-engine';
+import type { LiveMark } from '@/lib/live-marks/live-marks';
 import { isAiConfigured } from '@/lib/report/ai';
 
 import { getSessionContext } from '../context';
@@ -20,7 +21,7 @@ export default async function EvaluationsPage({ params, searchParams }: { params
   const { data: links } = await supabase.from('program_frameworks').select('framework_version_id').eq('program_id', group.program_id);
   const versionIds = (links ?? []).map((link) => link.framework_version_id);
 
-  const [versions, levels, skills, mapping, attendance, evaluations, staff] = await Promise.all([
+  const [versions, levels, skills, mapping, attendance, evaluations, staff, marksResult] = await Promise.all([
     supabase.from('framework_versions').select('id, label, is_provisional, scale_min, scale_max, scale_step, scoring_mode, aggregation, rounding, frameworks ( code, name, position )').in('id', versionIds),
     supabase.from('scale_levels').select('version_id, value, label').in('version_id', versionIds),
     supabase
@@ -35,7 +36,13 @@ export default async function EvaluationsPage({ params, searchParams }: { params
       .select('id, participant_id, status, revision, validated_at, evaluator_id, updated_at, evaluation_scores ( skill_id, score, score_source, comment ), evaluation_criterion_scores ( criterion_id, observed, score ), evaluation_comments ( kind, body ), evaluation_history ( id, change_type, skill_id, comment_kind, old_value, new_value, reason, changed_by, changed_at ), evaluation_frameworks ( framework_version_id )')
       .eq('session_id', id),
     supabase.from('staff_directory').select('id, first_name, last_name'),
+    // Points en direct : aide-mémoire du formateur (lecture seule, ne remplissent aucune note).
+    supabase.from('session_live_marks').select('id, participant_id, skill_code, block_index, block_title, elapsed_seconds, created_at').eq('session_id', id).order('created_at'),
   ]);
+  const liveMarks: Record<string, LiveMark[]> = {};
+  for (const row of marksResult.data ?? []) {
+    (liveMarks[row.participant_id] ??= []).push({ id: row.id, participantId: row.participant_id, skillCode: row.skill_code, blockIndex: row.block_index, blockTitle: row.block_title, elapsedSeconds: row.elapsed_seconds, createdAt: row.created_at });
+  }
 
   const mappedByVersion = new Map<string, Set<string>>();
   for (const row of mapping.data ?? []) mappedByVersion.set(row.version_id, (mappedByVersion.get(row.version_id) ?? new Set()).add(row.skill_id));
@@ -66,6 +73,7 @@ export default async function EvaluationsPage({ params, searchParams }: { params
         levels: (levels.data ?? []).filter((level) => level.version_id === version.id).sort((a, b) => a.value - b.value).map(({ value, label }) => ({ value, label })),
         skills: versionSkills.map((skill) => ({
           id: skill.id,
+          code: skill.code,
           name: skill.name,
           description: skill.description,
           category: skill.skill_categories?.name ?? null,
@@ -141,6 +149,7 @@ export default async function EvaluationsPage({ params, searchParams }: { params
           canWrite={canWrite}
           initialParticipant={requested && members.some((member) => member.id === requested) ? requested : null}
           aiReady={isAiConfigured()}
+          liveMarks={liveMarks}
         />
       )}
     </>

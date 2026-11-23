@@ -17,10 +17,15 @@ import { appendToComment, factCommentText, type ValidFact } from '@/lib/observat
 import { cn, formatDateTime, formatScore } from '@/lib/utils';
 
 import { amendEvaluation, saveDraft, validateEvaluation, type EvaluationPayload } from './actions';
+import { groupMarksByParticipant, type LiveMark } from '@/lib/live-marks/live-marks';
+
+import { LiveMarksHints, SkillMarkHint, useHiddenMarks } from './live-marks-hints';
 import { ObservationAssistant } from './observation-assistant';
 
 export type EngineSkill = {
   id: string;
+  /** Code stable (rattachement des points en direct) ; absent pour les écrans qui ne les affichent pas. */
+  code?: string;
   name: string;
   description: string | null;
   category: string | null;
@@ -99,6 +104,7 @@ export function EvaluationWorkspace({
   canWrite,
   initialParticipant,
   aiReady,
+  liveMarks = {},
 }: {
   sessionId: string;
   sessionStatus: string;
@@ -109,6 +115,8 @@ export function EvaluationWorkspace({
   initialParticipant: string | null;
   /** Service d'IA configuré (aide à la structuration des notes de séance). */
   aiReady: boolean;
+  /** Points en direct du formateur, par participant (aide-mémoire en lecture seule). */
+  liveMarks?: Record<string, LiveMark[]>;
 }) {
   const router = useRouter();
   const [existing, setExisting] = useState(initialExisting);
@@ -129,6 +137,12 @@ export function EvaluationWorkspace({
   const validated = evaluation?.status === 'validated';
   const locked = !canWrite || (validated && !editing);
   const index = members.findIndex((member) => member.id === currentId);
+  const hiddenMarks = useHiddenMarks(sessionId);
+  const currentMarks = useMemo(() => liveMarks[currentId] ?? [], [liveMarks, currentId]);
+  const visibleMarksBySkill = useMemo(() => {
+    const grouped = groupMarksByParticipant(currentMarks.filter((mark) => !hiddenMarks.hidden.has(mark.id)))[currentId];
+    return Object.fromEntries((grouped?.bySkill ?? []).filter((entry) => entry.skillCode).map((entry) => [entry.skillCode!, entry.marks]));
+  }, [currentMarks, hiddenMarks.hidden, currentId]);
   const usableFrameworks = useMemo(
     () => frameworks.filter((framework) => !evaluation || evaluation.versionIds.length === 0 || evaluation.versionIds.includes(framework.versionId)),
     [frameworks, evaluation],
@@ -371,6 +385,15 @@ export function EvaluationWorkspace({
           />
         ) : null}
 
+        <LiveMarksHints
+          participantName={current.firstName}
+          marks={currentMarks}
+          skills={frameworks.flatMap((framework) => framework.skills.flatMap((skill) => (skill.code ? [{ code: skill.code, name: skill.name }] : [])))}
+          hidden={hiddenMarks.hidden}
+          onHide={hiddenMarks.hide}
+          onReset={hiddenMarks.reset}
+        />
+
         {usableFrameworks.map((framework) => (
           <FrameworkSection
             key={framework.versionId}
@@ -380,6 +403,7 @@ export function EvaluationWorkspace({
             onScore={setScore}
             onSkillComment={setSkillComment}
             onCriterion={setCriterion}
+            marksBySkill={visibleMarksBySkill}
           />
         ))}
 
@@ -479,6 +503,7 @@ export function FrameworkSection({
   onScore,
   onSkillComment,
   onCriterion,
+  marksBySkill,
 }: {
   framework: EngineFramework;
   form: FormState;
@@ -486,6 +511,8 @@ export function FrameworkSection({
   onScore: (skillId: string, score: number | null) => void;
   onSkillComment: (skillId: string, comment: string) => void;
   onCriterion: (criterionId: string, value: { observed: boolean | null; score: number | null }) => void;
+  /** Points en direct par code de compétence (lecture seule) ; absent hors de l'évaluation du formateur. */
+  marksBySkill?: Record<string, LiveMark[]>;
 }) {
   const values = scaleValues(framework.rules);
   const derived = framework.rules.scoringMode !== 'direct';
@@ -534,6 +561,7 @@ export function FrameworkSection({
                 onScore={(value) => onScore(skill.id, value)}
                 onComment={(value) => onSkillComment(skill.id, value)}
                 onCriterion={onCriterion}
+                marks={skill.code ? marksBySkill?.[skill.code] : undefined}
               />
             </li>
           );
@@ -555,6 +583,7 @@ function SkillRow({
   onScore,
   onComment,
   onCriterion,
+  marks,
 }: {
   skill: EngineSkill;
   framework: EngineFramework;
@@ -567,6 +596,7 @@ function SkillRow({
   onScore: (value: number | null) => void;
   onComment: (value: string) => void;
   onCriterion: (criterionId: string, value: { observed: boolean | null; score: number | null }) => void;
+  marks?: LiveMark[];
 }) {
   const [showComment, setShowComment] = useState(Boolean(comment));
   const [showCriteria, setShowCriteria] = useState(derived);
@@ -601,6 +631,7 @@ function SkillRow({
             ) : null}
           </p>
           <p className="text-sm text-ink-muted">{score !== null ? `${formatScore(score)} · ${levelLabel(score)}` : 'Non observée'}</p>
+          {marks && marks.length > 0 ? <SkillMarkHint skillName={skill.name} marks={marks} /> : null}
         </div>
         <div role="radiogroup" aria-label={`Niveau observé pour ${skill.name}`} className="flex flex-wrap gap-1.5">
           {values.map((value) => {

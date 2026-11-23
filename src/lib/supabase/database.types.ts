@@ -4446,6 +4446,65 @@ export type Database = {
           },
         ]
       }
+      session_live_marks: {
+        Row: {
+          block_index: number | null
+          block_title: string | null
+          created_at: string
+          created_by: string | null
+          elapsed_seconds: number | null
+          id: string
+          kind: string
+          participant_id: string
+          session_id: string
+          skill_code: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          block_index?: number | null
+          block_title?: string | null
+          created_at?: string
+          created_by?: string | null
+          elapsed_seconds?: number | null
+          id?: string
+          kind?: string
+          participant_id: string
+          session_id: string
+          skill_code?: string | null
+        }
+        Update: {
+          block_index?: number | null
+          block_title?: string | null
+          created_at?: string
+          created_by?: string | null
+          elapsed_seconds?: number | null
+          id?: string
+          kind?: string
+          participant_id?: string
+          session_id?: string
+          skill_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_live_marks_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_live_marks_participant_id_fkey"
+            columns: ["participant_id"]
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_live_marks_session_id_fkey"
+            columns: ["session_id"]
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_player_states: {
         Row: {
           block_timers: NonNullable<Json>
