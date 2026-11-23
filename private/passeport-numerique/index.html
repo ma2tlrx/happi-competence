@@ -2467,6 +2467,33 @@ function eScroll(e,A,win){const it=['Pommes','Poireaux','Pain de campagne','From
  A.innerHTML=`<div class="scr" id="sc"><p><b>${B('Ma liste de courses')}</b> <small>${B('(la suite est plus bas ↓)')}</small></p>${it.map(x=>`<div class="li">${x}</div>`).join('')}<div style="padding:24px 0;text-align:center"><button class="btn sun big" id="bk">${ic('basket')} <span>${B('Le panier')}</span></button></div></div>`;
  const sc=A.querySelector('#sc');let told=0;sc.addEventListener('scroll',()=>{if(!told&&sc.scrollTop>80){told=1;fb('C’est ça, continuez à descendre !','good')}});A.querySelector('#bk').onclick=()=>{if(sc.scrollHeight>sc.clientHeight+20&&sc.scrollTop<sc.scrollHeight-sc.clientHeight-200){fb('Faites d’abord descendre la liste jusqu’en bas.','bad');return}win()}}
 
+/* Geste « glisser vers la gauche » (souris, doigt, stylet), utilisé par l'exercice des gestes spéciaux.
+   Évolution demandée par le client : seuil bas, zone de prise large, la photo suit le doigt, petit mouvement rapide accepté,
+   et une alternative sans glisser (bouton + flèches du clavier, WCAG 2.5.7). Voir docs/passeport-numerique.md. */
+/* swipe-verdict:start */
+function swipeVerdict(dx,dy,ms){const ax=Math.abs(dx),ay=Math.abs(dy);
+ if(ax<8&&ay<8)return'tap';
+ if(ax<ay*.6)return'vertical';
+ if(ax<24&&!(ax>=12&&ax/Math.max(ms,1)>=.35))return'short';
+ return dx<0?'left':'right'}
+/* swipe-verdict:end */
+function swipeLeft(zone,card,o){let d=null,busy=0;const W=()=>card.offsetWidth||280,still=matchMedia('(prefers-reduced-motion:reduce)').matches;
+ const follow=dx=>{const x=Math.max(-W()*1.1,Math.min(W()*.25,dx));card.style.transition='none';card.style.transform=`translateX(${x}px) rotate(${x/W()*6}deg)`;card.classList.toggle('ready',dx<=-24)};
+ const rest=()=>{card.classList.remove('ready');card.style.transition='transform .18s ease';card.style.transform=''};
+ const advance=()=>{if(busy)return;busy=1;card.classList.remove('ready');const show=o.left();
+  if(still||!show){if(show)show();card.style.transform='';busy=0;return}
+  card.style.transition='transform .14s ease-in';card.style.transform=`translateX(${-W()-30}px)`;
+  setTimeout(()=>{show();card.style.transition='none';card.style.transform=`translateX(${W()*.6}px)`;void card.offsetWidth;card.style.transition='transform .16s ease-out';card.style.transform='';setTimeout(()=>{busy=0},170)},140)};
+ zone.addEventListener('pointerdown',ev=>{if(busy||d||ev.button>0||ev.target.closest('button'))return;d={id:ev.pointerId,x:ev.clientX,y:ev.clientY,t:performance.now()};try{zone.setPointerCapture(ev.pointerId)}catch(_){}zone.classList.add('drag')});
+ zone.addEventListener('pointermove',ev=>{if(d&&ev.pointerId===d.id)follow(ev.clientX-d.x)});
+ zone.addEventListener('pointerup',ev=>{if(!d||ev.pointerId!==d.id)return;const g=d;d=null;zone.classList.remove('drag');
+  const v=swipeVerdict(ev.clientX-g.x,ev.clientY-g.y,performance.now()-g.t);if(v==='left')advance();else{rest();o[v]()}});
+ const abort=ev=>{if(d&&(!ev||ev.pointerId===d.id)){d=null;zone.classList.remove('drag');rest()}};
+ zone.addEventListener('pointercancel',abort);zone.addEventListener('lostpointercapture',abort);
+ zone.addEventListener('dragstart',ev=>ev.preventDefault());zone.addEventListener('contextmenu',ev=>ev.preventDefault());
+ card.addEventListener('keydown',ev=>{if(ev.key==='ArrowLeft'){ev.preventDefault();advance()}else if(ev.key==='ArrowRight'){ev.preventDefault();o.right()}});
+ return advance}
+
 function eGest(e,A,win){const pc=dev()==='pc';
  if(pc){setSay('Double-cliquez sur le dossier « Mes photos » : cliquez deux fois, rapidement, avec le bouton de gauche.');
   e.help='Le double-clic : deux petits clics rapides, sans bouger la souris entre les deux. Le clic droit : le bouton de droite de la souris, une seule fois.';
@@ -2482,9 +2509,14 @@ function eGest(e,A,win){const pc=dev()==='pc';
     m.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(b.dataset.m==='Renommer')win('Double-clic et clic droit : c’est acquis !');else fb('Cherchez plutôt « Renommer ».','bad')})})}}
  else{setSay('Faites glisser votre doigt vers la gauche sur la photo, pour passer à la photo suivante. Faites-le deux fois.');
   e.help='Posez le doigt sur la photo et faites-le glisser vers la gauche, comme pour tourner la page d’un album. Pour l’appui long : gardez le doigt posé, sans bouger, en comptant jusqu’à deux.';
-  let k=0,x0=null;A.innerHTML=`<div class="gbox"><div class="gtarget" id="gt" style="width:280px;height:210px">${photo(0)}</div><b id="gc">Photo 1 sur 3</b></div>`;const gt=A.querySelector('#gt');
-  gt.addEventListener('pointerdown',ev=>{x0=ev.clientX});
-  gt.addEventListener('pointerup',ev=>{if(x0==null)return;const dx=ev.clientX-x0;x0=null;if(dx<-50){k++;gt.innerHTML=photo(k);A.querySelector('#gc').textContent=`Photo ${k+1} sur 3`;fb('Bien glissé !','good');if(k>=2)setTimeout(step2,700)}else if(dx>50)fb('Dans l’autre sens : vers la gauche.','bad');else fb('Faites glisser le doigt, ne le posez pas seulement.','bad')});
+  let k=0;A.innerHTML=`<div class="gbox swipezone"><div class="gtarget swipecard" id="gt" tabindex="0" role="group" aria-roledescription="carrousel" aria-label="Photo 1 sur 3. Flèche gauche : photo suivante." style="width:280px;height:210px">${photo(0)}</div><b id="gc" role="status">Photo 1 sur 3</b><p class="swhint" id="gh">${B('Faites glisser l’image vers la gauche, ou touchez le bouton ←.')}</p><button class="btn alt big" id="gsl" type="button">${ic('back')} <span>${B('Déplacer vers la gauche')}</span></button></div>`;const gt=A.querySelector('#gt');
+  const go=swipeLeft(A.querySelector('.gbox'),gt,{
+   left(){k++;A.querySelector('#gc').textContent=`Photo ${k+1} sur 3`;fb('Bien glissé !','good');if(k>=2)setTimeout(step2,700);return()=>{gt.innerHTML=photo(k);gt.setAttribute('aria-label',`Photo ${k+1} sur 3. Flèche gauche : photo suivante.`)}},
+   right(){fb('Dans l’autre sens : vers la gauche.','bad')},
+   tap(){fb('Faites glisser le doigt, ne le posez pas seulement.','bad')},
+   short(){fb('Un peu plus loin, vers la gauche.','bad')},
+   vertical(){fb('Glissez vers la gauche, pas vers le haut ou le bas.','bad')}});
+  A.querySelector('#gsl').addEventListener('click',go);
   function step2(){setSay('Maintenant, l’appui long : gardez le doigt posé sur la photo, sans bouger, jusqu’à ce qu’un menu apparaisse.');
    A.innerHTML=`<div class="gbox"><div class="gtarget" id="gp" style="width:260px;height:195px">${photo(2)}</div><div id="menu"></div></div>`;const gp=A.querySelector('#gp');let t,shown=0;
    gp.addEventListener('contextmenu',ev=>ev.preventDefault());
