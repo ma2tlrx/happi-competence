@@ -26,8 +26,8 @@ export default defineConfig({
     trace: 'off',
   },
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'] }, testIgnore: /responsive\.spec\.ts/ },
-    { name: 'mobile', use: { ...devices['Pixel 7'] }, testMatch: /responsive\.spec\.ts/ },
+    { name: 'desktop', use: { ...devices['Desktop Chrome'] }, testIgnore: /(responsive|vitrine-mobile)\.spec\.ts/ },
+    { name: 'mobile', use: { ...devices['Pixel 7'] }, testMatch: /(responsive|vitrine-mobile)\.spec\.ts/ },
   ],
   webServer: {
     command: `npm run dev -- -p ${port}`,

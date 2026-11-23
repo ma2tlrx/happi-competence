@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import { login } from './helpers';
 
 test('accueil et passeport sans défilement horizontal sur téléphone', async ({ page }) => {
-  for (const path of ['/', '/programme', '/competences']) {
+  for (const path of ['/', '/programmes', '/competences']) {
     await page.goto(path);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(overflow, path).toBeLessThanOrEqual(1);

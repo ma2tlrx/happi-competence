@@ -21,7 +21,7 @@ export const siteConfig = {
 
 export const publicNavigation = [
   { href: '/', label: 'Accueil' },
-  { href: '/programme', label: 'Le programme' },
+  { href: '/programmes', label: 'Les programmes' },
   { href: '/approche', label: 'Notre approche' },
   { href: '/competences', label: 'Les compétences' },
   { href: '/contact', label: 'Contact' },

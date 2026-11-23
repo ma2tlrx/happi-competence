@@ -2,6 +2,12 @@
 
 Application d'initiation au numérique fournie sous forme de fichier statique (`private/passeport-numerique/index.html`, 19 « mondes » d'exercices, aide en 6 langues, défis chrono facultatifs, attestations, espace animateur). Elle est intégrée à la plateforme comme **second programme**, à côté de HAPPI Compétence.
 
+## Sur le site vitrine
+
+- Accueil : section « Le Passeport Numérique » entre « Notre méthodologie » et « Pour qui » ; bloc dédié aux personnes éloignées du numérique dans « Pour qui ».
+- Page `/programmes` (ancienne `/programme`, redirigée en 308) : HAPPI Compétence puis le Passeport Numérique (ancre `#passeport-numerique`).
+- Textes dans `src/lib/public-passeport.ts` (chiffres : `PASSEPORT_FACTS`) ; composants dans `src/components/public/passeport-numerique.tsx`.
+
 ## Ce que voient les personnes
 
 | Qui | Où | Quoi |

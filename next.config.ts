@@ -76,7 +76,8 @@ const nextConfig: NextConfig = {
     return [
       { source: '/contacts', destination: '/contact', permanent },
       { source: '/(about-us|history|mission|our-team|team|gallery)', destination: '/approche', permanent },
-      { source: '/services', destination: '/programme', permanent },
+      { source: '/services', destination: '/programmes', permanent },
+      { source: '/programme', destination: '/programmes', permanent }, // 308 : ancienne adresse de la page des programmes
       { source: '/(shop|shop-2|cart|checkout|my-account-2|wishlist-2)/:rest*', destination: '/', permanent },
       { source: '/(shop|shop-2|cart|checkout|my-account-2|wishlist-2)', destination: '/', permanent },
       { source: '/(product|portfolio|team|blog|category|tag|author)/:rest*', destination: '/', permanent },

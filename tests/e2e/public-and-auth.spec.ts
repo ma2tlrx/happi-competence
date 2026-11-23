@@ -5,7 +5,7 @@ import { login, unique } from './helpers';
 test('les pages publiques s’affichent', async ({ page }) => {
   for (const [path, heading] of [
     ['/', 'Révélez les compétences qui feront la différence.'],
-    ['/programme', 'Le programme HAPPI'],
+    ['/programmes', 'Les programmes'],
     ['/approche', 'Notre approche'],
     ['/competences', 'Les compétences observées'],
     ['/contact', 'Nous contacter'],
