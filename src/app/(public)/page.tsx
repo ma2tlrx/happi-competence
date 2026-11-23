@@ -5,6 +5,8 @@ import { CountUp } from '@/components/public/count-up';
 import { DeclaredObserved } from '@/components/public/declared-observed';
 import { HeroMascot, Intro, Magnetic, SplitHeadline } from '@/components/public/hero-motion';
 import { MethodTimeline } from '@/components/public/method-timeline';
+import { MobileFold } from '@/components/public/mobile-fold';
+import { PasseportAudienceCard, PasseportHome } from '@/components/public/passeport-numerique';
 import { PassportDemo } from '@/components/public/passport-demo';
 import { Reveal } from '@/components/public/reveal';
 import { ScaleSteps } from '@/components/public/scale-steps';
@@ -14,6 +16,7 @@ import { Faq, Section, SectionHeading, SpaceAccess } from '@/components/public/s
 import { Button } from '@/components/ui/button';
 import { siteConfig } from '@/config/site';
 import { audiences, faq, journey, mission, organizationBenefits, participantBenefits, testimonials, vision } from '@/config/site-content';
+import { passeportAudience } from '@/lib/public-passeport';
 import { frameworkByCode, getPublicCatalog } from '@/lib/public-catalog';
 import { formatDuration } from '@/lib/utils';
 
@@ -104,8 +107,8 @@ export default async function HomePage() {
               <div className="mt-9 flex flex-wrap gap-3">
                 <Magnetic>
                   <Button asChild size="lg">
-                    <Link href="/programme">
-                      Découvrir le programme
+                    <Link href="/programmes">
+                      Découvrir les programmes
                       <ArrowRight aria-hidden />
                     </Link>
                   </Button>
@@ -146,12 +149,14 @@ export default async function HomePage() {
           intro="Coopérer, s’adapter, décider sous pression : ces compétences comptent dans tous les métiers, mais elles se voient rarement sur un CV et se racontent mal en entretien."
         />
         {compared.length ? (
-          <Reveal className="mt-12">
-            <DeclaredObserved
-              skills={compared}
-              comment="Répartit les rôles dès le début de la partie et vérifie que chacun a compris la consigne."
-            />
-          </Reveal>
+          <MobileFold label="un exemple : ce qu’on dit, ce qu’on observe" className="mt-8 sm:mt-12">
+            <Reveal>
+              <DeclaredObserved
+                skills={compared}
+                comment="Répartit les rôles dès le début de la partie et vérifie que chacun a compris la consigne."
+              />
+            </Reveal>
+          </MobileFold>
         ) : null}
         <ol className="mt-16 grid gap-x-10 gap-y-10 md:grid-cols-3">
           {[
@@ -190,7 +195,7 @@ export default async function HomePage() {
             intro={`${sessionsCount} sessions de ${formatDuration(program?.session_duration_minutes ?? 180)}, en groupe. À chaque session, de nouvelles compétences entrent en jeu.`}
           />
           <Button asChild variant="inverse">
-            <Link href="/programme">
+            <Link href="/programmes">
               Le programme en détail
               <ArrowRight aria-hidden />
             </Link>
@@ -206,13 +211,15 @@ export default async function HomePage() {
           intro="Faites avancer un parcours d’exemple : l’auto-évaluation de départ reste visible, les observations des formateurs s’ajoutent au fil du programme."
         />
         {demoFrameworks.length && demoSessions.length ? (
-          <Reveal className="mt-12">
-            <PassportDemo frameworks={demoFrameworks} sessions={demoSessions} />
-            <p className="mt-3 text-sm text-ink-muted">
-              Niveaux et commentaires fictifs, affichés avec les composants de l’espace participant et la répartition réelle des
-              compétences par session.
-            </p>
-          </Reveal>
+          <MobileFold label="un exemple de passeport" className="mt-8 sm:mt-12">
+            <Reveal>
+              <PassportDemo frameworks={demoFrameworks} sessions={demoSessions} />
+              <p className="mt-3 text-sm text-ink-muted">
+                Niveaux et commentaires fictifs, affichés avec les composants de l’espace participant et la répartition réelle des
+                compétences par session.
+              </p>
+            </Reveal>
+          </MobileFold>
         ) : null}
 
         <div id="acces" className="mt-20 scroll-mt-24 sm:mt-24">
@@ -238,26 +245,31 @@ export default async function HomePage() {
               <Reveal key={framework.code} delay={index * 0.08}>
                 <article className="flex h-full flex-col rounded-xl border border-line p-6 sm:p-8">
                   <h3 className="flex items-end gap-4">
-                    <CountUp value={count} className="font-mono text-[clamp(3.5rem,3rem+3vw,5.5rem)] leading-[0.85] font-medium tracking-[-0.06em] text-petrol-900" />
+                    <CountUp
+                      value={count}
+                      className="font-mono text-[clamp(3.5rem,3rem+3vw,5.5rem)] leading-[0.85] font-medium tracking-[-0.06em] text-petrol-900"
+                    />
                     <span className="pb-1 text-display-md">{framework.name.replace(/^./, (letter) => letter.toLowerCase())}</span>
                   </h3>
-                  <div className="mt-8">
-                    <p className="mb-3 text-sm text-ink-subtle">
-                      Échelle de {framework.scale_min} à {framework.scale_max}
-                    </p>
-                    <ScaleSteps
-                      levels={framework.levels}
-                      label={`Échelle des ${framework.name.toLowerCase()}, de ${framework.scale_min} à ${framework.scale_max}`}
-                    />
-                  </div>
-                  <ul className="mt-8 space-y-3">
-                    {framework.categories.map((category) => (
-                      <li key={category.code} className="flex flex-col gap-1 border-t border-line pt-3 sm:flex-row sm:gap-4">
-                        <span className="w-40 shrink-0 font-semibold text-ink">{category.name}</span>
-                        <span className="text-ink-muted">{category.skills.map((skill) => skill.name).join(', ')}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <MobileFold label="l’échelle et les compétences" className="mt-4 sm:mt-8">
+                    <div>
+                      <p className="mb-3 text-sm text-ink-subtle">
+                        Échelle de {framework.scale_min} à {framework.scale_max}
+                      </p>
+                      <ScaleSteps
+                        levels={framework.levels}
+                        label={`Échelle des ${framework.name.toLowerCase()}, de ${framework.scale_min} à ${framework.scale_max}`}
+                      />
+                    </div>
+                    <ul className="mt-8 space-y-3">
+                      {framework.categories.map((category) => (
+                        <li key={category.code} className="flex flex-col gap-1 border-t border-line pt-3 sm:flex-row sm:gap-4">
+                          <span className="w-40 shrink-0 font-semibold text-ink">{category.name}</span>
+                          <span className="text-ink-muted">{category.skills.map((skill) => skill.name).join(', ')}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </MobileFold>
                 </article>
               </Reveal>
             );
@@ -283,6 +295,8 @@ export default async function HomePage() {
           <MethodTimeline steps={journey} />
         </div>
       </Section>
+
+      <PasseportHome />
 
       {/* ── Publics et bénéfices ─────────────────────────────────────── */}
       <Section tone="white">
@@ -317,24 +331,27 @@ export default async function HomePage() {
             </Reveal>
           ))}
         </div>
+        <PasseportAudienceCard {...passeportAudience} />
       </Section>
 
       {/* ── Témoignages ──────────────────────────────────────────────── */}
       <Section>
         <SectionHeading title="Ils ont participé au programme" />
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {testimonials.map((item, index) => (
-            <Reveal key={item.author} delay={index * 0.06}>
-              <figure className="flex h-full flex-col rounded-lg bg-white p-6">
-                <Quote className="size-6 text-orange-500" aria-hidden />
-                <blockquote className="mt-4 flex-1 text-ink">« {item.quote} »</blockquote>
-                <figcaption className="mt-5 text-sm text-ink-muted">
-                  <span className="font-semibold text-ink">{item.author}</span>, participant
-                </figcaption>
-              </figure>
-            </Reveal>
-          ))}
-        </div>
+        <MobileFold label="les témoignages" className="mt-6 sm:mt-10">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {testimonials.map((item, index) => (
+              <Reveal key={item.author} delay={index * 0.06}>
+                <figure className="flex h-full flex-col rounded-lg bg-white p-6">
+                  <Quote className="size-6 text-orange-500" aria-hidden />
+                  <blockquote className="mt-4 flex-1 text-ink">« {item.quote} »</blockquote>
+                  <figcaption className="mt-5 text-sm text-ink-muted">
+                    <span className="font-semibold text-ink">{item.author}</span>, participant
+                  </figcaption>
+                </figure>
+              </Reveal>
+            ))}
+          </div>
+        </MobileFold>
       </Section>
 
       {/* ── Équipe ───────────────────────────────────────────────────── */}

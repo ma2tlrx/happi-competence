@@ -19,7 +19,7 @@ export function Section({
 }) {
   const tones = { paper: 'bg-paper', white: 'bg-white', petrol: 'bg-petrol-900 text-white pixel-grid' };
   return (
-    <section id={id} className={cn('py-20 sm:py-24 lg:py-28', tones[tone], className)}>
+    <section id={id} className={cn('py-12 sm:py-24 lg:py-28', tones[tone], className)}>
       <div className="container-site">{children}</div>
     </section>
   );
@@ -86,7 +86,10 @@ export function SpaceAccess() {
                 {choice.cta}
                 <ArrowRight className="size-[1.125rem] transition-transform group-hover:translate-x-0.5" aria-hidden />
               </Link>
-              <Link href={choice.signup} className="inline-flex items-center gap-1.5 font-semibold text-petrol-700 underline-offset-4 hover:underline">
+              <Link
+                href={choice.signup}
+                className="inline-flex items-center gap-1.5 font-semibold text-petrol-700 underline-offset-4 hover:underline"
+              >
                 <Plus className="size-4" aria-hidden />
                 {choice.signupLabel}
               </Link>
@@ -97,7 +100,10 @@ export function SpaceAccess() {
       <Reveal className="md:col-span-2" delay={0.16}>
         <p className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-dashed border-line-strong px-5 py-4 text-[0.9375rem] text-ink-muted">
           <span>Vous faites partie de l’équipe HAPPI ?</span>
-          <Link href="/connexion?espace=formateur" className="inline-flex items-center gap-1.5 font-semibold text-ink hover:text-petrol-700">
+          <Link
+            href="/connexion?espace=formateur"
+            className="inline-flex items-center gap-1.5 font-semibold text-ink hover:text-petrol-700"
+          >
             <GraduationCap className="size-4" aria-hidden />
             Espace formateur
           </Link>

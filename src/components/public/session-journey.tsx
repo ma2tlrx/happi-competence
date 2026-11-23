@@ -1,6 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion, useMotionValueEvent, useScroll, useSpring } from 'motion/react';
+import { ChevronDown } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 
 import { cn } from '@/lib/utils';
@@ -57,8 +58,58 @@ function blocksOf(skills: JourneySkill[]): Block[] {
  */
 export function SessionJourney({ sessions, skills }: { sessions: JourneySession[]; skills: JourneySkill[] }) {
   const reduce = usePrefersReducedMotion();
-  if (reduce) return <StaticJourney sessions={sessions} skills={skills} />;
-  return <PinnedJourney sessions={sessions} skills={skills} />;
+  return (
+    <>
+      {/* Téléphone : liste courte, sans défilement épinglé ni animation. */}
+      <div className="sm:hidden">
+        <MobileJourney sessions={sessions} skills={skills} />
+      </div>
+      <div className="max-sm:hidden">
+        {reduce ? <StaticJourney sessions={sessions} skills={skills} /> : <PinnedJourney sessions={sessions} skills={skills} />}
+      </div>
+    </>
+  );
+}
+
+/** Téléphone : une ligne par session, les compétences travaillées sont dans un repli. */
+function MobileJourney({ sessions, skills }: { sessions: JourneySession[]; skills: JourneySkill[] }) {
+  return (
+    <ol className="container-site divide-y divide-white/10 py-6">
+      {sessions.map((session) => {
+        const mobilised = skillsOf(skills, session.number);
+        const all = [...mobilised.ct, ...mobilised.hbs];
+        return (
+          <li key={session.number} className="py-4">
+            <div className="flex items-start gap-4">
+              <span className="font-display text-3xl leading-none font-semibold text-orange-400" aria-hidden>
+                {session.number}
+              </span>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-display text-lg font-semibold text-white">
+                  <span className="sr-only">Session {session.number} : </span>
+                  {session.title}
+                </h3>
+                {session.summary ? <p className="mt-1 text-white/75">{session.summary}</p> : null}
+                {session.is_provisional ? <p className="mt-1 text-white/75">Contenu publié avec le programme définitif.</p> : null}
+                {all.length ? (
+                  <details className="group mt-2">
+                    <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 font-semibold text-orange-200 [&::-webkit-details-marker]:hidden">
+                      Compétences travaillées ({all.length})
+                      <ChevronDown
+                        className="size-4 transition-transform group-open:rotate-180 motion-reduce:transition-none"
+                        aria-hidden
+                      />
+                    </summary>
+                    <p className="pb-2 text-[0.9375rem] text-white/80">{all.map((skill) => skill.name).join(', ')}.</p>
+                  </details>
+                ) : null}
+              </div>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
 }
 
 function skillsOf(skills: JourneySkill[], session: number) {

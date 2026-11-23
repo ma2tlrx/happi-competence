@@ -32,7 +32,7 @@ Aucune variable d’environnement ni secret n’est inclus. Construisez sur Linu
 (optimisation des images) pour la plateforme de construction.
 
 Vérifié localement (17/11/2026, Node.js 22.23.4) : le zip décompressé dans un dossier
-neuf démarre avec `node app.js`, répond sur `/`, `/programme`, `/connexion`,
+neuf démarre avec `node app.js`, répond sur `/`, `/programmes`, `/connexion`,
 `/api/health` (200 quand la base répond, 503 sinon), produit les PDF (feuille
 d’émargement, passeport, feuille de présence) avec les polices du paquet et l’export
 ZIP de réversibilité ; ~150 Mo de mémoire après quelques requêtes. Node.js 24 n’a
