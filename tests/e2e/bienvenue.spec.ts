@@ -29,8 +29,19 @@ test('le participant remplit les cinq étapes puis arrive sur son auto-évaluati
 
   // Étape 1 : rien de rempli, les questions obligatoires sont signalées.
   await expect(page.getByText('Étape 1 sur 6')).toBeVisible();
+  // Même coque que l'auto-évaluation : menu participant, barre de progression collante, cartes pleine largeur (pas de colonne étroite).
+  await expect(page.getByRole('navigation', { name: 'Mon passeport' })).toBeAttached();
+  await expect(page.getByText('Réponses enregistrées à chaque étape')).toBeVisible();
+  const card = page.locator('fieldset').first();
+  const box = (await card.boundingBox())!;
+  expect(box.width).toBeGreaterThan(640);
+  // Cibles tactiles des choix : 44 px au moins.
+  const choice = page.getByText('18 - 21 ans');
+  expect((await choice.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await next(page);
   await expect(page.getByText('Indique ton âge.')).toBeVisible();
+  // Le focus va sur la première question à corriger.
+  await expect(page.locator('input[name=age_band]').first()).toBeFocused();
   await page.getByText('18 - 21 ans').click();
   await page.getByText('Demandeur(se) d’emploi').click();
   await page.getByText('Autre ville').click();
