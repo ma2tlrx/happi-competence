@@ -11,8 +11,8 @@ const base =
   'aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:shrink-0';
 
 const variants = {
-  /** Action principale : orange HAPPI, texte pétrole foncé (contraste 5,2:1). */
-  primary: 'bg-orange-500 text-petrol-950 shadow-xs hover:bg-orange-400',
+  /** Action principale : orange HAPPI (teinte un peu plus soutenue pour un texte blanc net, contraste 4,6:1). */
+  primary: 'bg-orange-650 text-white shadow-xs hover:bg-orange-700',
   secondary: 'bg-petrol-900 text-white hover:bg-petrol-800',
   outline: 'border border-line-strong bg-white text-ink hover:border-petrol-400 hover:bg-petrol-50',
   ghost: 'text-ink hover:bg-petrol-100/70',

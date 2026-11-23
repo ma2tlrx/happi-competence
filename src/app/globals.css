@@ -29,6 +29,7 @@
   --color-petrol-50: #f1f6f7;
 
   --color-orange-700: #b8431a;
+  --color-orange-650: #c94d1a; /* boutons orange avec texte blanc : contraste 4,6:1 */
   --color-orange-600: #d2541f;
   --color-orange-500: #ea632e;
   --color-orange-400: #f0733f;

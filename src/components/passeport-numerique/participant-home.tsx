@@ -16,7 +16,7 @@ export function PasseportNumeriqueHome({ firstName }: { firstName: string }) {
             <p className="mt-3 text-white/75">Découvrez le numérique pas à pas, à votre rythme. Votre progression est gardée : vous reprenez toujours là où vous vous êtes arrêté(e).</p>
             <Link
               href="/participant/passeport-numerique"
-              className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-orange-500 px-6 text-lg font-semibold text-petrol-950 transition-colors hover:bg-orange-400"
+              className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-orange-650 px-6 text-lg font-semibold text-white transition-colors hover:bg-orange-700"
             >
               <MonitorSmartphone className="size-5" aria-hidden />
               Continuer mes exercices

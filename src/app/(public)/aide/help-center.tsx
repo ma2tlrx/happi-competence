@@ -129,7 +129,7 @@ export function HelpCenter({ audience, contactEmail }: { audience: HelpAudience 
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
             href="/contact"
-            className="inline-flex min-h-10 items-center gap-2 rounded-md bg-orange-500 px-4 font-semibold text-petrol-950 hover:bg-orange-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="inline-flex min-h-10 items-center gap-2 rounded-md bg-orange-650 px-4 font-semibold text-white hover:bg-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             <MessageSquare className="size-4" aria-hidden />
             Formulaire de contact

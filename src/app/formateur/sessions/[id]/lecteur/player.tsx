@@ -449,12 +449,12 @@ export function SessionPlayer({
           </button>
         ) : null}
         {current < sequences.length - 1 ? (
-          <button type="button" onClick={() => go(current + 1)} className="flex h-11 items-center gap-1.5 rounded-md bg-orange-500 px-4 font-semibold text-petrol-950 hover:bg-orange-400">
+          <button type="button" onClick={() => go(current + 1)} className="flex h-11 items-center gap-1.5 rounded-md bg-orange-650 px-4 font-semibold text-white hover:bg-orange-700">
             <span>Suivante</span>
             <ChevronRight className="size-5" aria-hidden />
           </button>
         ) : (
-          <Link href={`/formateur/sessions/${sessionId}/evaluations`} className="flex h-11 items-center gap-1.5 rounded-md bg-orange-500 px-4 font-semibold text-petrol-950 hover:bg-orange-400">
+          <Link href={`/formateur/sessions/${sessionId}/evaluations`} className="flex h-11 items-center gap-1.5 rounded-md bg-orange-650 px-4 font-semibold text-white hover:bg-orange-700">
             <ClipboardPen className="size-5" aria-hidden />
             Évaluer les participants
           </Link>
@@ -513,7 +513,7 @@ function BlockTimer({ durationMinutes, timer, now, onChange, isBreak }: { durati
         <button
           type="button"
           onClick={() => onChange(running ? { elapsedMs: spent, runningSince: null } : { ...timer, runningSince: Date.now() })}
-          className={cn('flex h-11 items-center gap-1.5 rounded-md px-4 font-semibold', running ? 'bg-petrol-900 text-white hover:bg-petrol-800' : 'bg-orange-500 text-petrol-950 hover:bg-orange-400')}
+          className={cn('flex h-11 items-center gap-1.5 rounded-md px-4 font-semibold', running ? 'bg-petrol-900 text-white hover:bg-petrol-800' : 'bg-orange-650 text-white hover:bg-orange-700')}
           aria-label={running ? 'Mettre en pause le minuteur (espace)' : 'Démarrer le minuteur (espace)'}
         >
           {running ? <Pause className="size-4" aria-hidden /> : <Play className="size-4" aria-hidden />}

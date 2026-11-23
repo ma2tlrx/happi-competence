@@ -13,10 +13,11 @@
   --ink: light-dark(#102c32, #f5f5f2);
   --mute: light-dark(#4b6166, #a5c3c9);
   --deep: light-dark(#102c32, #0a1e22);
-  --pri: light-dark(#ea632e, #f0733f);
-  --priInk: #0a1e22;
-  --sun: #ea632e;
-  --sunInk: #0a1e22;
+  /* Boutons orange : texte blanc (comme sur le reste du site), orange un peu plus soutenu pour un contraste de 4,6:1. */
+  --pri: light-dark(#c94d1a, #c94d1a);
+  --priInk: #ffffff;
+  --sun: #c94d1a;
+  --sunInk: #ffffff;
   --line: light-dark(#e5e5e0, #21505a);
   --ok: light-dark(#1b7a39, #62d68d);
   --no: light-dark(#b42318, #ff8f86);
@@ -46,7 +47,7 @@ h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; }
   letter-spacing: -0.005em;
   transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
 }
-.btn:not(.alt):not(.on):hover { background: color-mix(in srgb, var(--pri) 88%, white); }
+.btn:not(.alt):not(.on):hover { background: #b8431a; }
 .btn.alt { background: var(--card); color: var(--ink); border-color: var(--line); }
 .btn.alt:hover { border-color: var(--petrol-400); }
 .btn.on { background: var(--deep); color: #fff; border-color: var(--deep); }
@@ -74,7 +75,7 @@ h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; }
 .hero p { color: #cadce0; }
 .pill { background: var(--petrol-700); border-radius: 99px; font-weight: 600; }
 .pill.low { background: #ea632e; color: #0a1e22; }
-.alertbar { background: #ea632e; color: #0a1e22; }
+.alertbar { background: #c94d1a; color: #fff; }
 
 /* ── Logo et mascotte officiels ─────────────────────────────────────────── */
 .logo { height: 34px; width: auto; border-radius: 0; background: none; padding: 0; }
@@ -129,7 +130,7 @@ th { font-family: Poppins, "DM Sans", system-ui, sans-serif; font-weight: 600; f
 .spill.loc { background: #e3edef; color: #173a41; }
 
 /* ── Navigation basse (téléphone) ───────────────────────────────────────── */
-.bnav button.help { background: #ea632e; color: #0a1e22; }
+.bnav button.help { background: #c94d1a; color: #fff; }
 
 /* ── Plein écran et encoches (téléphones) ───────────────────────────────── */
 html { min-height: 100dvh; }

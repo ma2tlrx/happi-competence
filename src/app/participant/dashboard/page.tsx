@@ -97,7 +97,7 @@ export default async function ParticipantDashboard({ searchParams }: { searchPar
           </div>
           <Link
             href="/bienvenue"
-            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md bg-orange-500 px-5 font-semibold text-petrol-950 transition-colors hover:bg-orange-400"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md bg-orange-650 px-5 font-semibold text-white transition-colors hover:bg-orange-700"
           >
             {intakeState.status === 'in_progress' ? 'Reprendre' : 'Commencer'}
           </Link>

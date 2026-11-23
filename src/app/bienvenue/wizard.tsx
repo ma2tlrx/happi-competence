@@ -219,7 +219,7 @@ function RatingRow({ name, label, value, onChange }: { name: string; label: stri
             className={cn(
               'flex h-12 cursor-pointer items-center justify-center rounded-lg border-2 font-display text-lg font-semibold transition-colors',
               'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-orange-500',
-              value === level ? 'border-orange-500 bg-orange-500 text-petrol-950' : 'border-line bg-white text-ink-subtle hover:border-petrol-300',
+              value === level ? 'border-orange-650 bg-orange-650 text-white' : 'border-line bg-white text-ink-subtle hover:border-petrol-300',
             )}
           >
             <input type="radio" name={name} value={level} checked={value === level} onChange={() => onChange(level)} className="sr-only" aria-label={`${label} : ${level} sur 5`} />

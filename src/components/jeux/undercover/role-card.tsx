@@ -80,7 +80,7 @@ export function PeekCard({ role, word }: { role: UndercoverRole; word: string | 
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed right-4 bottom-4 z-40 flex min-h-14 items-center gap-2 rounded-full bg-orange-500 px-5 text-base font-semibold text-petrol-950 shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        className="fixed right-4 bottom-4 z-40 flex min-h-14 items-center gap-2 rounded-full bg-orange-650 px-5 text-base font-semibold text-white shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       >
         <Eye className="size-5" aria-hidden />
         Revoir ma carte
