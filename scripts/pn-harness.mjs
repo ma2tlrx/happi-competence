@@ -16,7 +16,14 @@ import { createServer } from 'node:http';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { preparePasseportNumerique } from '../src/lib/passeport-numerique/page.ts';
+import { register } from 'node:module';
+
+// Les modules de src/ s'importent sans extension (résolution « bundler ») : on l'apprend à Node pour le banc d'essai.
+register(
+  'data:text/javascript,' +
+    encodeURIComponent("export async function resolve(s,c,n){try{return await n(s,c)}catch(e){if(s.startsWith('.')&&!/\\.[a-z]+$/.test(s))return n(s+'.ts',c);throw e}}"),
+);
+const { preparePasseportNumerique } = await import('../src/lib/passeport-numerique/page.ts');
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const port = Number(process.argv[2] ?? 4100);
