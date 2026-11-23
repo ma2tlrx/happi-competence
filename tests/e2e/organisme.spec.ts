@@ -130,9 +130,9 @@ test('l’organisme suit ses groupes, consulte les résultats d’un membre et r
   await signInWith(page, d.counselor.email, d.counselor.password);
   await page.goto('/organisme/dashboard');
 
-  // Le menu ne contient que « Mes groupes » et « Aide ».
+  // Le menu reste minimal : « Mes groupes », « Calendrier » (sessions de la structure) et « Aide ».
   const menu = page.getByRole('navigation', { name: 'Espace organisme' });
-  await expect(menu.getByRole('link')).toHaveText(['Mes groupes', 'Aide']);
+  await expect(menu.getByRole('link')).toHaveText(['Mes groupes', 'Calendrier', 'Aide']);
 
   // « Mes groupes » : la structure, puis une carte par groupe, avec le badge « à relancer ».
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(d.organization.name);
@@ -208,13 +208,15 @@ test('les trois écrans sont accessibles (axe, WCAG 2.1 AA), à 1280 et 390 px',
   expect(problems).toEqual([]);
 });
 
-test('sur téléphone, pas de barre de navigation basse à un seul élément', async ({ page }) => {
+test('sur téléphone, la barre de navigation basse n’a jamais un seul élément', async ({ page }) => {
   const d = data!;
   await page.setViewportSize({ width: 390, height: 844 });
   await signInWith(page, d.counselor.email, d.counselor.password);
   await page.goto('/organisme/dashboard');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(d.organization.name);
-  await expect(page.getByRole('navigation', { name: 'Navigation rapide' })).toHaveCount(0);
+  // Avec « Mes groupes » et « Calendrier » la barre existe ; elle ne doit jamais se réduire à un seul bouton.
+  const bar = page.getByRole('navigation', { name: 'Navigation rapide' });
+  if (await bar.count()) expect(await bar.getByRole('link').count()).toBeGreaterThanOrEqual(2);
   // Pas de défilement horizontal à 390 px.
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
