@@ -152,3 +152,16 @@ html { min-height: 100dvh; }
   h3 { font-size: 22px; }
   .top .btn { padding-left: 10px; padding-right: 10px; }
 }
+
+/* ── Grands écrans : le contenu occupe toute la largeur (plus de marges vides de chaque côté) ─────────
+   Les grilles (mondes, exercices, tableaux de l'espace animateur) se remplissent d'elles-mêmes. */
+.wrap, .band .inner, .awrap { max-width: none; }
+.wrap { padding-left: clamp(16px, 3vw, 64px); padding-right: clamp(16px, 3vw, 64px); }
+.band { padding-left: clamp(16px, 3vw, 64px); padding-right: clamp(16px, 3vw, 64px); }
+.top { padding-left: max(clamp(12px, 3vw, 64px), env(safe-area-inset-left)); padding-right: max(clamp(12px, 3vw, 64px), env(safe-area-inset-right)); }
+
+/* Accueil sur grand écran : barre de progression et bulle du guide plus larges. */
+@media (min-width: 1000px) {
+  .prog { max-width: min(720px, 100%); }
+  .bubble { max-width: 640px; font-size: 24px; }
+}

@@ -25,7 +25,8 @@ test('Passeport Numérique sur téléphone : le cadre remplit l’écran sous l�
   await expect.poll(async () => (await frame.boundingBox())?.x).toBe(0);
   const metrics = await page.evaluate(() => {
     const box = document.querySelector('iframe')!.getBoundingClientRect();
-    const header = document.querySelector('header')!.getBoundingClientRect();
+    // Le cadre commence sous l'en-tête et sous le bandeau éventuel (compte de démonstration).
+    const header = (document.querySelector('main')!.previousElementSibling ?? document.querySelector('header')!).getBoundingClientRect();
     const bar = document.querySelector('nav[aria-label="Navigation rapide"]');
     return { top: box.top, height: box.height, width: box.width, headerBottom: header.bottom, vh: innerHeight, vw: innerWidth, barVisible: bar ? getComputedStyle(bar).display !== 'none' : false, scroll: document.documentElement.scrollHeight };
   });

@@ -98,10 +98,12 @@ test('l’application s’affiche en grand dans la page, menu conservé, et ram�
   await expect(frame).toBeVisible();
   const box = await frame.boundingBox();
   const viewport = page.viewportSize()!;
-  // Grand cadre : presque toute la hauteur de la fenêtre et au moins 40 rem de haut, mais pas en plein écran.
-  expect(box!.height).toBeGreaterThanOrEqual(640);
+  // Le cadre va jusqu'au bas de la fenêtre, à droite du menu (pas le plein écran du navigateur).
+  expect(Math.round(box!.y + box!.height)).toBe(viewport.height);
   expect(box!.width).toBeGreaterThan(viewport.width * 0.6);
   expect(box!.x).toBeGreaterThan(0);
+  // Toute la largeur à droite du menu : aucune marge vide de chaque côté.
+  expect(Math.round(box!.x + box!.width)).toBe(viewport.width);
 
   const app = page.frameLocator('iframe[title="Le Passeport Numérique"]');
   await app.locator('[data-a=cAge][data-v="26 à 39 ans"]').click();
