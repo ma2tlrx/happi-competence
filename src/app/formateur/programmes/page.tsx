@@ -2,21 +2,24 @@ import { ArrowRight, BookOpen, Check, MonitorSmartphone } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { ProgramVideoButton } from '@/components/programmes/video-button';
 import { Button } from '@/components/ui/button';
 import { Badge, Card, CardBody, CardHeader, EmptyState, PageHeader, ProvisionalBadge } from '@/components/ui/primitives';
+import { PendingAccountsList } from '@/components/programmes/pending-accounts';
 import { requireRole } from '@/lib/auth/session';
 import { AGGREGATION_LABELS, SCORING_MODE_LABELS, type Aggregation, type ScoringMode } from '@/lib/evaluation-engine';
 import { PASSEPORT_FACTS } from '@/lib/passeport-numerique/meta';
 import { PROGRAM_KIND_LABELS, PROGRAM_KINDS, programKindFromSlug, programSlug, type ProgramKind } from '@/lib/programmes/kind';
 import { createClient } from '@/lib/supabase/server';
-import { cn, formatDuration } from '@/lib/utils';
+import { myGroupIds } from '@/lib/trainer';
+import { cn, formatDate, formatDuration } from '@/lib/utils';
 
 export const metadata: Metadata = { title: 'Programmes' };
 
 const KIND_ICONS: Record<ProgramKind, typeof BookOpen> = { happi_competence: BookOpen, passeport_numerique: MonitorSmartphone };
 
 export default async function TrainerProgramsPage({ searchParams }: { searchParams: Promise<{ programme?: string }> }) {
-  await requireRole('formateur', 'admin');
+  const user = await requireRole('formateur', 'admin');
   const selected = programKindFromSlug((await searchParams).programme) ?? 'happi_competence';
   const supabase = await createClient();
   const { data: programs } = await supabase
@@ -25,6 +28,8 @@ export default async function TrainerProgramsPage({ searchParams }: { searchPara
     .eq('status', 'active')
     .eq('kind', 'happi_competence')
     .order('name');
+
+  const pn = selected === 'passeport_numerique' ? await loadPendingAccounts(user.id, user.role === 'admin') : null;
 
   return (
     <>
@@ -59,7 +64,7 @@ export default async function TrainerProgramsPage({ searchParams }: { searchPara
       </nav>
       {selected === 'passeport_numerique' ? (
         <Card>
-          <CardHeader title={PROGRAM_KIND_LABELS.passeport_numerique.name} description="Un atelier d’initiation au numérique, avec son espace animateur." />
+          <CardHeader title={PROGRAM_KIND_LABELS.passeport_numerique.name} description="Un atelier d’initiation au numérique, avec son espace animateur." action={<ProgramVideoButton kind="passeport_numerique" />} />
           <CardBody className="space-y-6">
             <dl className="grid grid-cols-3 gap-3">
               {PASSEPORT_FACTS.map((fact) => (
@@ -73,6 +78,25 @@ export default async function TrainerProgramsPage({ searchParams }: { searchPara
               Découvrir le numérique pas à pas, à son rythme : gestes de base, clavier, arnaques, mails, photos, démarches en ligne, intelligence artificielle… Une heure d’exercices, puis une heure d’entraide. Les
               participants inscrits au Passeport Numérique y accèdent avec leur compte.
             </p>
+            <div className="space-y-3">
+              <h3 className="font-display text-base font-semibold text-ink">
+                Comptes en attente de validation{pn && pn.accounts.length > 0 ? ` (${pn.accounts.length})` : ''}
+              </h3>
+              <p className="text-sm text-ink-muted">
+                Les ateliers se font uniquement en présentiel. Une personne qui crée son compte n’accède aux exercices qu’une fois validée par un formateur, c’est-à-dire rattachée à une session du Passeport Numérique.
+              </p>
+              {pn && pn.accounts.length > 0 ? (
+                <PendingAccountsList accounts={pn.accounts} sessions={pn.sessions} />
+              ) : (
+                <p className="rounded-lg bg-paper p-3.5 text-sm text-ink-muted">Aucun compte en attente.</p>
+              )}
+              {pn && pn.sessions.length === 0 ? (
+                <p className="text-sm text-ink-muted">
+                  Vous n’avez pas encore de session du Passeport Numérique :{' '}
+                  <Link href="/formateur/groupes?nouveau=1" className="font-semibold text-petrol-700 underline underline-offset-4">créez un groupe</Link> avec ce programme pour pouvoir y valider des comptes.
+                </p>
+              ) : null}
+            </div>
             <div className="flex flex-wrap items-center gap-3">
               <Button asChild size="lg">
                 <Link href="/formateur/programmes/passeport-numerique">
@@ -95,6 +119,7 @@ export default async function TrainerProgramsPage({ searchParams }: { searchPara
             <Card key={program.id}>
               <CardHeader
                 title={program.name}
+                action={<ProgramVideoButton kind="happi_competence" />}
                 description={`${program.sessions_count} sessions de ${formatDuration(program.session_duration_minutes)} · groupes de ${program.min_group_size} à ${program.max_group_size} participants`}
               />
               <CardBody className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
@@ -137,4 +162,36 @@ export default async function TrainerProgramsPage({ searchParams }: { searchPara
       )}
     </>
   );
+}
+
+/** Comptes Passeport Numérique sans session (en attente) et sessions du programme où l'on peut les valider. */
+async function loadPendingAccounts(userId: string, isAdmin: boolean) {
+  const supabase = await createClient();
+  const groupIds = isAdmin ? null : await myGroupIds(supabase, userId);
+  let groupsQuery = supabase
+    .from('groups')
+    .select('id, name, start_date, programs!inner ( kind )')
+    .eq('programs.kind', 'passeport_numerique')
+    .in('status', ['planned', 'active'])
+    .order('start_date', { ascending: false });
+  if (groupIds) groupsQuery = groupsQuery.in('id', groupIds);
+  const [{ data: groups }, { data: candidates }] = await Promise.all([
+    groupsQuery,
+    supabase
+      .from('participants')
+      .select('id, first_name, last_name, email, created_at')
+      .eq('program_kind', 'passeport_numerique')
+      .not('user_id', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(200),
+  ]);
+  const ids = (candidates ?? []).map((row) => row.id);
+  const { data: members } = ids.length ? await supabase.from('group_members').select('participant_id').in('participant_id', ids).eq('status', 'active') : { data: [] };
+  const placed = new Set((members ?? []).map((row) => row.participant_id));
+  return {
+    sessions: (groups ?? []).map((group) => ({ id: group.id, label: group.start_date ? `${group.name} · ${formatDate(group.start_date)}` : group.name })),
+    accounts: (candidates ?? [])
+      .filter((row) => !placed.has(row.id))
+      .map((row) => ({ id: row.id, name: `${row.first_name} ${row.last_name}`, email: row.email, createdAt: formatDate(row.created_at) })),
+  };
 }

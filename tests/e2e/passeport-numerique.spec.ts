@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Browser, type Page } from '@playwright/test';
 
 import { login, unique } from './helpers';
 
@@ -20,10 +20,41 @@ async function signUp(page: Page, programme: 'HAPPI Compétence' | 'Passeport Nu
   await page.locator('input[name=terms]').check();
   await page.locator('input[name=privacy]').check();
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  return email;
 }
 
-test('inscription au Passeport Numérique : le questionnaire est celui de l’application, sans compte à recréer', async ({ page }) => {
+/** Un formateur valide le compte « Camille Essai » : il le rattache à une session (groupe) du Passeport Numérique. */
+async function approveAsTrainer(browser: Browser) {
+  const context = await browser.newContext();
+  const trainer = await context.newPage();
+  await login(trainer, 'formateur@demo.happi.test');
+  await trainer.goto('/formateur/groupes?nouveau=1');
+  await trainer.getByLabel('Nom du groupe').fill(`Atelier numérique ${unique()}`);
+  await trainer.getByLabel('Programme').selectOption({ label: 'Passeport Numérique' });
+  await trainer.getByRole('button', { name: 'Créer le groupe' }).click();
+  await trainer.goto('/formateur/programmes?programme=passeport-numerique');
+  const row = trainer.getByRole('listitem').filter({ hasText: 'Camille Essai' }).first();
+  await row.getByRole('button', { name: 'Valider' }).click();
+  await expect(trainer.getByText(/accès aux ateliers est ouvert/)).toBeVisible();
+  await context.close();
+}
+
+test('inscription au Passeport Numérique : compte en attente de validation, sans accès aux ateliers', async ({ page }) => {
   await signUp(page, 'Passeport Numérique');
+  await expect(page).toHaveURL(/\/participant\/dashboard/);
+  await expect(page.getByRole('heading', { name: 'Votre compte est en attente de validation' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Nous contacter' })).toHaveAttribute('href', '/contact');
+  await expect(page.getByRole('link', { name: 'Continuer mes exercices' })).toHaveCount(0);
+  expect((await page.request.get('/passeport-numerique/app')).status()).toBe(403);
+  await page.goto('/participant/passeport-numerique');
+  await expect(page).toHaveURL(/\/participant\/dashboard/);
+});
+
+test('inscription au Passeport Numérique validée par le formateur : le questionnaire est celui de l’application, sans compte à recréer', async ({ page, browser }) => {
+  await signUp(page, 'Passeport Numérique');
+  await expect(page.getByRole('heading', { name: 'Votre compte est en attente de validation' })).toBeVisible();
+  await approveAsTrainer(browser);
+  await page.goto('/participant/passeport-numerique');
   // Ni le questionnaire d'accueil HAPPI, ni l'auto-évaluation : directement l'application.
   await expect(page).toHaveURL(/\/participant\/passeport-numerique$/);
   const app = page.frameLocator('iframe[title="Le Passeport Numérique"]');
@@ -91,8 +122,10 @@ test('l’application n’est servie ni aux visiteurs, ni aux organismes, et san
   expect(ok.headers()['x-frame-options']).toBe('SAMEORIGIN');
 });
 
-test('l’application s’affiche en grand dans la page, menu conservé, et ramène à l’espace HAPPI quand on la quitte', async ({ page }) => {
+test('l’application s’affiche en grand dans la page, menu conservé, et ramène à l’espace HAPPI quand on la quitte', async ({ page, browser }) => {
   await signUp(page, 'Passeport Numérique');
+  await approveAsTrainer(browser);
+  await page.goto('/participant/passeport-numerique');
   await expect(page).toHaveURL(/\/participant\/passeport-numerique$/);
   const frame = page.locator('iframe[title="Le Passeport Numérique"]');
   await expect(frame).toBeVisible();

@@ -25,3 +25,20 @@ export const getParticipantProgramKind = cache(async (participantId: string): Pr
   ]);
   return effectiveProgramKind(membership?.groups?.programs?.kind, participant?.program_kind);
 });
+
+/**
+ * Accès aux ateliers du Passeport Numérique : les ateliers se font en présentiel avec un formateur. Un compte
+ * créé seul reste « en attente » tant que le formateur ne l'a pas validé, c'est-à-dire rattaché à un groupe
+ * (une session) du Passeport Numérique. Lecture avec la session de l'appelant (RLS).
+ */
+export const hasPasseportNumeriqueAccess = cache(async (participantId: string): Promise<boolean> => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('group_members')
+    .select('groups!inner ( programs!inner ( kind ) )')
+    .eq('participant_id', participantId)
+    .eq('status', 'active')
+    .eq('groups.programs.kind', 'passeport_numerique')
+    .limit(1);
+  return (data ?? []).length > 0;
+});

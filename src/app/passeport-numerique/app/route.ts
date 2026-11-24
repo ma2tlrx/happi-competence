@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { getCurrentUser } from '@/lib/auth/session';
 import { preparePasseportNumerique } from '@/lib/passeport-numerique/page';
-import { getParticipantProgramKind } from '@/lib/programmes/load';
+import { getParticipantProgramKind, hasPasseportNumeriqueAccess } from '@/lib/programmes/load';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,7 +52,11 @@ export async function GET() {
 
   let role: 'staff' | 'participant';
   if (user.role === 'formateur' || user.role === 'admin') role = 'staff';
-  else if (user.role === 'participant' && user.participantId && (await getParticipantProgramKind(user.participantId)) === 'passeport_numerique') role = 'participant';
+  else if (user.role === 'participant' && user.participantId && (await getParticipantProgramKind(user.participantId)) === 'passeport_numerique') {
+    // Les ateliers se font en présentiel : il faut que le formateur ait validé le compte (rattachement à une session).
+    if (!(await hasPasseportNumeriqueAccess(user.participantId))) return new Response('Compte en attente de validation par le formateur.', { status: 403, headers: { 'Cache-Control': 'no-store' } });
+    role = 'participant';
+  }
   else return new Response('Accès réservé aux formateurs et aux participants du Passeport Numérique.', { status: 403, headers: { 'Cache-Control': 'no-store' } });
 
   const uid = createHash('sha256').update(user.id).digest('hex').slice(0, 16);
