@@ -3,7 +3,7 @@
 // Rythme de lecture : chaque texte reste à l'écran au moins 0,45 s par mot + 0,8 s (voir docs dans video/README.md).
 import { $, CX, CY, P, clamp, cam, el, fadeUp, flash, glows, leave, punch, renderers, rise, scene, shake, show, slam, split, svg, text, tl } from './engine.js';
 
-export const DURATION = 30;
+export const DURATION = 52;
 const BRAND = '../public/brand';
 const ORANGE = '#EA632E';
 const ORANGE_INK = '#C94D1A';
@@ -146,159 +146,186 @@ function mondes() {
   rise(sl[1].words, 10.0, { dur: 0.7 });
 
   const items = [
-    ['1', 'Les premiers gestes'],
-    ['2', 'Reconnaître les arnaques'],
-    ['3', 'Les mails'],
-    ['4', 'Démarches et rendez-vous'],
+    ['1', 'Acheter sur Amazon', '#FF9900'],
+    ['2', 'Publier sur Facebook', '#5AA2FF'],
+    ['3', 'Trouver son chemin (GPS)', '#3DDC97'],
   ];
-  const times = [10.4, 10.8, 11.2, 11.6];
-  items.forEach(([n, label], i) => {
-    const chip = el('div', { cls: 'chip', html: `<div class="n">${n}</div><div class="t">${label}</div>`, style: { left: '1010px', top: `${150 + i * 148}px` } }, s);
+  const times = [10.4, 10.9, 11.4];
+  items.forEach(([n, label, color], i) => {
+    const chip = el('div', { cls: 'chip', html: `<div class="n" style="background:${color};color:#102C32">${n}</div><div class="t">${label}</div>`, style: { left: '1010px', top: `${190 + i * 150}px` } }, s);
     tl.fromTo(chip, { x: 180, opacity: 0, scale: 0.94 }, { x: 0, opacity: 1, scale: 1, duration: 0.6, ease: 'expo.out' }, times[i]);
     tl.fromTo(chip, { y: 0 }, { y: -8, duration: 1.3, ease: 'sine.inOut', yoyo: true, repeat: 1, immediateRender: false }, times[i] + 0.7);
   });
-  const more = el('div', { cls: 'chip more', html: '<div class="n">+</div><div class="t">15 autres mondes</div>', style: { left: '1010px', top: `${150 + 4 * 148}px` } }, s);
-  tl.fromTo(more, { x: 180, opacity: 0, scale: 0.94 }, { x: 0, opacity: 1, scale: 1, duration: 0.6, ease: 'expo.out' }, 12.2);
+  const more = el('div', { cls: 'chip more', html: '<div class="n">+</div><div class="t">Et bien d’autres exercices</div>', style: { left: '1010px', top: `${190 + 3 * 150}px` } }, s);
+  tl.fromTo(more, { x: 180, opacity: 0, scale: 0.94 }, { x: 0, opacity: 1, scale: 1, duration: 0.6, ease: 'expo.out' }, 12.1);
   shake(9.4, 0.5, 0.4);
 }
 
 // ═════════════════════════════════════════════════════════════════════════════════════
-// 4. S'ENTRAÎNER SANS RISQUE, AVEC UN GUIDE (14 – 21 s)
+// 4–6. LES TROIS MODULES : Amazon, Facebook, GPS — les vrais écrans de l'application, touchés pas à pas
 // ═════════════════════════════════════════════════════════════════════════════════════
-function demo() {
-  const s = scene('s4');
-  show(s, 14, 21);
-  el('div', { cls: 'paper-bg' }, s);
-  tl.set('#vignette', { opacity: 0.25 }, 14);
-  tl.set('#vignette', { opacity: 1 }, 21);
+const PH = { left: 1262, top: 70, sw: 470, sh: 903 }; // écran du téléphone (la coque ajoute 18 px de chaque côté)
 
-  const disc = el('div', { cls: 'disc', style: { left: '1190px', top: '170px', width: '740px', height: '740px', background: `radial-gradient(circle at 36% 30%, #ff9a70, ${ORANGE} 60%, #d9561f)` } }, s);
-  tl.fromTo(disc, { scale: 0 }, { scale: 1, duration: 0.9, ease: 'back.out(1.4)' }, 14.15);
+function moduleScene(m, manifests) {
+  const s = scene(`m-${m.id}`);
+  show(s, m.start, m.end);
+  tl.set(P, { opacity: 0.7 }, m.start);
+  const acc = m.accent;
+  const meta = (f) => manifests[f.dir ?? m.dir].frames.find((x) => x.file === f.file);
+  const frameAt = (t) => [...m.frames].reverse().find((f) => f.t <= t) ?? m.frames[0];
 
-  // Texte A : s'entraîner
-  const a1 = text(s, 'On s’entraîne', 'h w800 ink', { left: '126px', top: '262px', fontSize: '100px' });
-  const a2 = text(s, 'sans risque', 'h w800', { left: '126px', top: '388px', fontSize: '100px' }, { color: ORANGE_INK });
-  const sa1 = split(a1, 'words', 'words');
-  const sa2 = split(a2, 'words', 'words');
-  rise(sa1.words, 14.4, { stagger: 0.1, dur: 0.7 });
-  rise(sa2.words, 14.6, { stagger: 0.1, dur: 0.7 });
-  const as = text(s, 'Rien ne se perd.', 'body ink', { left: '130px', top: '556px', fontSize: '64px' });
-  fadeUp(as, 15.2, { dur: 0.6 });
-  leave([a1, a2, as], 17.35, { y: -90, blur: 14, dur: 0.32, stagger: 0.05 });
+  // Lueur de la couleur du module
+  const aura = el('div', { cls: 'disc', style: { left: '640px', top: '60px', width: '1100px', height: '1100px', background: `radial-gradient(circle, ${acc}40, ${acc}00 62%)`, filter: 'blur(24px)' } }, s);
+  tl.fromTo(aura, { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 1.2, ease: 'power2.out' }, m.start + 0.1);
+  tl.fromTo(cam, { zoom: 1 }, { zoom: 1.03, duration: m.end - m.start, ease: 'sine.inOut' }, m.start);
 
-  // Texte B : le guide
-  const b1 = text(s, 'Un guide', 'h w800 ink', { left: '126px', top: '262px', fontSize: '100px' });
-  const b2 = text(s, 'vous accompagne', 'h w800', { left: '126px', top: '388px', fontSize: '100px' }, { color: ORANGE_INK });
-  const sb1 = split(b1, 'words', 'words');
-  const sb2 = split(b2, 'words', 'words');
-  rise(sb1.words, 17.7, { stagger: 0.1, dur: 0.7 });
-  rise(sb2.words, 17.9, { stagger: 0.1, dur: 0.7 });
-  const bs = text(s, 'Lu à voix haute, en 6 langues.', 'body ink', { left: '130px', top: '556px', fontSize: '58px' });
-  fadeUp(bs, 18.4, { dur: 0.6 });
+  // Texte : surtitre, titre, note
+  const kick = text(s, m.kicker, 'mono', { left: '130px', top: '104px', fontSize: '27px' }, { color: acc });
+  fadeUp(kick, m.start + 0.35, { dur: 0.55 });
+  const colored = (html) => html.replace('<em>', `<span style="color:${acc}">`).replace('</em>', '</span>');
+  const t1 = text(s, m.title[0], 'h w800', { left: '126px', top: '170px', fontSize: '104px' });
+  const t2 = text(s, colored(m.title[1]), 'h w800', { left: '126px', top: '282px', fontSize: '104px' });
+  const st = [t1, t2].map((n) => split(n, 'words', 'words'));
+  rise(st[0].words, m.start + 0.5, { dur: 0.7 });
+  rise(st[1].words, m.start + 0.65, { dur: 0.7 });
+  const note = text(s, m.note, 'body', { left: '130px', top: '426px', fontSize: '36px' }, { color: 'rgba(255,255,255,0.68)' });
+  fadeUp(note, m.start + 1.0, { dur: 0.6 });
 
-  // Téléphone
-  const phone = el('div', { cls: 'pn-phone', style: { left: '1300px', top: '100px' } }, s);
+  // Étapes : la liste est visible d'emblée, l'étape en cours s'allume
+  m.steps.forEach((step, i) => {
+    const row = el('div', { cls: 'abs', style: { left: '130px', top: `${520 + i * 92}px`, display: 'flex', alignItems: 'center', gap: '22px', height: '72px', opacity: '0' } }, s);
+    const dot = el('div', { text: String(i + 1), style: { width: '58px', height: '58px', borderRadius: '50%', border: `3px solid ${acc}`, color: acc, font: '700 30px/52px Poppins, sans-serif', textAlign: 'center', flex: 'none' } }, row);
+    el('div', { text: step.label, style: { font: '600 44px/1 Poppins, sans-serif', letterSpacing: '-0.02em', whiteSpace: 'nowrap' } }, row);
+    const next = m.steps[i + 1]?.t;
+    tl.fromTo(row, { opacity: 0, x: -40 }, { opacity: 0.32, x: 0, duration: 0.5, ease: 'power3.out' }, m.start + 0.7 + i * 0.1);
+    tl.fromTo(row, { opacity: 0.32 }, { opacity: 1, duration: 0.3, immediateRender: false }, step.t);
+    tl.fromTo(row, { scale: 1 }, { scale: 1.05, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out', transformOrigin: '0% 50%', immediateRender: false }, step.t);
+    tl.fromTo(dot, { backgroundColor: 'rgba(0,0,0,0)', color: acc }, { backgroundColor: acc, color: '#102C32', duration: 0.3, immediateRender: false }, step.t);
+    if (next) tl.fromTo(row, { opacity: 1 }, { opacity: 0.62, duration: 0.4, immediateRender: false }, next);
+  });
+
+  // Téléphone et vrais écrans
+  const phone = el('div', { cls: 'pn-phone', style: { left: `${PH.left}px`, top: `${PH.top}px`, width: `${PH.sw + 36}px`, height: `${PH.sh + 36}px` } }, s);
   const scr = el('div', { cls: 'pn-screen' }, phone);
-  const bar = el('div', { cls: 'pn-bar' }, scr);
-  const barA = el('span', { text: 'Toucher les ronds', style: { position: 'absolute', left: '0', right: '0', top: '24px' } }, bar);
-  const barB = el('span', { text: 'Votre guide', style: { position: 'absolute', left: '0', right: '0', top: '24px', opacity: '0' } }, bar);
-  tl.fromTo(phone, { y: 1000, rotation: 9 }, { y: 0, rotation: 0, duration: 0.95, ease: 'expo.out' }, 14.25);
-  tl.fromTo(phone, { y: 0 }, { y: -12, duration: 1.6, ease: 'sine.inOut', yoyo: true, repeat: 3, immediateRender: false }, 15.3);
-
-  const game = el('div', { style: { position: 'absolute', inset: '0' } }, scr);
-  const spots = [[50, 190], [240, 340], [110, 500]];
-  const dots = spots.map(([x, y], i) => {
-    const d = el('div', { cls: 'tapdot', style: { left: `${x}px`, top: `${y}px` }, html: '<svg viewBox="0 0 112 112" width="112" height="112" style="position:absolute;inset:0;opacity:0"><path d="M30 58 L48 76 L82 38" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg>' }, game);
-    tl.fromTo(d, { scale: 0 }, { scale: 1, duration: 0.5, ease: 'back.out(2)' }, 14.7 + i * 0.1);
-    return d;
-  });
-  const finger = el('div', { cls: 'finger', style: { left: '0', top: '0' } }, game);
-  const spot = (i) => ({ x: spots[i][0] + 56 - 38, y: spots[i][1] + 56 - 38 });
-  tl.fromTo(finger, { x: 320, y: 820, opacity: 0 }, { x: spot(0).x, y: spot(0).y, opacity: 1, duration: 0.4, ease: 'power3.out' }, 14.8);
-  [1, 2].forEach((i) => {
-    tl.fromTo(finger, { x: spot(i - 1).x, y: spot(i - 1).y }, { x: spot(i).x, y: spot(i).y, duration: 0.3, ease: 'power3.inOut', immediateRender: false }, 15.35 + (i - 1) * 0.5);
-  });
-  tl.fromTo(finger, { opacity: 1 }, { opacity: 0, duration: 0.25, immediateRender: false }, 16.4);
-  [15.2, 15.7, 16.2].forEach((t, i) => {
-    tl.fromTo(finger, { scale: 1 }, { scale: 0.7, duration: 0.1, yoyo: true, repeat: 1, ease: 'power2.out', immediateRender: false }, t - 0.05);
-    tl.fromTo(dots[i], { scale: 1 }, { scale: 1.25, duration: 0.14, yoyo: true, repeat: 1, ease: 'power2.out', immediateRender: false }, t);
-    tl.fromTo(dots[i], { backgroundColor: ORANGE }, { backgroundColor: PETROLE, duration: 0.12, immediateRender: false }, t);
-    tl.fromTo(dots[i].firstChild, { opacity: 0 }, { opacity: 1, duration: 0.15, immediateRender: false }, t);
-  });
-  const bravo = el('div', { cls: 'bravo', text: 'Bravo !' }, game);
-  tl.fromTo(bravo, { scale: 0.4, opacity: 0, y: 40 }, { scale: 1, opacity: 1, y: 0, duration: 0.55, ease: 'back.out(2.2)' }, 16.5);
-  flash(16.5, 0.12, 0.35);
-  tl.fromTo(game, { opacity: 1 }, { opacity: 0, duration: 0.3, ease: 'power2.in', immediateRender: false }, 17.35);
-  tl.fromTo(barA, { opacity: 1 }, { opacity: 0, duration: 0.2, immediateRender: false }, 17.35);
-  tl.fromTo(barB, { opacity: 0 }, { opacity: 1, duration: 0.3, immediateRender: false }, 17.6);
-
-  // Le guide parle
-  const guide = el('div', { style: { position: 'absolute', inset: '0', opacity: '0' } }, scr);
-  const avatar = el('div', { cls: 'disc', style: { left: '117px', top: '170px', width: '170px', height: '170px', background: '#F5F5F2', overflow: 'hidden', boxShadow: `0 0 0 8px ${ORANGE}` } }, guide);
-  el('img', { attrs: { src: `${BRAND}/happi-mascotte.png` }, style: { position: 'absolute', left: '0', top: '6px', width: '170px', height: '170px' } }, avatar);
-  const bubble = el('div', { cls: 'bubble', text: 'Touchez le rond orange.' }, guide);
-  const waves = el('div', { style: { position: 'absolute', left: '82px', width: '240px', top: '600px', height: '110px' } }, guide);
-  const bars = Array.from({ length: 9 }, (_, i) => el('div', { cls: 'wavebar', style: { left: `${i * 27}px`, height: '14px' } }, waves));
-  tl.fromTo(guide, { opacity: 0 }, { opacity: 1, duration: 0.3, immediateRender: false }, 17.6);
-  tl.fromTo(avatar, { scale: 0 }, { scale: 1, duration: 0.6, ease: 'back.out(2)' }, 17.75);
-  tl.fromTo(bubble, { scale: 0.6, opacity: 0, y: 30 }, { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: 'back.out(2)' }, 18.15);
+  tl.fromTo(phone, { x: 900, rotation: 8, opacity: 0 }, { x: 0, rotation: 0, opacity: 1, duration: 0.95, ease: 'expo.out' }, m.start + 0.15);
+  tl.fromTo(phone, { y: 0 }, { y: -10, duration: 1.8, ease: 'sine.inOut', yoyo: true, repeat: Math.max(1, Math.round((m.end - m.start) / 1.8) - 1), immediateRender: false }, m.start + 1.2);
+  const imgs = m.frames.map((f) =>
+    el('img', { attrs: { src: `./out/captures-pn/${f.dir ?? m.dir}/${f.file}` }, style: { position: 'absolute', left: '0', top: '0', width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', opacity: '0' } }, scr),
+  );
   renderers.push((t) => {
-    const on = clamp((t - 18.4) / 0.2) * (1 - clamp((t - 20.8) / 0.3));
-    bars.forEach((b, i) => {
-      const h = 14 + on * (14 + 76 * Math.abs(Math.sin(t * 8.5 + i * 0.85) * Math.cos(t * 3.1 + i)));
-      b.style.height = `${h.toFixed(1)}px`;
-    });
+    if (t < m.start - 0.01 || t > m.end + 0.01) return;
+    const k = m.frames.findLastIndex((f) => f.t <= t);
+    imgs.forEach((im, i) => { im.style.opacity = i === Math.max(0, k) ? '1' : '0'; });
   });
-  punch(17.6, 0.02, 0.4);
+
+  // Touchers : un doigt arrive, appuie, une onde part de l'élément touché
+  const finger = el('div', { cls: 'finger', style: { left: '0', top: '0', opacity: '0' } }, scr);
+  const taps = [];
+  m.frames.forEach((f, i) => {
+    const mt = meta(f);
+    const t = f.tapAt ?? m.frames[i + 1]?.t;
+    if (mt?.tap && !f.noTap && t != null) taps.push({ t, box: mt.tap });
+  });
+  taps.forEach((tp, k) => {
+    const cx = (tp.box.x + tp.box.w / 2) * PH.sw;
+    const cy = (tp.box.y + tp.box.h / 2) * PH.sh;
+    const tx = cx - 38;
+    const ty = cy - 38;
+    tl.fromTo(finger, { x: Math.min(tx + 90, PH.sw - 76), y: Math.min(ty + 170, PH.sh - 76), opacity: 0, scale: 1 }, { x: tx, y: ty, opacity: 1, duration: 0.42, ease: 'power3.out', immediateRender: k === 0 }, tp.t - 0.52);
+    tl.fromTo(finger, { scale: 1 }, { scale: 0.72, duration: 0.1, ease: 'power2.in', immediateRender: false }, tp.t - 0.1);
+    tl.fromTo(finger, { scale: 0.72 }, { scale: 1, duration: 0.18, ease: 'back.out(3)', immediateRender: false }, tp.t);
+    tl.fromTo(finger, { opacity: 1 }, { opacity: 0, duration: 0.25, ease: 'power1.in', immediateRender: false }, tp.t + 0.2);
+    const ripple = el('div', { style: { position: 'absolute', left: `${cx - 60}px`, top: `${cy - 60}px`, width: '120px', height: '120px', borderRadius: '50%', border: `5px solid ${ORANGE}`, opacity: '0', pointerEvents: 'none' } }, scr);
+    tl.fromTo(ripple, { scale: 0.3, opacity: 0.9 }, { scale: 1.5, opacity: 0, duration: 0.55, ease: 'power2.out', immediateRender: false }, tp.t);
+  });
+
+  // Mises en évidence : ce qu'il faut regarder
+  for (const c of m.callouts) {
+    const f = frameAt(c.t0);
+    const mt = meta(f);
+    const b = c.box ? { x: c.box[0], y: c.box[1], w: c.box[2], h: c.box[3] } : c.mark ? mt.marks[c.mark] : mt.tap;
+    if (!b) throw new Error(`mise en évidence introuvable : ${m.id} ${c.label}`);
+    const L = b.x * PH.sw - 8;
+    const T = b.y * PH.sh - 6;
+    const Wd = b.w * PH.sw + 16;
+    const Ht = b.h * PH.sh + 12;
+    const rect = el('div', { style: { position: 'absolute', left: `${L}px`, top: `${T}px`, width: `${Wd}px`, height: `${Ht}px`, borderRadius: '14px', border: `5px solid ${acc}`, boxShadow: `0 0 0 3px rgba(16,44,50,0.35), 0 0 34px ${acc}`, opacity: '0', pointerEvents: 'none' } }, scr);
+    const pill = el('div', { text: c.label, style: { position: 'absolute', left: '0', top: '0', padding: '10px 20px', borderRadius: '999px', background: acc, color: '#102C32', font: '700 30px/1 Poppins, sans-serif', whiteSpace: 'nowrap', opacity: '0' } }, scr);
+    const pw = pill.offsetWidth;
+    pill.style.left = `${Math.min(Math.max(8, L), PH.sw - pw - 8)}px`;
+    pill.style.top = `${c.below || T <= 80 ? T + Ht + 12 : T - 58}px`;
+    tl.fromTo(rect, { opacity: 0, scale: 1.12 }, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2)' }, c.t0);
+    tl.fromTo(pill, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.3, ease: 'power3.out' }, c.t0 + 0.06);
+    tl.fromTo([rect, pill], { opacity: 1 }, { opacity: 0, duration: 0.2, immediateRender: false }, c.t1 - 0.2);
+  }
+
+  // Confirmations
+  for (const ts of m.toasts) {
+    const toast = el('div', { style: { position: 'absolute', left: '26px', right: '26px', bottom: '44px', height: '104px', borderRadius: '30px', background: '#102C32', color: '#fff', display: 'flex', alignItems: 'center', gap: '18px', padding: '0 26px', font: '700 36px/1.1 Poppins, sans-serif', boxShadow: '0 20px 40px rgba(0,0,0,0.35)', opacity: '0' } }, scr);
+    el('div', { html: '<svg viewBox="0 0 56 56" width="56" height="56"><circle cx="28" cy="28" r="28" fill="#3DDC97"/><path d="M15 29 L25 39 L42 18" fill="none" stroke="#102C32" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>', style: { flex: 'none' } }, toast);
+    el('div', { text: ts.text }, toast);
+    tl.fromTo(toast, { y: 100, opacity: 0, scale: 0.9 }, { y: 0, opacity: 1, scale: 1, duration: 0.45, ease: 'back.out(2)' }, ts.t0);
+    tl.fromTo(toast, { opacity: 1 }, { opacity: 0, duration: 0.25, immediateRender: false }, ts.t1 - 0.25);
+    flash(ts.t0, 0.1, 0.4);
+  }
+  return { taps: taps.map((x) => x.t), toasts: m.toasts.map((x) => x.t0) };
 }
 
 // ═════════════════════════════════════════════════════════════════════════════════════
-// 5. DES TRACES (21 – 26 s) : défis chrono, mémos, certificat
+// 7. ET EN PLUS (43 – 48 s) : guide vocal, défis chrono, mémos, certificat
 // ═════════════════════════════════════════════════════════════════════════════════════
 function traces() {
+  const T0 = 43;
   const s = scene('s5');
-  show(s, 21, 26);
+  show(s, T0, 48);
   el('div', { cls: 'orange-bg' }, s);
-  tl.set('#vignette', { opacity: 0.3 }, 21);
-  tl.set('#vignette', { opacity: 1 }, 26);
+  tl.set('#vignette', { opacity: 0.3 }, T0);
+  tl.set('#vignette', { opacity: 1 }, 48);
 
-  const h = text(s, 'Pour garder des traces', 'h w700', { left: '0', right: '0', top: '96px', textAlign: 'center', fontSize: '100px' });
+  const h = text(s, 'Pour aller plus loin', 'h w700', { left: '0', right: '0', top: '96px', textAlign: 'center', fontSize: '100px' });
   const sh = split(h, 'words', 'words');
-  rise(sh.words, 21.3, { stagger: 0.1, dur: 0.75 });
+  rise(sh.words, T0 + 0.3, { stagger: 0.1, dur: 0.75 });
 
-  const lefts = [80, 690, 1300];
+  const lefts = [90, 540, 990, 1440];
   const top = 270;
   const defs = [
-    { ttl: 'Défis chrono', sub: 'pour s’amuser', rot: -5 },
-    { ttl: 'Notes mémo', sub: 'à imprimer', rot: 0 },
+    { ttl: 'Guide vocal', sub: 'en 6 langues', rot: -5 },
+    { ttl: 'Défis chrono', sub: 'pour s’amuser', rot: -2 },
+    { ttl: 'Notes mémo', sub: 'à imprimer', rot: 2 },
     { ttl: 'Certificat', sub: 'de réussite', rot: 5 },
   ];
   const cards = defs.map((d, i) => {
-    const c = el('div', { cls: 'card', html: `<div class="ttl">${d.ttl}</div><div class="sub">${d.sub}</div>`, style: { left: `${lefts[i]}px`, top: `${top}px` } }, s);
-    tl.fromTo(c, { y: 260, opacity: 0, rotation: d.rot }, { y: 0, opacity: 1, rotation: 0, duration: 0.85, ease: 'back.out(1.4)' }, 21.9 + i * 0.6);
+    const c = el('div', { cls: 'card s', html: `<div class="ttl">${d.ttl}</div><div class="sub">${d.sub}</div>`, style: { left: `${lefts[i]}px`, top: `${top}px` } }, s);
+    tl.fromTo(c, { y: 260, opacity: 0, rotation: d.rot }, { y: 0, opacity: 1, rotation: 0, duration: 0.8, ease: 'back.out(1.4)' }, T0 + 0.5 + i * 0.5);
     return c;
   });
 
+  // Haut-parleur
+  const sp = svg('svg', { class: 'ico', viewBox: '0 0 260 260' }, cards[0]);
+  svg('path', { d: 'M40 105 H78 L130 62 V198 L78 155 H40 Z', fill: PETROLE }, sp);
+  const waves = [0, 1, 2].map((k) => svg('path', { d: `M${158 + k * 26} ${130 - 30 - k * 14} Q${186 + k * 26} 130 ${158 + k * 26} ${130 + 30 + k * 14}`, fill: 'none', stroke: ORANGE, 'stroke-width': 14, 'stroke-linecap': 'round' }, sp));
+  tl.fromTo(waves, { opacity: 0.15 }, { opacity: 1, duration: 0.35, stagger: 0.2, yoyo: true, repeat: 3, ease: 'power1.inOut', immediateRender: true }, T0 + 1.0);
+
   // Chronomètre
-  const sw = svg('svg', { class: 'ico', viewBox: '0 0 260 260' }, cards[0]);
+  const sw = svg('svg', { class: 'ico', viewBox: '0 0 260 260' }, cards[1]);
   svg('rect', { x: 108, y: 14, width: 44, height: 28, rx: 8, fill: PETROLE }, sw);
   svg('rect', { x: 196, y: 52, width: 24, height: 20, rx: 6, fill: PETROLE, transform: 'rotate(40 208 62)' }, sw);
   svg('circle', { cx: 130, cy: 150, r: 92, fill: '#FFF', stroke: PETROLE, 'stroke-width': 14 }, sw);
   const arc = svg('circle', { cx: 130, cy: 150, r: 70, fill: 'none', stroke: ORANGE, 'stroke-width': 14, 'stroke-linecap': 'round', 'stroke-dasharray': '440', 'stroke-dashoffset': '440', transform: 'rotate(-90 130 150)' }, sw);
   const hand = svg('line', { x1: 130, y1: 150, x2: 130, y2: 98, stroke: PETROLE, 'stroke-width': 12, 'stroke-linecap': 'round' }, sw);
   svg('circle', { cx: 130, cy: 150, r: 12, fill: PETROLE }, sw);
-  tl.fromTo(arc, { attr: { 'stroke-dashoffset': 440 } }, { attr: { 'stroke-dashoffset': 70 }, duration: 1.8, ease: 'power2.inOut', immediateRender: false }, 22.5);
-  tl.fromTo(hand, { rotation: 0, svgOrigin: '130 150' }, { rotation: 320, duration: 1.8, ease: 'power2.inOut', immediateRender: false }, 22.5);
+  tl.fromTo(arc, { attr: { 'stroke-dashoffset': 440 } }, { attr: { 'stroke-dashoffset': 70 }, duration: 1.8, ease: 'power2.inOut', immediateRender: false }, T0 + 1.5);
+  tl.fromTo(hand, { rotation: 0, svgOrigin: '130 150' }, { rotation: 320, duration: 1.8, ease: 'power2.inOut', immediateRender: false }, T0 + 1.5);
 
   // Mémo
-  const doc = svg('svg', { class: 'ico', viewBox: '0 0 260 260' }, cards[1]);
+  const doc = svg('svg', { class: 'ico', viewBox: '0 0 260 260' }, cards[2]);
   svg('rect', { x: 52, y: 20, width: 156, height: 210, rx: 18, fill: '#FFF', stroke: PETROLE, 'stroke-width': 14 }, doc);
   const lines = [88, 128, 168].map((y, i) => svg('rect', { x: 84, y, width: i === 2 ? 70 : 92, height: 14, rx: 7, fill: ORANGE }, doc));
-  tl.fromTo(lines, { scaleX: 0, svgOrigin: '84 0' }, { scaleX: 1, duration: 0.5, ease: 'power3.out', stagger: 0.18 }, 23.1);
+  tl.fromTo(lines, { scaleX: 0, svgOrigin: '84 0' }, { scaleX: 1, duration: 0.5, ease: 'power3.out', stagger: 0.18 }, T0 + 2.1);
   svg('rect', { x: 84, y: 52, width: 50, height: 14, rx: 7, fill: PETROLE }, doc);
 
-  // Sceau du certificat (étoile dentelée) + mascotte
-  const seal = svg('svg', { class: 'ico', viewBox: '0 0 260 260' }, cards[2]);
+  // Sceau du certificat
+  const seal = svg('svg', { class: 'ico', viewBox: '0 0 260 260' }, cards[3]);
   const pts = Array.from({ length: 48 }, (_, k) => {
     const r = k % 2 ? 112 : 126;
     const ang = (k / 48) * Math.PI * 2;
@@ -307,64 +334,63 @@ function traces() {
   const star = svg('g', {}, seal);
   svg('polygon', { points: pts, fill: ORANGE }, star);
   svg('circle', { cx: 130, cy: 130, r: 96, fill: 'none', stroke: '#fff', 'stroke-width': 4, 'stroke-dasharray': '3 9' }, seal);
-  const medal = el('div', { cls: 'disc', style: { left: '170px', top: '100px', width: '200px', height: '200px', background: '#F5F5F2', overflow: 'hidden', boxShadow: '0 0 0 6px #fff' } }, cards[2]);
+  const medal = el('div', { cls: 'disc', style: { left: '100px', top: '80px', width: '200px', height: '200px', background: '#F5F5F2', overflow: 'hidden', boxShadow: '0 0 0 6px #fff' } }, cards[3]);
   el('img', { attrs: { src: `${BRAND}/happi-mascotte.png` }, style: { position: 'absolute', left: '0', top: '8px', width: '200px', height: '200px' } }, medal);
-  tl.fromTo(star, { rotation: -40, scale: 0.4, svgOrigin: '130 130' }, { rotation: 0, scale: 1, svgOrigin: '130 130', duration: 0.9, ease: 'back.out(1.6)' }, 23.15);
-  tl.fromTo(medal, { scale: 0.4, rotation: -40 }, { scale: 1, rotation: 0, duration: 0.9, ease: 'back.out(1.6)' }, 23.15);
-  tl.fromTo(star, { rotation: 0, svgOrigin: '130 130' }, { rotation: 360, svgOrigin: '130 130', duration: 6, ease: 'none', immediateRender: false }, 24.05);
+  tl.fromTo(star, { rotation: -40, scale: 0.4, svgOrigin: '130 130' }, { rotation: 0, scale: 1, svgOrigin: '130 130', duration: 0.9, ease: 'back.out(1.6)' }, T0 + 2.0);
+  tl.fromTo(medal, { scale: 0.4, rotation: -40 }, { scale: 1, rotation: 0, duration: 0.9, ease: 'back.out(1.6)' }, T0 + 2.0);
+  tl.fromTo(star, { rotation: 0, svgOrigin: '130 130' }, { rotation: 360, svgOrigin: '130 130', duration: 6, ease: 'none', immediateRender: false }, T0 + 2.95);
 
-  // Éclats autour du certificat
-  const cx = lefts[2] + 270;
-  const cy = top + 220;
-  const sparks = Array.from({ length: 12 }, (_, i) => {
-    const sp = el('div', { cls: 'disc', style: { left: `${cx - 9}px`, top: `${cy - 9}px`, width: '18px', height: '18px', background: '#fff', opacity: '0' } }, s);
+  const cx = lefts[3] + 200;
+  const cy = top + 240;
+  for (let i = 0; i < 12; i += 1) {
+    const spark = el('div', { cls: 'disc', style: { left: `${cx - 9}px`, top: `${cy - 9}px`, width: '18px', height: '18px', background: '#fff', opacity: '0' } }, s);
     const ang = (i / 12) * Math.PI * 2;
-    tl.fromTo(sp, { x: 0, y: 0, scale: 0.4, opacity: 1 }, { x: Math.cos(ang) * 330, y: Math.sin(ang) * 300, scale: 1.2, opacity: 0, duration: 0.9, ease: 'power2.out', immediateRender: false }, 24.2);
-    return sp;
-  });
-  void sparks;
-  tl.fromTo(cards[2], { scale: 1 }, { scale: 1.06, duration: 0.3, yoyo: true, repeat: 1, ease: 'power2.out', immediateRender: false }, 24.15);
-  flash(24.2, 0.18, 0.4);
+    tl.fromTo(spark, { x: 0, y: 0, scale: 0.4, opacity: 1 }, { x: Math.cos(ang) * 300, y: Math.sin(ang) * 280, scale: 1.2, opacity: 0, duration: 0.9, ease: 'power2.out', immediateRender: false }, T0 + 3.0);
+  }
+  tl.fromTo(cards[3], { scale: 1 }, { scale: 1.06, duration: 0.3, yoyo: true, repeat: 1, ease: 'power2.out', immediateRender: false }, T0 + 2.95);
+  flash(T0 + 3.0, 0.18, 0.4);
 }
 
 // ═════════════════════════════════════════════════════════════════════════════════════
-// 6. INVITATION (26 – 30 s)
+// 8. INVITATION (48 – 52 s)
 // ═════════════════════════════════════════════════════════════════════════════════════
 function final() {
+  const T0 = 48;
   const s = scene('s6');
-  show(s, 26, 30);
-  tl.set(P, { opacity: 0.8 }, 26);
-  glow(0, 26, { opacity: 0.35, x: 1000, y: 200 }, 2);
-  glow(1, 26, { opacity: 0.2, x: 100, y: 500 }, 2);
-  tl.fromTo(cam, { zoom: 1.0 }, { zoom: 1.04, duration: 4, ease: 'sine.inOut' }, 26);
+  show(s, T0, 52);
+  tl.set(P, { opacity: 0.8 }, T0);
+  glow(0, T0, { opacity: 0.35, x: 1000, y: 200 }, 2);
+  glow(1, T0, { opacity: 0.2, x: 100, y: 500 }, 2);
+  tl.fromTo(cam, { zoom: 1.0 }, { zoom: 1.04, duration: 4, ease: 'sine.inOut' }, T0);
 
   const halo = el('div', { cls: 'disc', style: { left: '1250px', top: '230px', width: '640px', height: '640px', background: `radial-gradient(circle at 36% 30%, #ff9a70, ${ORANGE} 60%, #d9561f)` } }, s);
-  tl.fromTo(halo, { scale: 0 }, { scale: 1, duration: 0.9, ease: 'back.out(1.5)' }, 26.2);
+  tl.fromTo(halo, { scale: 0 }, { scale: 1, duration: 0.9, ease: 'back.out(1.5)' }, T0 + 0.2);
   const masc = el('img', { cls: 'abs', attrs: { src: `${BRAND}/happi-mascotte-3d.webp` }, style: { left: '1330px', top: '170px', height: '800px', filter: 'drop-shadow(0 30px 40px rgba(0,0,0,0.45))' } }, s);
-  tl.fromTo(masc, { y: 500, opacity: 0, rotation: -8 }, { y: 0, opacity: 1, rotation: 0, duration: 0.9, ease: 'back.out(1.4)' }, 26.45);
-  tl.fromTo(masc, { y: 0 }, { y: -14, duration: 1.3, ease: 'sine.inOut', yoyo: true, repeat: 1, immediateRender: false }, 27.4);
+  tl.fromTo(masc, { y: 500, opacity: 0, rotation: -8 }, { y: 0, opacity: 1, rotation: 0, duration: 0.9, ease: 'back.out(1.4)' }, T0 + 0.45);
+  tl.fromTo(masc, { y: 0 }, { y: -14, duration: 1.3, ease: 'sine.inOut', yoyo: true, repeat: 1, immediateRender: false }, T0 + 1.4);
 
   const l1 = text(s, 'Prêt à', 'h w800', { left: '124px', top: '240px', fontSize: '150px' });
   const l2 = text(s, 'commencer ?', 'h w800', { left: '124px', top: '382px', fontSize: '150px' }, { color: ORANGE });
   const sp = [l1, l2].map((n) => split(n, 'words', 'words'));
-  rise(sp[0].words, 26.4, { dur: 0.75 });
-  rise(sp[1].words, 26.55, { dur: 0.75 });
+  rise(sp[0].words, T0 + 0.4, { dur: 0.75 });
+  rise(sp[1].words, T0 + 0.55, { dur: 0.75 });
   const sub = text(s, 'Inscrivez-vous sur HAPPI Compétence', 'body', { left: '130px', top: '600px', fontSize: '56px' }, { color: 'rgba(255,255,255,0.88)' });
-  fadeUp(sub, 27.3, { dur: 0.6 });
+  fadeUp(sub, T0 + 1.3, { dur: 0.6 });
   const logo = el('img', { cls: 'abs', attrs: { src: `${BRAND}/happi-logotype-blanc.png` }, style: { left: '130px', top: '770px', height: '84px' } }, s);
-  fadeUp(logo, 27.75, { dur: 0.6 });
-  tl.fromTo('#fade', { opacity: 0 }, { opacity: 1, duration: 0.6, ease: 'power1.in', immediateRender: false }, 29.4);
-  punch(26.45, 0.03, 0.5);
+  fadeUp(logo, T0 + 1.75, { dur: 0.6 });
+  tl.fromTo('#fade', { opacity: 0 }, { opacity: 1, duration: 0.6, ease: 'power1.in', immediateRender: false }, 51.4);
+  punch(T0 + 0.45, 0.03, 0.5);
 }
 
-export function buildAll() {
+export function buildAll(data) {
   titre();
   question();
   mondes();
-  demo();
+  const { modules, manifests } = data;
+  for (const m of modules) moduleScene(m, manifests);
   traces();
   final();
-  for (const b of [3.5, 9, 14, 21, 26]) wipe(b);
+  for (const b of [3.5, 9, 14, 24, 33.5, 43, 48]) wipe(b);
   return tl;
 }
 

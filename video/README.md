@@ -40,14 +40,24 @@ node render.mjs --workers 3           # vidéo finale → out/happi-competence.m
 Pour remplacer la musique par un morceau sous licence : un titre à 120 BPM calé sur la première mesure reste synchronisé
 (impacts à 4, 8, 20, 38, 50 et 54 s).
 
-## Vidéo « Passeport Numérique » (30 s)
+## Vidéo « Passeport Numérique » (52 s)
 
-Même moteur, autre page : `pn.html` (scènes dans `src/pn-scenes.js`, styles dans `src/pn.css`), grille rythmique `cues-pn.json`,
-musique `music/compose_pn.py` (réutilise les instruments de `compose.py`) → `out/music-pn.wav`.
-Règle de lecture : chaque texte reste affiché au moins 0,45 s par mot + 0,8 s.
+Même moteur, autre page : `pn.html` (scènes dans `src/pn-scenes.js`, styles `src/pn.css`). Après le titre et la question
+(« Le numérique vous semble compliqué ? »), la vidéo met en avant trois modules de l'application avec **ses vrais écrans** :
+Amazon (« Commander sur Amazon »), Facebook (« Publier dans le groupe de la famille » puis confidentialité) et le GPS
+(« Trouver son chemin »). Chaque module : liste d'étapes qui s'allume, doigt qui touche, mises en évidence (publicité,
+avis, prix, « seulement la famille », itinéraire…). Puis guide vocal, défis chrono, mémos, certificat, et invitation.
+
+- `capture-pn.mjs` : déroule les exercices dans le banc d'essai (`scripts/pn-harness.mjs`) et enregistre l'écran du téléphone
+  simulé à chaque action, avec la position de l'élément touché → `out/captures-pn/<module>/` (images + `manifest.json`).
+- `modules-pn.json` : plan de montage (instants, étapes, mises en évidence). L'animation **et** la musique le lisent.
+- `cues-pn.json` + `music/compose_pn.py` : musique originale ; les clics tombent sur chaque toucher du téléphone.
+- Règle de lecture : chaque texte reste affiché au moins 0,45 s par mot + 0,8 s.
 
 ```bash
+node --experimental-strip-types ../scripts/pn-harness.mjs 4100 &    # banc d'essai
+node capture-pn.mjs                                                  # vrais écrans Amazon / Facebook / GPS
 python3 -I music/compose_pn.py
-node render.mjs --page pn.html --sheet 1                       # planche de contrôle
-node render.mjs --page pn.html --music music-pn.wav --out passeport-numerique.mp4 --workers 3
+node render.mjs --page pn.html --sheet 1                             # planche de contrôle
+node render.mjs --page pn.html --music music-pn.wav --out passeport-numerique.mp4 --workers 4
 ```

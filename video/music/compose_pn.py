@@ -22,7 +22,7 @@ CHORDS = {
     'Cfin': {'bass': 36, 'pad': [48, 55, 60, 64, 67, 74], 'arp': [72, 76, 79, 84]},
 }
 BARS = int(round(DUR / BAR))
-PROG = (['Am', 'F', 'C', 'G'] * 3 + ['F', 'G', 'Cfin'])[:BARS]
+PROG = (['Am', 'F', 'C', 'G'] * 6 + ['G', 'Cfin'])[:BARS]
 
 
 def section_of(t):
@@ -32,7 +32,7 @@ def section_of(t):
     return 'final'
 
 
-FULL = {'mondes', 'demo', 'traces'}
+FULL = {'mondes', 'amazon', 'facebook', 'gps', 'traces'}
 drums, bass, music, fx, hitbus = Bus(), Bus(), Bus(), Bus(), Bus()
 
 # Batterie
@@ -48,7 +48,7 @@ for b in range(BARS):
             drums.add(kick(0.8), t0)
         elif sec == 'intro' and beat == 0 and t0 >= 2.0:
             drums.add(kick(0.6), t0)
-        elif sec == 'final' and beat == 0 and t0 < 28:
+        elif sec == 'final' and beat == 0 and t0 < 50:
             drums.add(kick(0.8), t0)
         for sub in range(4):
             ts = t0 + sub * BEAT / 4
@@ -90,7 +90,7 @@ for b, name in enumerate(PROG):
         end = min(N, start + n)
         pad[c, start:end] += acc[: end - start]
 cut = np.zeros(N)
-base = {'intro': (400, 1400), 'question': (1400, 1800), 'mondes': (2400, 2600), 'demo': (2200, 2200), 'traces': (2800, 3000), 'final': (3000, 1200)}
+base = {'intro': (400, 1400), 'question': (1400, 1800), 'mondes': (2400, 2600), 'amazon': (2000, 2200), 'facebook': (2200, 2400), 'gps': (2400, 2800), 'traces': (2800, 3000), 'final': (3000, 1200)}
 for s in CUES['sections']:
     a, b_ = int(s['start'] * SR), int(s['end'] * SR)
     cut[a:b_] = np.geomspace(base[s['name']][0], base[s['name']][1], b_ - a)
@@ -105,7 +105,7 @@ for b, name in enumerate(PROG):
     sec = section_of(t0)
     if t0 < 2.0 or name == 'Cfin':
         continue
-    gain = {'intro': 0.4, 'question': 0.55, 'demo': 0.75, 'final': 0.5}.get(sec, 0.9)
+    gain = {'intro': 0.4, 'question': 0.55, 'amazon': 0.7, 'facebook': 0.7, 'gps': 0.7, 'final': 0.5}.get(sec, 0.9)
     tones = CHORDS[name]['arp']
     for i, p in enumerate(pattern):
         arp.add(stereo(pluck(tones[p], bright=0.6 if sec in ('intro', 'question') else 1.0, gain=gain * (1.0 if i % 4 == 0 else 0.7)), 0.3 if i % 2 else -0.3), t0 + i * BEAT / 4)
@@ -121,7 +121,7 @@ MOTIF = {
 lead = Bus()
 for b, name in enumerate(PROG):
     t0 = b * BAR
-    if not (9 <= t0 < 14 or 20 <= t0 < 28):
+    if not (9 <= t0 < 14 or 43 <= t0 < 50):
         continue
     for beat, midi, length in MOTIF.get(name, []):
         lead.add(stereo(lead_note(midi, length * BEAT), -0.1), t0 + beat * BEAT)
@@ -135,7 +135,26 @@ for c in range(2):
         for d in (-8, 0, 7):
             acc += saw(float(hz(m)) * 2 ** ((d + (3 if c else -3)) / 1200), fin.shape[1], RNG.uniform())
     fin[c] = acc * envelope(fin.shape[1], 0.05, 1.8) / 18
-music.add(filt(fin, 'lowpass', 2600) * 0.6, 28.0)
+music.add(filt(fin, 'lowpass', 2600) * 0.6, 50.0)
+
+# Touchers du téléphone et confirmations, tirés du plan de montage (même règle que src/pn-scenes.js)
+import json as _json
+_plan = _json.load(open(os.path.join(ROOT, 'modules-pn.json'), encoding='utf-8'))['modules']
+for _m in _plan:
+    _man = {}
+    for _f in _m['frames']:
+        _d = _f.get('dir', _m['dir'])
+        if _d not in _man:
+            _man[_d] = {x['file']: x for x in _json.load(open(os.path.join(ROOT, 'out', 'captures-pn', _d, 'manifest.json'), encoding='utf-8'))['frames']}
+    for _i, _f in enumerate(_m['frames']):
+        _t = _f.get('tapAt', _m['frames'][_i + 1]['t'] if _i + 1 < len(_m['frames']) else None)
+        if _man[_f.get('dir', _m['dir'])][_f['file']]['tap'] and not _f.get('noTap') and _t is not None:
+            CUES['click'].append(_t)
+    for _ts in _m['toasts']:
+        CUES['ding'].append(_ts['t0'])
+# Frappe du clavier : un tic léger par image de saisie
+for _m in _plan:
+    CUES['click'] += [_f['t'] for _f in _m['frames'] if 'saisie-' in _f['file'] and _f['t'] > _m['start'] + 1.0 and _f['t'] % 0.2 < 0.1]
 
 # Effets sur la grille
 for t0 in CUES['impact']:

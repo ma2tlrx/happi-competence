@@ -1,0 +1,414 @@
+{
+ "modules": [
+  {
+   "id": "amazon",
+   "dir": "amazon",
+   "start": 14,
+   "end": 24,
+   "accent": "#FF9900",
+   "kicker": "Module 1 · Acheter en ligne",
+   "title": [
+    "Commander sur",
+    "<em>Amazon</em>"
+   ],
+   "note": "Écran simulé : rien n’est acheté pour de vrai.",
+   "steps": [
+    {
+     "t": 14.6,
+     "label": "Chercher le produit"
+    },
+    {
+     "t": 16.4,
+     "label": "Repérer la publicité"
+    },
+    {
+     "t": 17.6,
+     "label": "Comparer étoiles et prix"
+    },
+    {
+     "t": 21.0,
+     "label": "Livraison gratuite"
+    },
+    {
+     "t": 22.8,
+     "label": "Valider avec sa banque"
+    }
+   ],
+   "frames": [
+    {
+     "file": "01-avant-saisie.png",
+     "t": 14.0
+    },
+    {
+     "file": "02-saisie-1.png",
+     "t": 14.9
+    },
+    {
+     "file": "03-saisie-2.png",
+     "t": 15.0
+    },
+    {
+     "file": "04-saisie-3.png",
+     "t": 15.1
+    },
+    {
+     "file": "05-saisie-4.png",
+     "t": 15.2
+    },
+    {
+     "file": "06-saisie-5.png",
+     "t": 15.3
+    },
+    {
+     "file": "07-saisie-6.png",
+     "t": 15.4
+    },
+    {
+     "file": "08-saisie-7.png",
+     "t": 15.5
+    },
+    {
+     "file": "09-saisie-8.png",
+     "t": 15.6
+    },
+    {
+     "file": "10-saisie-9.png",
+     "t": 15.7
+    },
+    {
+     "file": "11-saisie-10.png",
+     "t": 15.8
+    },
+    {
+     "file": "12-avant-p2.png",
+     "t": 16.1
+    },
+    {
+     "file": "13-avant-add.png",
+     "t": 18.7
+    },
+    {
+     "file": "14-avant-go.png",
+     "t": 21.1
+    },
+    {
+     "file": "15-avant-free.png",
+     "t": 21.9
+    },
+    {
+     "file": "16-avant-buy.png",
+     "t": 22.7
+    },
+    {
+     "file": "17-fin.png",
+     "t": 23.3
+    }
+   ],
+   "callouts": [
+    {
+     "t0": 16.4,
+     "t1": 17.5,
+     "mark": ".spon",
+     "label": "Publicité"
+    },
+    {
+     "t0": 17.55,
+     "t1": 18.6,
+     "mark": ".stars@1",
+     "label": "Les avis"
+    },
+    {
+     "t0": 19.0,
+     "t1": 19.95,
+     "mark": ".az-price",
+     "label": "Le prix"
+    },
+    {
+     "t0": 19.95,
+     "t1": 21.0,
+     "mark": ".green",
+     "label": "Livraison gratuite"
+    },
+    {
+     "t0": 22.0,
+     "t1": 22.65,
+     "mark": ".az-tot",
+     "label": "Le total"
+    }
+   ],
+   "toasts": []
+  },
+  {
+   "id": "facebook",
+   "dir": "facebook",
+   "start": 24,
+   "end": 33.5,
+   "accent": "#5AA2FF",
+   "kicker": "Module 2 · Les réseaux sociaux",
+   "title": [
+    "Publier sur",
+    "<em>Facebook</em>"
+   ],
+   "note": "Écran simulé : rien n’est publié pour de vrai.",
+   "steps": [
+    {
+     "t": 24.6,
+     "label": "Écrire un message"
+    },
+    {
+     "t": 27.8,
+     "label": "Choisir qui le voit"
+    },
+    {
+     "t": 30.2,
+     "label": "Publier en famille"
+    },
+    {
+     "t": 31.3,
+     "label": "Protéger son compte"
+    }
+   ],
+   "frames": [
+    {
+     "file": "01-avant-new.png",
+     "t": 24.0
+    },
+    {
+     "file": "02-avant-saisie.png",
+     "t": 25.4
+    },
+    {
+     "file": "03-saisie-3.png",
+     "t": 26.0
+    },
+    {
+     "file": "04-saisie-6.png",
+     "t": 26.2
+    },
+    {
+     "file": "05-saisie-9.png",
+     "t": 26.4
+    },
+    {
+     "file": "06-saisie-12.png",
+     "t": 26.6
+    },
+    {
+     "file": "07-saisie-15.png",
+     "t": 26.8
+    },
+    {
+     "file": "08-saisie-18.png",
+     "t": 27.0
+    },
+    {
+     "file": "09-saisie-21.png",
+     "t": 27.2
+    },
+    {
+     "file": "10-saisie-23.png",
+     "t": 27.4
+    },
+    {
+     "file": "11-avant-grp.png",
+     "t": 27.8
+    },
+    {
+     "file": "12-avant-pub.png",
+     "t": 29.4,
+     "tapAt": 30.2
+    },
+    {
+     "dir": "facebook-compte",
+     "file": "03-avant-pub.png",
+     "t": 31.2
+    },
+    {
+     "dir": "facebook-compte",
+     "file": "04-avant-amis.png",
+     "t": 32.0,
+     "noTap": true
+    }
+   ],
+   "callouts": [
+    {
+     "t0": 28.0,
+     "t1": 29.2,
+     "tapbox": true,
+     "label": "Seulement la famille",
+     "below": true
+    },
+    {
+     "t0": 32.2,
+     "t1": 33.4,
+     "tapbox": true,
+     "label": "Choisir « Amis »",
+     "below": true
+    }
+   ],
+   "toasts": [
+    {
+     "t0": 30.3,
+     "t1": 31.1,
+     "text": "Publié dans le groupe !"
+    }
+   ]
+  },
+  {
+   "id": "gps",
+   "dir": "gps",
+   "start": 33.5,
+   "end": 43,
+   "accent": "#3DDC97",
+   "kicker": "Module 3 · Le GPS",
+   "title": [
+    "Trouver son",
+    "<em>chemin</em>"
+   ],
+   "note": "Écran simulé : aucune position réelle n’est utilisée.",
+   "steps": [
+    {
+     "t": 34.1,
+     "label": "Écrire l’adresse"
+    },
+    {
+     "t": 36.5,
+     "label": "Toucher Itinéraire"
+    },
+    {
+     "t": 37.9,
+     "label": "Choisir « à pied »"
+    },
+    {
+     "t": 39.3,
+     "label": "Démarrer"
+    },
+    {
+     "t": 40.3,
+     "label": "Suivre le guide"
+    }
+   ],
+   "frames": [
+    {
+     "file": "01-avant-saisie.png",
+     "t": 33.5
+    },
+    {
+     "file": "02-saisie-1.png",
+     "t": 34.9
+    },
+    {
+     "file": "03-saisie-2.png",
+     "t": 34.99
+    },
+    {
+     "file": "04-saisie-3.png",
+     "t": 35.08
+    },
+    {
+     "file": "05-saisie-4.png",
+     "t": 35.17
+    },
+    {
+     "file": "06-saisie-5.png",
+     "t": 35.26
+    },
+    {
+     "file": "07-saisie-6.png",
+     "t": 35.35
+    },
+    {
+     "file": "08-saisie-7.png",
+     "t": 35.44
+    },
+    {
+     "file": "09-saisie-8.png",
+     "t": 35.53
+    },
+    {
+     "file": "10-saisie-9.png",
+     "t": 35.62
+    },
+    {
+     "file": "11-saisie-10.png",
+     "t": 35.71
+    },
+    {
+     "file": "12-saisie-11.png",
+     "t": 35.8
+    },
+    {
+     "file": "13-saisie-12.png",
+     "t": 35.89
+    },
+    {
+     "file": "14-saisie-13.png",
+     "t": 35.98
+    },
+    {
+     "file": "15-saisie-14.png",
+     "t": 36.07
+    },
+    {
+     "file": "16-saisie-15.png",
+     "t": 36.16
+    },
+    {
+     "file": "17-avant-iti.png",
+     "t": 36.5
+    },
+    {
+     "file": "18-avant-walk.png",
+     "t": 37.9
+    },
+    {
+     "file": "19-avant-go.png",
+     "t": 39.3
+    },
+    {
+     "file": "20-avant-quit.png",
+     "t": 40.3,
+     "tapAt": 42.0
+    }
+   ],
+   "callouts": [
+    {
+     "t0": 36.7,
+     "t1": 37.75,
+     "tapbox": true,
+     "label": "Itinéraire",
+     "below": true
+    },
+    {
+     "t0": 38.1,
+     "t1": 39.15,
+     "box": [
+      0.03,
+      0.19,
+      0.93,
+      0.09
+     ],
+     "label": "3 façons d’y aller"
+    },
+    {
+     "t0": 40.5,
+     "t1": 41.8,
+     "box": [
+      0.03,
+      0.08,
+      0.94,
+      0.18
+     ],
+     "label": "Il vous guide"
+    }
+   ],
+   "toasts": [
+    {
+     "t0": 42.0,
+     "t1": 42.95,
+     "text": "Vous êtes arrivé !"
+    }
+   ]
+  }
+ ]
+}
