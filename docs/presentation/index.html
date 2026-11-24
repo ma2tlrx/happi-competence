@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>HAPPI Compétence et Passeport Numérique — présentation</title>
+<style>
+@font-face{font-family:Poppins;font-weight:500;src:url('../../public/passeport-numerique/fonts/poppins-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:Poppins;font-weight:600;src:url('../../public/passeport-numerique/fonts/poppins-latin-600-normal.woff2') format('woff2')}
+@font-face{font-family:Poppins;font-weight:700;src:url('../../public/passeport-numerique/fonts/poppins-latin-700-normal.woff2') format('woff2')}
+@font-face{font-family:'DM Sans';font-weight:400;src:url('../../public/passeport-numerique/fonts/dm-sans-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'DM Sans';font-weight:500;src:url('../../public/passeport-numerique/fonts/dm-sans-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'DM Sans';font-weight:700;src:url('../../public/passeport-numerique/fonts/dm-sans-latin-700-normal.woff2') format('woff2')}
+@page{size:A4;margin:0}
+:root{--ink:#102C32;--or:#EA632E;--or-ink:#C94D1A;--paper:#F5F5F2;--line:#E5E5E0;--muted:#4B5D61}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#fff}
+body{font-family:'DM Sans',sans-serif;color:var(--ink);font-size:8.9pt;line-height:1.38;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{position:relative;width:210mm;height:297mm;overflow:hidden;page-break-after:always;background:#fff}
+.page:last-child{page-break-after:auto}
+h1,h2,h3,.fig b,.n{font-family:Poppins,sans-serif;letter-spacing:-0.02em}
+.band{position:relative;height:50mm;padding:9mm 14mm 0;color:#fff;overflow:hidden}
+.band.ink{background:linear-gradient(120deg,#0b1d21 0%,#102C32 55%,#16393f 100%)}
+.band.or{height:48mm;background:linear-gradient(120deg,#c94d1a 0%,#d9561f 55%,#EA632E 100%)}
+.band .logo{height:8mm;display:block}
+.band .kick{font:500 7.2pt/1 'DM Sans';letter-spacing:.16em;text-transform:uppercase;margin-top:4.6mm;opacity:.9}
+.band h1{font-weight:700;font-size:20.5pt;line-height:1.08;margin-top:2mm;max-width:126mm}
+.band h1 em{font-style:normal;color:#FF8A57}
+.band.or h1 em{color:#102C32}.band.or h1{font-size:19pt}.band.or .kick{margin-top:3.6mm}
+.band .slogan{position:absolute;left:14mm;bottom:3.6mm;font:500 8pt 'DM Sans';opacity:.85}
+.band .masc{position:absolute;right:9mm;bottom:-12mm;height:60mm}
+.band .disc{position:absolute;right:14mm;top:5mm;width:36mm;height:36mm;border-radius:50%;background:#F5F5F2;overflow:hidden;box-shadow:0 0 0 2mm rgba(255,255,255,.35)}
+.band .disc img{width:36mm;position:absolute;top:1mm;left:0}
+.band .dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.12) .35mm,transparent .4mm);background-size:5mm 5mm;opacity:.8}
+.body{padding:4.6mm 14mm 0}
+.lab{font:700 6.8pt/1 'DM Sans';letter-spacing:.16em;text-transform:uppercase;color:var(--or-ink);margin-bottom:1.6mm}
+h2{font-weight:700;font-size:11.5pt;line-height:1.15;margin-bottom:1.6mm}
+p{margin:0 0 1.6mm}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:7mm}
+.lead{font-size:9pt}
+.figs{display:grid;gap:2.2mm;margin-top:3.6mm}
+.fig{border:.3mm solid var(--line);border-radius:2.4mm;padding:2mm 2.6mm;background:var(--paper)}
+.fig b{display:block;font-size:15pt;line-height:1;color:var(--or-ink);font-weight:700}
+.fig span{display:block;font-size:7.4pt;line-height:1.22;color:var(--muted);margin-top:1mm}
+.pill{display:grid;grid-template-columns:5.2mm 1fr;gap:2.2mm;margin-bottom:1.3mm;align-items:start}
+.pill i{font:700 7pt/5.2mm Poppins;font-style:normal;text-align:center;width:5.2mm;height:5.2mm;border-radius:50%;background:var(--ink);color:#fff}
+.pill.o i{background:var(--or-ink)}
+.pill strong{font-family:Poppins;font-weight:600;font-size:8.6pt;display:block;line-height:1.2}
+.pill span{display:block;font-size:8pt;color:var(--muted);line-height:1.25}
+.box{border-radius:3mm;padding:3mm 3.6mm}
+.box.paper{background:var(--paper)}
+.box.tint{background:#FDEBE3}
+.box.ink{background:var(--ink);color:#fff}
+.box h3{font-weight:700;font-size:9.6pt;margin-bottom:1.6mm}
+.box ul{list-style:none}
+.box li{position:relative;padding-left:3.6mm;margin-bottom:.7mm;font-size:8.1pt;line-height:1.28}
+.box li::before{content:'';position:absolute;left:0;top:1.35mm;width:1.7mm;height:1.7mm;border-radius:50%;background:var(--or)}
+.tags{display:flex;flex-wrap:wrap;gap:1mm}
+.tag{font:500 7.1pt/1 'DM Sans';padding:1.25mm 2.1mm;border-radius:99mm;border:.3mm solid var(--line);background:#fff}
+.tag.o{background:var(--ink);border-color:var(--ink);color:#fff}
+.tbl{width:100%;border-collapse:collapse;font-size:8pt}
+.tbl td{padding:1.1mm 0;border-bottom:.25mm solid var(--line);vertical-align:top}
+.tbl td:first-child{font-family:Poppins;font-weight:600;width:27mm}
+.tbl td:nth-child(2){color:var(--or-ink);font-weight:700;width:21mm}
+.foot{position:absolute;left:14mm;right:14mm;bottom:7mm;display:flex;justify-content:space-between;align-items:center;font-size:7.2pt;color:var(--muted);border-top:.3mm solid var(--line);padding-top:2.2mm}
+.foot span:last-child{white-space:nowrap;margin-left:6mm}.foot b{color:var(--ink);font-family:Poppins;font-weight:600}
+.phones{display:grid;grid-template-columns:repeat(3,1fr);gap:5mm;margin-top:2mm}
+.ph{text-align:center}
+.ph .fr{width:25.5mm;margin:0 auto 1.8mm;background:#0a1619;border-radius:4mm;padding:1mm;box-shadow:0 2mm 4mm rgba(16,44,50,.25)}
+.ph .fr img{display:block;width:100%;border-radius:3.2mm;aspect-ratio:756/1452;object-fit:cover}
+.ph h3{font-size:8.8pt;font-weight:700;line-height:1.2}
+.ph p{font-size:7.6pt;color:var(--muted);line-height:1.25;margin:.6mm 2mm 0}
+.k{display:inline-block;font:700 6.4pt/1 'DM Sans';letter-spacing:.1em;text-transform:uppercase;padding:.9mm 1.8mm;border-radius:99mm;margin-bottom:1.2mm;color:#102C32}
+.quote{margin-top:3.4mm;border-left:1.2mm solid var(--or);padding:.4mm 0 .4mm 3.6mm;font:500 9.4pt/1.3 Poppins,sans-serif;letter-spacing:-.01em}.quote small{display:block;font:400 7.6pt 'DM Sans';color:var(--muted);margin-top:.8mm;letter-spacing:0}
+.contact{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:5mm;align-items:center}
+.contact b{font-family:Poppins;font-weight:600}
+.contact small{display:block;font-size:7.4pt;opacity:.85}
+</style>
+</head>
+<body>
+
+<!-- ═════════════ RECTO : HAPPI COMPÉTENCE ═════════════ -->
+<section class="page">
+  <div class="band ink">
+    <div class="dots"></div>
+    <img class="logo" src="assets/happi-logotype-blanc.png" alt="HAPPI" />
+    <div class="kick">Présentation du programme · 2026</div>
+    <h1>Révéler les compétences de chacun <em>par le jeu vidéo</em></h1>
+    <div class="slogan">HAPPI : Human Abilities &amp; Professional Progress Integration · L’avenir se joue ici.</div>
+    <img class="masc" src="assets/happi-mascotte-3d.webp" alt="" />
+  </div>
+
+  <div class="body">
+    <div class="lab">HAPPI Compétence</div>
+    <div class="two">
+      <div>
+        <h2>Notre vision</h2>
+        <p class="lead">Explorer un nouveau vecteur de lien social, permettant d’activer, de mobiliser et de dynamiser les compétences transversales ainsi que les habiletés socio-cognitives de chacun.</p>
+      </div>
+      <div>
+        <h2>Notre mission</h2>
+        <p class="lead">Renforcer l’employabilité en révélant et en valorisant les compétences transversales ainsi que les habiletés socio-cognitives grâce à l’usage innovant du jeu vidéo.</p>
+      </div>
+    </div>
+
+    <div class="figs" style="grid-template-columns:repeat(5,1fr)">
+      <div class="fig"><b>18 h</b><span>d’accompagnement</span></div>
+      <div class="fig"><b>6</b><span>sessions de 3 heures</span></div>
+      <div class="fig"><b>4 à 8</b><span>participants par groupe</span></div>
+      <div class="fig"><b>18</b><span>compétences transversales observées</span></div>
+      <div class="fig"><b>16</b><span>habiletés socio-cognitives observées</span></div>
+    </div>
+
+    <div class="two" style="margin-top:3.6mm">
+      <div>
+        <h2>Une méthode d’observation</h2>
+        <div class="pill o"><i>1</i><div><strong>Identification</strong><span>Repérer, en situation, les compétences que chacun mobilise sans toujours les connaître.</span></div></div>
+        <div class="pill o"><i>2</i><div><strong>Évaluation</strong><span>Croiser l’auto-évaluation du participant et les observations des formateurs.</span></div></div>
+        <div class="pill o"><i>3</i><div><strong>Employabilité</strong><span>Transformer ces observations en arguments concrets pour un parcours professionnel.</span></div></div>
+        <div class="pill o"><i>4</i><div><strong>Gamification</strong><span>Le jeu vidéo, terrain d’observation commun, accessible aux non-joueurs.</span></div></div>
+        <p style="font-size:8pt;color:var(--muted);margin-top:1mm">On observe des comportements, à partir de critères partagés : une compétence est notée parce qu’elle a été vue, pas parce qu’elle a été affirmée.</p>
+      </div>
+      <div>
+        <h2>Le parcours en 6 étapes</h2>
+        <div class="pill"><i>1</i><div><strong>Questionnaire d’auto-évaluation</strong><span>Le point de départ, conservé tel quel.</span></div></div>
+        <div class="pill"><i>2</i><div><strong>Présentation du programme</strong><span>Le cadre, les six sessions, le rôle de l’observation.</span></div></div>
+        <div class="pill"><i>3</i><div><strong>Sessions de jeu et analyse</strong><span>Mises en situation, débats et débriefings, observés par les formateurs.</span></div></div>
+        <div class="pill"><i>4</i><div><strong>Passeport de compétences</strong><span>Les observations validées alimentent le passeport personnel.</span></div></div>
+        <div class="pill"><i>5</i><div><strong>Rendez-vous individuel</strong><span>Relire le parcours, les points forts, les pistes de progression.</span></div></div>
+        <div class="pill"><i>6</i><div><strong>Transmission des résultats</strong><span>Le participant présente son passeport ; l’organisme qui l’accompagne y accède s’il y est rattaché.</span></div></div>
+      </div>
+    </div>
+
+    <div class="two" style="margin-top:2.6mm">
+      <div class="box tint">
+        <h3>Pour le participant</h3>
+        <ul>
+          <li>Mieux connaître ses forces et les mots pour les décrire.</li>
+          <li>Comparer sa perception de soi et le regard des formateurs.</li>
+          <li>Suivre sa progression session après session.</li>
+          <li>Disposer d’un passeport de compétences à présenter.</li>
+        </ul>
+      </div>
+      <div class="box paper">
+        <h3>Pour la structure d’accompagnement</h3>
+        <ul>
+          <li>Un suivi clair de la présence et de l’avancement de chacun.</li>
+          <li>Des fiches de compétences fondées sur des observations datées.</li>
+          <li>Des feuilles de présence téléchargeables.</li>
+          <li>Des données isolées : chaque structure ne voit que ses participants.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="quote">« Merci de m’avoir fait découvrir le leadership présent en moi. »<small>Témoignage d’un participant · Noham H.</small></div>
+
+    <div class="two" style="margin-top:3mm">
+      <div>
+        <h2 style="font-size:10.5pt">Pour qui</h2>
+        <div class="tags">
+          <span class="tag o">Missions Locales</span><span class="tag o">France Travail</span>
+          <span class="tag o">Écoles et organismes de formation</span><span class="tag o">Structures d’insertion</span><span class="tag o">Entreprises</span>
+        </div>
+      </div>
+      <div>
+        <h2 style="font-size:10.5pt">Formats</h2>
+        <table class="tbl">
+          <tr><td>Cycle complet</td><td>18 heures</td><td>Parcours complet, suivi individualisé</td></tr>
+          <tr><td>Teambuilding</td><td>5 heures</td><td>Cohésion d’équipe, repas compris</td></tr>
+          <tr><td>Bloc individuel</td><td>3 heures</td><td>Une compétence ciblée</td></tr>
+          <tr><td>Sur-mesure</td><td>Adaptable</td><td>Construit avec vous</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span><b>Un passeport, ni un diplôme ni un diagnostic</b> · habiletés socio-cognitives : travaux AFNOR XP X50-766</span>
+    <span>1 / 2</span>
+  </div>
+</section>
+
+<!-- ═════════════ VERSO : PASSEPORT NUMÉRIQUE ═════════════ -->
+<section class="page">
+  <div class="band or">
+    <div class="dots"></div>
+    <img class="logo" src="assets/happi-logotype-blanc.png" alt="HAPPI" />
+    <div class="kick">Second programme · Passeport Numérique</div>
+    <h1>Gagner en autonomie avec le numérique, <em>à son rythme</em></h1>
+    <div class="slogan">Des exercices guidés, sans jugement, sur des écrans simulés.</div>
+    <div class="disc"><img src="assets/happi-mascotte.png" alt="" /></div>
+  </div>
+
+  <div class="body">
+    <div class="lab">Passeport Numérique</div>
+    <div class="two">
+      <div>
+        <h2>Pour les personnes éloignées du numérique</h2>
+        <p class="lead">Le téléphone, l’ordinateur ou internet vous semblent compliqués, ou vous évitez de vous en servir ? Le Passeport Numérique est fait pour vous : on avance à votre rythme, sans jugement.</p>
+      </div>
+      <div class="box tint" style="margin-top:.5mm">
+        <h3>Ce que cela change</h3>
+        <ul>
+          <li><b>Gagner en autonomie</b> : prendre son téléphone ou son ordinateur en main sans demander à quelqu’un.</li>
+          <li><b>Prendre confiance</b> : s’entraîner sans risque de se tromper pour de vrai.</li>
+          <li><b>Éviter les arnaques</b> : repérer faux messages, faux appels, faux sites.</li>
+          <li><b>Faire ses démarches</b> et <b>rester en lien</b> avec ses proches.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="figs" style="grid-template-columns:repeat(4,1fr)">
+      <div class="fig"><b>19</b><span>mondes d’exercices</span></div>
+      <div class="fig"><b>6</b><span>langues d’aide</span></div>
+      <div class="fig"><b>2 h</b><span>par atelier</span></div>
+      <div class="fig"><b>Voix</b><span>consignes lues à voix haute</span></div>
+    </div>
+
+    <div style="margin-top:3.6mm">
+      <h2>Trois modules à la loupe</h2>
+      <p style="font-size:8.4pt;color:var(--muted)">Écrans réels de l’application, simulés : rien n’est acheté, publié ou envoyé pour de vrai.</p>
+      <div class="phones">
+        <div class="ph">
+          <div class="fr"><img src="assets/ecran-amazon.jpg" alt="Écran de résultats d’achat en ligne" /></div>
+          <span class="k" style="background:#FF9900">Acheter en ligne</span>
+          <h3>Commander sur Amazon</h3>
+          <p>Chercher un produit, repérer la publicité, regarder les avis et le prix, choisir la livraison gratuite.</p>
+        </div>
+        <div class="ph">
+          <div class="fr"><img src="assets/ecran-facebook.jpg" alt="Écran de choix de l’audience d’une publication" /></div>
+          <span class="k" style="background:#8EBBFF">Réseaux sociaux</span>
+          <h3>Publier sur Facebook</h3>
+          <p>Écrire dans le groupe de la famille et choisir qui voit son message, puis protéger son compte.</p>
+        </div>
+        <div class="ph">
+          <div class="fr"><img src="assets/ecran-gps.jpg" alt="Écran de guidage GPS à pied" /></div>
+          <span class="k" style="background:#7BE3B3">Le GPS</span>
+          <h3>Trouver son chemin</h3>
+          <p>Saisir une adresse, choisir l’itinéraire à pied, puis suivre le guidage pas à pas.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="two" style="margin-top:3mm">
+      <div>
+        <h2 style="font-size:10.5pt">Comment cela se passe</h2>
+        <div class="pill o"><i>1</i><div><strong>Je m’inscris</strong><span>Je crée mon compte et je choisis le Passeport Numérique.</span></div></div>
+        <div class="pill o"><i>2</i><div><strong>Un guide m’accompagne</strong><span>Pas à pas ; consignes simples, lues à voix haute.</span></div></div>
+        <div class="pill o"><i>3</i><div><strong>Je m’entraîne sans risque</strong><span>Rien ne se perd ; je peux recommencer.</span></div></div>
+        <div class="pill o"><i>4</i><div><strong>Je garde des traces</strong><span>Notes mémo à imprimer, défis chrono et certificat de réussite.</span></div></div>
+      </div>
+      <div>
+        <h2 style="font-size:10.5pt">Un parcours en 19 mondes</h2>
+        <div class="tags">
+          <span class="tag o">Les premiers gestes</span><span class="tag o">Reconnaître les arnaques</span><span class="tag o">Les mails</span><span class="tag o">Démarches et rendez-vous</span>
+          <span class="tag">Le clavier</span><span class="tag">Les photos et les proches</span><span class="tag">Imprimer</span><span class="tag">Internet au quotidien</span>
+          <span class="tag">Appeler et garder le contact</span><span class="tag">Un appareil confortable</span><span class="tag">Applications et astuces</span>
+          <span class="tag">Acheter en ligne sans risque</span><span class="tag">Les applis du quotidien</span><span class="tag">Les réseaux sociaux</span>
+          <span class="tag o" style="background:var(--or-ink);border-color:var(--or-ink)">et 5 autres mondes</span>
+          </div>
+      </div>
+    </div>
+
+    <div class="box ink" style="margin-top:3mm">
+      <div class="contact">
+        <div><b style="font-size:10pt">Deux programmes, une même plateforme</b><small>Révéler ses compétences ; gagner en autonomie avec le numérique.</small></div>
+        <div><small>Porteurs du projet</small><b style="font-size:8.6pt">Thomas Cannard</b><small>t.cannard@happicompetence.fr</small><b style="font-size:8.6pt">Mattéo Loriaux</b><small>m.loriaux@happicompetence.fr</small></div>
+        <div><small>Contact</small><b style="font-size:8.6pt">contact@happicompetence.fr</b><small>happicompetence.fr</small></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span><b>HAPPI Compétence</b> · L’avenir se joue ici.</span>
+    <span>2 / 2</span>
+  </div>
+</section>
+</body>
+</html>
