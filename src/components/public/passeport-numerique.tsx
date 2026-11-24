@@ -2,6 +2,7 @@ import { ArrowRight, Check, Compass, Headphones, Languages, Printer, ShieldCheck
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { ProgramVideoButton } from '@/components/programmes/video-button';
 import { MobileFold } from '@/components/public/mobile-fold';
 import { Reveal } from '@/components/public/reveal';
 import { Section, SectionHeading } from '@/components/public/sections';
@@ -214,6 +215,9 @@ export function PasseportProgram() {
             <p className="mt-4 max-w-2xl text-lead text-white/80">
               Un parcours d’exercices guidés pour prendre en main le téléphone, l’ordinateur et internet, à son rythme et sans risque.
             </p>
+            <div className="mt-5">
+              <ProgramVideoButton kind="passeport_numerique" variant="inverse" />
+            </div>
             <div className="mt-8 max-w-xl">
               <Facts />
             </div>

@@ -12,12 +12,12 @@ export const PROGRAM_VIDEOS = {
 } as const;
 
 /** Bouton « Voir la vidéo » : ouvre la vidéo de présentation du programme dans une fenêtre. */
-export function ProgramVideoButton({ kind }: { kind: keyof typeof PROGRAM_VIDEOS }) {
+export function ProgramVideoButton({ kind, variant = 'outline' }: { kind: keyof typeof PROGRAM_VIDEOS; variant?: 'outline' | 'inverse' }) {
   const video = PROGRAM_VIDEOS[kind];
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant={variant} size="sm">
           <Play aria-hidden />
           Voir la vidéo
         </Button>

@@ -4,6 +4,7 @@ import Link from 'next/link';
 
 import { Reveal } from '@/components/public/reveal';
 import { PasseportProgram } from '@/components/public/passeport-numerique';
+import { ProgramVideoButton } from '@/components/programmes/video-button';
 import { PageHero, Section, SectionHeading } from '@/components/public/sections';
 import { Button } from '@/components/ui/button';
 import { ProvisionalBadge } from '@/components/ui/primitives';
@@ -81,6 +82,9 @@ export default async function ProgrammesPage() {
             Un parcours de six sessions en groupe, où le jeu vidéo sert de terrain d’observation commun. Chaque session alterne mise en
             situation, débat et débriefing.
           </p>
+          <div className="mt-5">
+            <ProgramVideoButton kind="happi_competence" />
+          </div>
         </Section>
 
         <Section tone="white" className="pt-10 sm:pt-10 lg:pt-10">
