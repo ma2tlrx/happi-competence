@@ -5,6 +5,7 @@
 //   node render.mjs --stills 4,8.2,20       images fixes → out/stills/
 //   node render.mjs --sheet 1               planche contact (une image par seconde)
 //   node render.mjs --from 18 --to 28       extrait
+//   node render.mjs --page pn.html --music music-pn.wav --out passeport-numerique.mp4   autre vidéo (Passeport Numérique)
 import { spawn } from 'node:child_process';
 import { createReadStream, existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -23,6 +24,8 @@ const args = Object.fromEntries(
 const FPS = Number(args.fps ?? 30);
 const SUB = Number(args.sub ?? 4);
 const SHUTTER = Number(args.shutter ?? 0.5);
+const PAGE = String(args.page ?? 'index.html');
+const MUSIC = String(args.music ?? 'music.wav');
 
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.woff': 'font/woff', '.jpg': 'image/jpeg' };
 const server = createServer((req, res) => {
@@ -43,7 +46,7 @@ const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, de
 const errors = [];
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errors.push(`${m.type()}: ${m.text()}`); });
 page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
-await page.goto('http://127.0.0.1:4173/video/index.html');
+await page.goto(`http://127.0.0.1:4173/video/${PAGE}`);
 await page.waitForFunction(() => window.__ready === true, null, { timeout: 60000 }).catch(() => {});
 if (errors.length) console.log(errors.join('\n'));
 const ready = await page.evaluate(() => window.__ready === true);
@@ -74,7 +77,7 @@ if (args.stills || args.sheet) {
   const to = Number(args.to ?? duration);
   const frames = Math.round((to - from) * FPS);
   const name = args.out ?? (from === 0 && to === duration ? 'happi-competence.mp4' : `extrait-${from}-${to}.mp4`);
-  const music = join(outDir, 'music.wav');
+  const music = join(outDir, MUSIC);
   const workers = Math.max(1, Number(args.workers ?? 3));
   const per = Math.ceil(frames / workers);
   const started = Date.now();
@@ -92,7 +95,7 @@ if (args.stills || args.sheet) {
     if (f0 >= f1) return null;
     const p = w === 0 ? page : await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
     if (w !== 0) {
-      await p.goto('http://127.0.0.1:4173/video/index.html');
+      await p.goto(`http://127.0.0.1:4173/video/${PAGE}`);
       await p.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
     }
     const session = w === 0 ? cdp : await p.context().newCDPSession(p);

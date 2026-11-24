@@ -39,3 +39,15 @@ node render.mjs --workers 3           # vidéo finale → out/happi-competence.m
 
 Pour remplacer la musique par un morceau sous licence : un titre à 120 BPM calé sur la première mesure reste synchronisé
 (impacts à 4, 8, 20, 38, 50 et 54 s).
+
+## Vidéo « Passeport Numérique » (30 s)
+
+Même moteur, autre page : `pn.html` (scènes dans `src/pn-scenes.js`, styles dans `src/pn.css`), grille rythmique `cues-pn.json`,
+musique `music/compose_pn.py` (réutilise les instruments de `compose.py`) → `out/music-pn.wav`.
+Règle de lecture : chaque texte reste affiché au moins 0,45 s par mot + 0,8 s.
+
+```bash
+python3 -I music/compose_pn.py
+node render.mjs --page pn.html --sheet 1                       # planche de contrôle
+node render.mjs --page pn.html --music music-pn.wav --out passeport-numerique.mp4 --workers 3
+```

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Passeport Numérique — vidéo</title>
+    <link rel="stylesheet" href="./src/style.css" />
+    <link rel="stylesheet" href="./src/pn.css" />
+  </head>
+  <body>
+    <div id="stage">
+      <div id="bg"></div>
+      <div id="glows"></div>
+      <canvas id="particles" width="1920" height="1080"></canvas>
+      <div id="camera"></div>
+      <div id="wipeA" class="wipe"></div>
+      <div id="wipeB" class="wipe"></div>
+      <div id="flash"></div>
+      <div id="vignette"></div>
+      <canvas id="grain" width="1920" height="1080"></canvas>
+      <div id="fade"></div>
+    </div>
+    <script src="./node_modules/gsap/dist/gsap.min.js"></script>
+    <script src="./node_modules/gsap/dist/CustomEase.min.js"></script>
+    <script src="./node_modules/gsap/dist/SplitText.min.js"></script>
+    <script src="./node_modules/gsap/dist/DrawSVGPlugin.min.js"></script>
+    <script src="./node_modules/gsap/dist/MorphSVGPlugin.min.js"></script>
+    <script src="./node_modules/gsap/dist/MotionPathPlugin.min.js"></script>
+    <script type="module" src="./src/pn-main.js"></script>
+  </body>
+</html>

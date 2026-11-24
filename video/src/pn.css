@@ -1,0 +1,29 @@
+/* Vidéo « Passeport Numérique » : compléments à style.css */
+.wipe { position: absolute; top: -5%; left: -12%; width: 124%; height: 110%; pointer-events: none; will-change: transform; }
+#wipeA { background: #ea632e; }
+#wipeB { background: #f5f5f2; }
+.paper-bg { position: absolute; inset: 0; background: #f5f5f2; }
+.paper-bg::after { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(16, 44, 50, 0.1) 1.6px, transparent 1.7px); background-size: 48px 48px; }
+.orange-bg { position: absolute; inset: 0; background: radial-gradient(110% 90% at 50% 30%, #f0733f 0%, #ea632e 55%, #d9561f 100%); }
+.ink { color: #102c32; }
+.ink-o { color: #c94d1a; }
+.disc { position: absolute; border-radius: 50%; }
+.chip { position: absolute; display: flex; align-items: center; gap: 26px; height: 118px; padding: 0 36px 0 20px; width: 840px; border-radius: 28px; background: rgba(255, 255, 255, 0.97); color: #102c32; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4); }
+.chip .n { flex: none; width: 78px; height: 78px; border-radius: 50%; background: #c94d1a; color: #fff; font: 700 40px/78px Poppins, sans-serif; text-align: center; }
+.chip .t { font: 600 46px/1 Poppins, sans-serif; letter-spacing: -0.02em; white-space: nowrap; }
+.chip.more { background: transparent; border: 3px dashed #ea632e; color: #fff; box-shadow: none; }
+.chip.more .n { background: #ea632e; }
+.card { position: absolute; width: 540px; height: 560px; border-radius: 40px; background: #fff; color: #102c32; box-shadow: 0 40px 90px rgba(80, 20, 0, 0.35); text-align: center; overflow: hidden; }
+.card .ttl { position: absolute; left: 0; right: 0; top: 340px; font: 700 56px/1 Poppins, sans-serif; letter-spacing: -0.03em; }
+.card .sub { position: absolute; left: 0; right: 0; top: 428px; font: 500 38px/1.1 'DM Sans', sans-serif; color: #4b5d61; }
+.card svg.ico { position: absolute; left: 140px; top: 70px; width: 260px; height: 260px; overflow: visible; }
+.pn-phone { position: absolute; width: 440px; height: 880px; border-radius: 64px; background: #0a1619; padding: 18px; box-shadow: 0 60px 120px rgba(16, 44, 50, 0.45), 0 0 0 2px rgba(255, 255, 255, 0.14) inset; }
+.pn-screen { position: relative; width: 100%; height: 100%; border-radius: 48px; background: #fff; overflow: hidden; color: #102c32; }
+.pn-bar { position: absolute; left: 0; right: 0; top: 0; height: 120px; background: #102c32; color: #fff; font: 600 34px/120px Poppins, sans-serif; text-align: center; padding-top: 24px; }
+.pn-bar span { display: block; line-height: 96px; }
+.tapdot { position: absolute; width: 112px; height: 112px; border-radius: 50%; background: radial-gradient(circle at 38% 34%, #ff9a70, #ea632e 55%, #c94d1a); box-shadow: 0 14px 30px rgba(234, 99, 46, 0.5); }
+.finger { position: absolute; width: 76px; height: 76px; border-radius: 50%; background: rgba(16, 44, 50, 0.28); border: 4px solid rgba(16, 44, 50, 0.65); z-index: 5; }
+.bravo { position: absolute; left: 60px; right: 60px; top: 620px; height: 120px; border-radius: 28px; background: #102c32; color: #fff; font: 700 48px/120px Poppins, sans-serif; text-align: center; }
+.bubble { position: absolute; left: 36px; right: 36px; top: 360px; padding: 34px 32px; border-radius: 34px; background: #f5f5f2; border: 3px solid #e5e5e0; font: 600 40px/1.2 'DM Sans', sans-serif; color: #102c32; text-align: center; }
+.wavebar { position: absolute; bottom: 0; width: 20px; border-radius: 10px; background: #ea632e; }
+.lang { display: inline-block; margin: 8px 6px 0; padding: 10px 20px; border-radius: 999px; background: #102c32; color: #fff; font: 700 28px/1 Poppins, sans-serif; letter-spacing: 0.04em; }
